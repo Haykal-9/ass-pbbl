@@ -126,6 +126,8 @@ class DatabaseHelper {
   }
 
   Future<int> updateDestination(Destination destination) async {
+    if (destination.id == null) return 0;
+
     final db = await database;
     return db.update(
       'destinations',

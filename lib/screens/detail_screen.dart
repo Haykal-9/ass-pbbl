@@ -97,19 +97,7 @@ class _DetailScreenState extends State<DetailScreen> {
                         shadows: [Shadow(blurRadius: 4, color: Colors.black54)],
                       ),
                     ),
-                    background: _destination.photoPath != null
-                        ? Image.file(
-                            File(_destination.photoPath!),
-                            fit: BoxFit.cover,
-                          )
-                        : Container(
-                            color: Colors.grey[300],
-                            child: Icon(
-                              Icons.landscape,
-                              size: 80,
-                              color: Colors.grey[400],
-                            ),
-                          ),
+                    background: _photoBackground(),
                   ),
                   actions: [
                     // PERSON B — navigate to edit
@@ -252,6 +240,33 @@ class _DetailScreenState extends State<DetailScreen> {
         ),
         Text(value, style: TextStyle(color: Colors.grey[600])),
       ],
+    );
+  }
+
+  Widget _photoBackground() {
+    final photoPath = _destination.photoPath;
+    if (photoPath != null) {
+      final imageFile = File(photoPath);
+      if (imageFile.existsSync()) {
+        return Image.file(
+          imageFile,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _photoPlaceholder(),
+        );
+      }
+    }
+
+    return _photoPlaceholder();
+  }
+
+  Widget _photoPlaceholder() {
+    return Container(
+      color: Colors.grey[300],
+      child: Icon(
+        Icons.landscape,
+        size: 80,
+        color: Colors.grey[400],
+      ),
     );
   }
 

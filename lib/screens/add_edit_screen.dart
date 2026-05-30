@@ -84,16 +84,31 @@ class _AddEditScreenState extends State<AddEditScreen> {
   }
 
   Future<void> _pickDate() async {
+    final firstDate = DateTime(2000);
     final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
-      initialDate: now,
-      firstDate: DateTime(2000),
+      initialDate: _initialVisitedDate(firstDate, now),
+      firstDate: firstDate,
       lastDate: now,
     );
     if (picked != null) {
       _visitedAtCtrl.text =
           '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+    }
+  }
+
+  DateTime _initialVisitedDate(DateTime firstDate, DateTime lastDate) {
+    final value = _visitedAtCtrl.text.trim();
+    if (value.isEmpty) return lastDate;
+
+    try {
+      final parsed = DateTime.parse(value);
+      if (parsed.isBefore(firstDate)) return firstDate;
+      if (parsed.isAfter(lastDate)) return lastDate;
+      return parsed;
+    } catch (_) {
+      return lastDate;
     }
   }
 
@@ -112,8 +127,8 @@ class _AddEditScreenState extends State<AddEditScreen> {
       status: _status,
       notes: _notesCtrl.text.trim(),
       photoPath: _imageFile?.path,
-      visitedAt: _status == 'visited' && _visitedAtCtrl.text.isNotEmpty
-          ? _visitedAtCtrl.text
+      visitedAt: _status == 'visited' && _visitedAtCtrl.text.trim().isNotEmpty
+          ? _visitedAtCtrl.text.trim()
           : null,
       createdAt: _isEditMode ? widget.destination!.createdAt : now,
     );
@@ -292,6 +307,13 @@ class _AddEditScreenState extends State<AddEditScreen> {
                   ),
                   readOnly: true,
                   onTap: _pickDate,
+                  validator: (v) {
+                    if (_status == 'visited' &&
+                        (v == null || v.trim().isEmpty)) {
+                      return 'Tanggal kunjungan wajib diisi';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 12),
               ],
