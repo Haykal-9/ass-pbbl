@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../main.dart';
 import '../services/preferences_service.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -21,8 +22,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _sortBy = 'terbaru';
 
   // PERSON C
-  String _temaWarna = 'teal';
-  bool _showMapDefault = false;
+  String _temaWarna = 'Canopy';
+  bool _showChecklistProgress = false;
 
   bool _isLoading = true;
 
@@ -41,7 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _bahasa = all['bahasa'] as String;
         _sortBy = all['sort_by'] as String;
         _temaWarna = all['tema_warna'] as String;
-        _showMapDefault = all['show_map_default'] as bool;
+        _showChecklistProgress = all['show_checklist_progress'] as bool;
         _isLoading = false;
       });
     }
@@ -49,13 +50,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Color _themeColor(String theme) {
     switch (theme) {
-      case 'orange':
-        return Colors.orange;
-      case 'purple':
-        return Colors.purple;
-      case 'teal':
+      case 'Ancient Earth':
+        return const Color(0xFF8B5E3C);
+      case 'Urban Slate':
+        return const Color(0xFF3D4451);
+      case 'Canopy':
       default:
-        return Colors.teal;
+        return const Color(0xFF3A6B4A);
     }
   }
 
@@ -66,147 +67,196 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Pengaturan')),
+      backgroundColor: Colors.grey[50], // Modern off-white background
+      appBar: AppBar(
+        title: const Text(
+          'Pengaturan',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        foregroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: Colors.grey[50],
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
       body: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         children: [
-          // ─── PERSON A ──────────────────────────────────────────
-          _sectionHeader('Tampilan (Person A)'),
-          ListTile(
-            title: const Text('Mode Tampilan'),
-            subtitle: const Text('Grid atau List di Home'),
-            trailing: SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'grid', icon: Icon(Icons.grid_view, size: 18)),
-                ButtonSegment(value: 'list', icon: Icon(Icons.list, size: 18)),
-              ],
-              selected: {_tampilanMode},
-              onSelectionChanged: (s) async {
-                setState(() => _tampilanMode = s.first);
-                await _prefs.setTampilanMode(s.first);
-              },
-            ),
-          ),
-          ListTile(
-            title: const Text('Mata Uang'),
-            subtitle: Text(_mataUang),
-            trailing: DropdownButton<String>(
-              value: _mataUang,
-              underline: const SizedBox(),
-              items: const [
-                DropdownMenuItem(value: 'IDR', child: Text('IDR')),
-                DropdownMenuItem(value: 'USD', child: Text('USD')),
-                DropdownMenuItem(value: 'EUR', child: Text('EUR')),
-              ],
-              onChanged: (v) async {
-                if (v == null) return;
-                setState(() => _mataUang = v);
-                await _prefs.setMataUang(v);
-              },
-            ),
-          ),
-
-          // ─── PERSON B ──────────────────────────────────────────
-          _sectionHeader('Preferensi (Person B)'),
-          ListTile(
-            title: const Text('Bahasa'),
-            trailing: SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'ID', label: Text('ID')),
-                ButtonSegment(value: 'EN', label: Text('EN')),
-              ],
-              selected: {_bahasa},
-              onSelectionChanged: (s) async {
-                setState(() => _bahasa = s.first);
-                await _prefs.setBahasa(s.first);
-              },
-            ),
-          ),
-          ListTile(
-            title: const Text('Urutkan Destinasi'),
-            subtitle: Text(_sortByLabel(_sortBy)),
-            trailing: DropdownButton<String>(
-              value: _sortBy,
-              underline: const SizedBox(),
-              items: const [
-                DropdownMenuItem(value: 'terbaru', child: Text('Terbaru')),
-                DropdownMenuItem(value: 'az', child: Text('A–Z')),
-                DropdownMenuItem(value: 'kategori', child: Text('Kategori')),
-              ],
-              onChanged: (v) async {
-                if (v == null) return;
-                setState(() => _sortBy = v);
-                await _prefs.setSortBy(v);
-              },
-            ),
-          ),
-
-          // ─── PERSON C ──────────────────────────────────────────
-          _sectionHeader('Tema & Tampilan (Person C)'),
-          ListTile(
-            title: const Text('Tema Warna'),
-            subtitle: const Text('Berlaku setelah restart'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: ['teal', 'orange', 'purple'].map((t) {
-                final selected = _temaWarna == t;
-                return GestureDetector(
-                  onTap: () async {
-                    setState(() => _temaWarna = t);
-                    await _prefs.setTemaWarna(t);
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: _themeColor(t),
-                      shape: BoxShape.circle,
-                      border: selected
-                          ? Border.all(color: Colors.black54, width: 2.5)
-                          : null,
-                    ),
-                    child: selected
-                        ? const Icon(Icons.check, color: Colors.white, size: 16)
-                        : null,
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          SwitchListTile(
-            title: const Text('Tampilkan Peta Secara Default'),
-            subtitle: const Text('Tab peta aktif saat buka detail'),
-            value: _showMapDefault,
-            onChanged: (v) async {
-              setState(() => _showMapDefault = v);
-              await _prefs.setShowMapDefault(v);
-            },
-          ),
-          const SizedBox(height: 24),
-          if (_temaWarna != 'teal')
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'Tema warna akan diterapkan setelah aplikasi di-restart.',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                textAlign: TextAlign.center,
+          _sectionHeader('Tampilan'),
+          _buildCardGroup([
+            ListTile(
+              leading: _iconBox(Icons.dashboard_customize_outlined),
+              title: const Text('Mode Tampilan', style: TextStyle(fontWeight: FontWeight.w500)),
+              subtitle: const Text('Grid atau List di Home'),
+              trailing: SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(value: 'grid', icon: Icon(Icons.grid_view, size: 18)),
+                  ButtonSegment(value: 'list', icon: Icon(Icons.list, size: 18)),
+                ],
+                selected: {_tampilanMode},
+                onSelectionChanged: (s) async {
+                  setState(() => _tampilanMode = s.first);
+                  await _prefs.setTampilanMode(s.first);
+                },
               ),
             ),
+            _divider(),
+            ListTile(
+              leading: _iconBox(Icons.payments_outlined),
+              title: const Text('Mata Uang', style: TextStyle(fontWeight: FontWeight.w500)),
+              subtitle: Text(_mataUang),
+              trailing: DropdownButton<String>(
+                value: _mataUang,
+                underline: const SizedBox(),
+                items: const [
+                  DropdownMenuItem(value: 'IDR', child: Text('IDR')),
+                  DropdownMenuItem(value: 'USD', child: Text('USD')),
+                  DropdownMenuItem(value: 'EUR', child: Text('EUR')),
+                ],
+                onChanged: (v) async {
+                  if (v == null) return;
+                  setState(() => _mataUang = v);
+                  await _prefs.setMataUang(v);
+                },
+              ),
+            ),
+          ]),
+          
+          _sectionHeader('Preferensi'),
+          _buildCardGroup([
+            ListTile(
+              leading: _iconBox(Icons.language_outlined),
+              title: const Text('Bahasa', style: TextStyle(fontWeight: FontWeight.w500)),
+              trailing: SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(value: 'ID', label: Text('ID')),
+                  ButtonSegment(value: 'EN', label: Text('EN')),
+                ],
+                selected: {_bahasa},
+                onSelectionChanged: (s) async {
+                  setState(() => _bahasa = s.first);
+                  await _prefs.setBahasa(s.first);
+                },
+              ),
+            ),
+            _divider(),
+            ListTile(
+              leading: _iconBox(Icons.sort_outlined),
+              title: const Text('Urutkan Destinasi', style: TextStyle(fontWeight: FontWeight.w500)),
+              subtitle: Text(_sortByLabel(_sortBy)),
+              trailing: DropdownButton<String>(
+                value: _sortBy,
+                underline: const SizedBox(),
+                items: const [
+                  DropdownMenuItem(value: 'terbaru', child: Text('Terbaru')),
+                  DropdownMenuItem(value: 'az', child: Text('A–Z')),
+                  DropdownMenuItem(value: 'kategori', child: Text('Kategori')),
+                ],
+                onChanged: (v) async {
+                  if (v == null) return;
+                  setState(() => _sortBy = v);
+                  await _prefs.setSortBy(v);
+                },
+              ),
+            ),
+          ]),
+
+          _sectionHeader('Tema & Tampilan Tambahan'),
+          _buildCardGroup([
+            ListTile(
+              leading: _iconBox(Icons.palette_outlined),
+              title: const Text('Tema Warna', style: TextStyle(fontWeight: FontWeight.w500)),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: ['Canopy', 'Ancient Earth', 'Urban Slate'].map((t) {
+                  final selected = _temaWarna == t;
+                  return GestureDetector(
+                    onTap: () async {
+                      setState(() => _temaWarna = t);
+                      await _prefs.setTemaWarna(t);
+                      themeNotifier.value = t;
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: _themeColor(t),
+                        shape: BoxShape.circle,
+                        border: selected
+                            ? Border.all(color: Colors.black54, width: 2.5)
+                            : null,
+                      ),
+                      child: selected
+                          ? const Icon(Icons.check, color: Colors.white, size: 16)
+                          : null,
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            _divider(),
+            SwitchListTile(
+              secondary: _iconBox(Icons.checklist_rtl_outlined),
+              title: const Text('Progres Checklist', style: TextStyle(fontWeight: FontWeight.w500)),
+              subtitle: const Text('Tampilkan bar progres di beranda'),
+              value: _showChecklistProgress,
+              activeColor: Theme.of(context).colorScheme.primary,
+              onChanged: (v) async {
+                setState(() => _showChecklistProgress = v);
+                await _prefs.setShowChecklistProgress(v);
+              },
+            ),
+          ]),
+          const SizedBox(height: 32),
         ],
       ),
     );
   }
 
+  Widget _buildCardGroup(List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Column(
+        children: children,
+      ),
+    );
+  }
+
+  Widget _iconBox(IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 22),
+    );
+  }
+
+  Widget _divider() {
+    return Divider(height: 1, indent: 56, endIndent: 16, color: Colors.grey[200]);
+  }
+
   Widget _sectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
+      padding: const EdgeInsets.fromLTRB(8, 24, 8, 8),
       child: Text(
-        title,
+        title.toUpperCase(),
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.primary,
-          letterSpacing: 0.8,
+          color: Colors.grey[500],
+          letterSpacing: 1.2,
         ),
       ),
     );

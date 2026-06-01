@@ -67,12 +67,12 @@ class PreferencesService {
   // ─────────────────────────────────────────────────────────────────
 
   static const String _kTemaWarna = 'tema_warna';
-  static const String _kShowMapDefault = 'show_map_default';
+  static const String _kShowChecklistProgress = 'show_checklist_progress';
 
-  /// Returns 'teal' | 'orange' | 'purple'
+  /// Returns 'Canopy' | 'Ancient Earth' | 'Urban Slate'
   Future<String> getTemaWarna() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTemaWarna) ?? 'teal';
+    return prefs.getString(_kTemaWarna) ?? 'Canopy';
   }
 
   Future<void> setTemaWarna(String theme) async {
@@ -80,14 +80,14 @@ class PreferencesService {
     await prefs.setString(_kTemaWarna, theme);
   }
 
-  Future<bool> getShowMapDefault() async {
+  Future<bool> getShowChecklistProgress() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowMapDefault) ?? false;
+    return prefs.getBool(_kShowChecklistProgress) ?? false;
   }
 
-  Future<void> setShowMapDefault(bool value) async {
+  Future<void> setShowChecklistProgress(bool value) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_kShowMapDefault, value);
+    await prefs.setBool(_kShowChecklistProgress, value);
   }
 
   // ─────────────────────────────────────────────────────────────────
@@ -101,7 +101,7 @@ class PreferencesService {
       'bahasa': await getBahasa(),
       'sort_by': await getSortBy(),
       'tema_warna': await getTemaWarna(),
-      'show_map_default': await getShowMapDefault(),
+      'show_checklist_progress': await getShowChecklistProgress(),
     };
   }
 }

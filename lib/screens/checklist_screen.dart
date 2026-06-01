@@ -70,11 +70,11 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     await _loadItems();
   }
 
-  Future<void> _confirmDeleteItem(ChecklistItem item) async {
-    final confirmed = await showDialog<bool>(
+  Future<bool?> _confirmDeleteItem(ChecklistItem item) async {
+    return await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Hapus Item?'),
+        title: const Text('Anda Yakin?'),
         content: Text('Hapus "${item.label}" dari checklist?'),
         actions: [
           TextButton(
@@ -89,199 +89,265 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
         ],
       ),
     );
-    if (confirmed == true) await _deleteItem(item.id!);
   }
 
   @override
   Widget build(BuildContext context) {
     final doneCount = _items.where((i) => i.isDone).length;
+    final progress = _items.isEmpty ? 0.0 : doneCount / _items.length;
 
     return Scaffold(
+      backgroundColor: Colors.grey[50], // Match settings screen background
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Checklist',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            Text(
-              widget.destination.name,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
+        title: Text(
+          'Checklist ${widget.destination.name}',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
-        bottom: _items.isNotEmpty
-            ? PreferredSize(
-                preferredSize: const Size.fromHeight(4),
-                child: LinearProgressIndicator(
-                  value: _items.isEmpty ? 0 : doneCount / _items.length,
-                  backgroundColor: Colors.white24,
-                ),
-              )
-            : null,
+        foregroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: Colors.grey[50],
+        elevation: 0,
+        scrolledUnderElevation: 0,
       ),
       body: Column(
         children: [
-          // Progress info
+          // Elegant Progress Header
           if (_items.isNotEmpty)
             Container(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.checklist,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '$doneCount dari ${_items.length} selesai',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w500,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Progres Perjalanan',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '$doneCount dari ${_items.length} Selesai',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: 54,
+                        height: 54,
+                        child: CircularProgressIndicator(
+                          value: progress,
+                          backgroundColor: Colors.white.withValues(alpha: 0.2),
+                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                          strokeWidth: 5,
+                        ),
+                      ),
+                      Text(
+                        '${(progress * 100).toInt()}%',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
 
-          // Add item input
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _addCtrl,
-                    decoration: InputDecoration(
-                      hintText: 'Tambah item checklist...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
-                      ),
-                      isDense: true,
-                    ),
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _addItem(),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                FilledButton(
-                  onPressed: _addItem,
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.all(12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Icon(Icons.add),
-                ),
-              ],
-            ),
-          ),
-
-          // List
+          // List Items
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _items.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.checklist_rtl,
-                                size: 64, color: Colors.grey[300]),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Belum ada item checklist',
-                              style: TextStyle(color: Colors.grey[500]),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Tambah hal yang ingin dilakukan di sini!',
-                              style: TextStyle(
-                                  color: Colors.grey[400], fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      )
+                    ? _emptyState()
                     : ListView.builder(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         itemCount: _items.length,
                         itemBuilder: (context, index) {
                           final item = _items[index];
-                          return Dismissible(
-                            key: Key('checklist_${item.id}'),
-                            direction: DismissDirection.endToStart,
-                            background: Container(
-                              color: Colors.red,
-                              alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.only(right: 16),
-                              child: const Icon(Icons.delete,
-                                  color: Colors.white),
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(color: Colors.grey[200]!),
                             ),
-                            confirmDismiss: (_) async {
-                              final confirmed = await showDialog<bool>(
-                                context: context,
-                                builder: (_) => AlertDialog(
-                                  title: const Text('Hapus Item?'),
-                                  content:
-                                      Text('Hapus "${item.label}"?'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, false),
-                                      child: const Text('Batal'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, true),
-                                      style: TextButton.styleFrom(
-                                          foregroundColor: Colors.red),
-                                      child: const Text('Hapus'),
-                                    ),
-                                  ],
+                            color: Colors.white,
+                            child: Dismissible(
+                              key: Key('checklist_${item.id}'),
+                              direction: DismissDirection.endToStart,
+                              background: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.red[400],
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                              );
-                              return confirmed ?? false;
-                            },
-                            onDismissed: (_) => _deleteItem(item.id!),
-                            child: CheckboxListTile(
-                              value: item.isDone,
-                              onChanged: (_) => _toggleItem(item),
-                              title: Text(
-                                item.label,
-                                style: TextStyle(
-                                  decoration: item.isDone
-                                      ? TextDecoration.lineThrough
-                                      : null,
-                                  color: item.isDone
-                                      ? Colors.grey[500]
-                                      : null,
+                                alignment: Alignment.centerRight,
+                                padding: const EdgeInsets.only(right: 20),
+                                child: const Icon(Icons.delete_sweep, color: Colors.white),
+                              ),
+                              confirmDismiss: (_) async {
+                                return await _confirmDeleteItem(item);
+                              },
+                              onDismissed: (_) => _deleteItem(item.id!),
+                              child: CheckboxListTile(
+                                value: item.isDone,
+                                onChanged: (_) => _toggleItem(item),
+                                activeColor: Theme.of(context).colorScheme.primary,
+                                checkColor: Colors.white,
+                                title: Text(
+                                  item.label,
+                                  style: TextStyle(
+                                    fontWeight: item.isDone ? FontWeight.normal : FontWeight.w500,
+                                    decoration: item.isDone ? TextDecoration.lineThrough : null,
+                                    color: item.isDone ? Colors.grey[400] : Colors.black87,
+                                  ),
+                                ),
+                                controlAffinity: ListTileControlAffinity.leading,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                secondary: IconButton(
+                                  icon: const Icon(Icons.close, size: 18),
+                                  color: Colors.grey[300],
+                                  onPressed: () async {
+                                    final confirmed = await _confirmDeleteItem(item);
+                                    if (confirmed == true) {
+                                      await _deleteItem(item.id!);
+                                    }
+                                  },
                                 ),
                               ),
-                              secondary: IconButton(
-                                icon: const Icon(Icons.delete_outline,
-                                    size: 20),
-                                color: Colors.red[300],
-                                onPressed: () =>
-                                    _confirmDeleteItem(item),
-                              ),
-                              controlAffinity:
-                                  ListTileControlAffinity.leading,
                             ),
                           );
                         },
                       ),
+          ),
+          
+          // Add Item Input anchored to bottom
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -4),
+                )
+              ],
+            ),
+            child: SafeArea(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _addCtrl,
+                      decoration: InputDecoration(
+                        hintText: 'Tambah hal yang ingin dilakukan...',
+                        hintStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5), 
+                            fontSize: 13),
+                        filled: true,
+                        fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                            width: 1.5,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                      ),
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _addItem(),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_upward, color: Colors.white, size: 22),
+                      onPressed: _addItem,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _emptyState() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.checklist_rtl_outlined,
+              size: 48,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Belum ada aktivitas',
+            style: TextStyle(
+              color: Colors.grey[700],
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Ketik di bawah untuk menambahkannya!',
+            style: TextStyle(color: Colors.grey[500], fontSize: 13),
           ),
         ],
       ),

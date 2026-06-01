@@ -27,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // PERSON A SharedPrefs
   String _tampilanMode = 'grid';
+  bool _showChecklistProgress = false;
 
   // PERSON B SharedPref
   String _sortBy = 'terbaru';
@@ -52,10 +53,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadPrefs() async {
     final tampilan = await _prefs.getTampilanMode();
     final sortBy = await _prefs.getSortBy();
+    final showProgress = await _prefs.getShowChecklistProgress();
     if (mounted) {
       setState(() {
         _tampilanMode = tampilan;
         _sortBy = sortBy;
+        _showChecklistProgress = showProgress;
       });
     }
     await _loadDestinations();
@@ -122,6 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        foregroundColor: Theme.of(context).colorScheme.primary,
         title: const Text(
           'WanderList',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -260,6 +264,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return DestinationCard(
           destination: dest,
           isGrid: true,
+          showChecklistProgress: _showChecklistProgress,
           onTap: () => _openDetail(dest),
           onDelete: () => _confirmDelete(dest),
         );
@@ -276,6 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return DestinationCard(
           destination: dest,
           isGrid: false,
+          showChecklistProgress: _showChecklistProgress,
           onTap: () => _openDetail(dest),
           onDelete: () => _confirmDelete(dest),
         );

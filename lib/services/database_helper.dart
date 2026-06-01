@@ -1,7 +1,9 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 import '../models/checklist_item.dart';
 import '../models/destination.dart';
@@ -19,9 +21,14 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDb() async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'wanderlist.db');
-    return openDatabase(path, version: 1, onCreate: _onCreate);
+    if (kIsWeb) {
+      databaseFactory = databaseFactoryFfiWeb;
+      return openDatabase('wanderlist.db', version: 1, onCreate: _onCreate);
+    } else {
+      final dbPath = await getDatabasesPath();
+      final path = join(dbPath, 'wanderlist.db');
+      return openDatabase(path, version: 1, onCreate: _onCreate);
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -48,6 +55,65 @@ class DatabaseHelper {
         created_at     TEXT    NOT NULL
       )
     ''');
+
+    final now = DateTime.now().toIso8601String();
+    final seeds = [
+      "('Raja Ampat', 'Sorong, Indonesia', 'Wisata Alam', 'wishlist', 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Raja_Ampat%2C_West_Papua%2C_Indonesia.jpg/960px-Raja_Ampat%2C_West_Papua%2C_Indonesia.jpg', '$now')",
+      "('Taman Nasional Komodo', 'Labuan Bajo, Indonesia', 'Wisata Alam', 'visited', 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?q=80&w=600', '$now')",
+      "('Gunung Fuji', 'Shizuoka, Jepang', 'Wisata Alam', 'wishlist', 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?q=80&w=600', '$now')",
+      "('Air Terjun Niagara', 'Ontario, Kanada', 'Wisata Alam', 'wishlist', 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/3Falls_Niagara.jpg/960px-3Falls_Niagara.jpg', '$now')",
+      "('Taman Nasional Yellowstone', 'Wyoming, Amerika Serikat', 'Wisata Alam', 'wishlist', 'https://upload.wikimedia.org/wikipedia/commons/7/73/Grand_Canyon_of_yellowstone.jpg', '$now')",
+      "('Candi Borobudur', 'Magelang, Indonesia', 'Budaya & Sejarah', 'visited', 'https://images.unsplash.com/photo-1596402184320-417e7178b2cd?q=80&w=600', '$now')",
+      "('Angkor Wat', 'Siem Reap, Kamboja', 'Budaya & Sejarah', 'wishlist', 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Buddhist_monks_in_front_of_the_Angkor_Wat.jpg/960px-Buddhist_monks_in_front_of_the_Angkor_Wat.jpg', '$now')",
+      "('Colosseum', 'Roma, Italia', 'Budaya & Sejarah', 'visited', 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=600', '$now')",
+      "('Machu Picchu', 'Cusco, Peru', 'Budaya & Sejarah', 'wishlist', 'https://images.unsplash.com/photo-1526392060635-9d6019884377?q=80&w=600', '$now')",
+      "('Tembok Besar China', 'Beijing, China', 'Budaya & Sejarah', 'wishlist', 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?q=80&w=600', '$now')",
+      "('Burj Khalifa', 'Dubai, UAE', 'Kota & Urban', 'wishlist', 'https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?q=80&w=600', '$now')",
+      "('Menara Eiffel', 'Paris, Prancis', 'Kota & Urban', 'visited', 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/960px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg', '$now')",
+      "('Shibuya Crossing', 'Tokyo, Jepang', 'Kota & Urban', 'visited', 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Shibuya_skyline_from_Tokyu_Plaza_in_Omotesando%2C_Harajuku%2C_Tokyo%2C_2024_May.jpg/960px-Shibuya_skyline_from_Tokyu_Plaza_in_Omotesando%2C_Harajuku%2C_Tokyo%2C_2024_May.jpg', '$now')",
+      "('Marina Bay Sands', 'Singapura, Singapura', 'Kota & Urban', 'wishlist', 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?q=80&w=600', '$now')",
+      "('Times Square', 'New York, Amerika Serikat', 'Kota & Urban', 'visited', 'https://images.unsplash.com/photo-1534430480872-3498386e7856?q=80&w=600', '$now')"
+    ];
+
+    for (var val in seeds) {
+      await db.execute('''
+        INSERT INTO destinations (name, country, category, status, photo_path, created_at)
+        VALUES $val
+      ''');
+    }
+
+    final checklistSeeds = {
+      1: ['Snorkeling di Cape Kri', 'Island hopping ke Wayag', 'Foto dari Piaynemo viewpoint', 'Sunset di dermaga'],
+      2: ['Lihat komodo langsung', 'Snorkeling di Pink Beach', 'Hiking ke Padar Island viewpoint', 'Foto manta ray'],
+      3: ['Pendakian ke puncak', 'Foto dari Danau Kawaguchiko', 'Lihat matahari terbit', 'Kunjungi Chureito Pagoda'],
+      4: ['Naik Maid of the Mist', 'Journey Behind the Falls', 'Foto dari Prospect Point', 'Lihat illuminasi malam'],
+      5: ['Lihat Old Faithful meletus', 'Grand Prismatic Spring', 'Wildlife spotting bison', 'Canyon viewpoint'],
+      6: ['Sunrise tour', 'Naik ke stupa utama', 'Baca relief Karmawibhangga', 'Museum Samudra Raksa'],
+      7: ['Foto sunrise di kolam refleksi', 'Jelajahi Ta Prohm', 'Bayon temple 216 wajah', 'Angkor Thom'],
+      8: ['Tur lantai arena gladiator', 'Roman Forum', 'Palatine Hill', 'Foto dari Arch of Constantine'],
+      9: ['Trekking Inca Trail', 'Sun Gate viewpoint', 'Pendakian Huayna Picchu', 'Foto iconic terrace'],
+      10: ['Jalan di seksi Mutianyu', 'Foto panorama', 'Naik cable car', 'Stamp paspor khusus'],
+      11: ['At the Top observation deck', 'Dubai Fountain show', 'Dubai Mall', 'Foto skyline malam'],
+      12: ['Naik ke puncak', 'Foto dari Trocadéro', 'Makan di Le Jules Verne', 'Light show tengah malam'],
+      13: ['Foto dari Starbucks lantai 2', 'Scramble crossing', 'Shibuya Sky rooftop', 'Belanja di Shibuya 109'],
+      14: ['Observation deck SkyPark', 'Spectra laser show', 'Casino', 'Foto skyline dari waterfront'],
+      15: ['Foto malam hari neon signs', 'Tonton Broadway show', 'TKTS discount booth', 'Naik double decker bus'],
+    };
+
+    final visitedIds = {2, 6, 8, 12, 13, 15};
+
+    for (final entry in checklistSeeds.entries) {
+      final destId = entry.key;
+      final items = entry.value;
+      final isDone = visitedIds.contains(destId) ? 1 : 0;
+      
+      for (final label in items) {
+        await db.execute('''
+          INSERT INTO checklist_items (destination_id, label, is_done, created_at)
+          VALUES ($destId, '$label', $isDone, '$now')
+        ''');
+      }
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────
@@ -102,6 +168,11 @@ class DatabaseHelper {
 
     final maps = await db.query(
       'destinations',
+      columns: [
+        '*',
+        '(SELECT COUNT(*) FROM checklist_items WHERE destination_id = destinations.id) AS checklist_total',
+        '(SELECT IFNULL(SUM(is_done), 0) FROM checklist_items WHERE destination_id = destinations.id) AS checklist_done'
+      ],
       where: whereClause.isEmpty ? null : whereClause,
       whereArgs: whereArgs.isEmpty ? null : whereArgs,
       orderBy: orderBy,
@@ -143,17 +214,19 @@ class DatabaseHelper {
 
   Future<int> deleteDestination(int id) async {
     final existing = await getDestinationById(id);
-    if (existing?.photoPath != null) {
+    if (existing?.photoPath != null && !kIsWeb) {
       final f = File(existing!.photoPath!);
       if (await f.exists()) await f.delete();
     }
     final db = await database;
-    await db.delete(
-      'checklist_items',
-      where: 'destination_id = ?',
-      whereArgs: [id],
-    );
-    return db.delete('destinations', where: 'id = ?', whereArgs: [id]);
+    return await db.transaction((txn) async {
+      await txn.delete(
+        'checklist_items',
+        where: 'destination_id = ?',
+        whereArgs: [id],
+      );
+      return await txn.delete('destinations', where: 'id = ?', whereArgs: [id]);
+    });
   }
 
   Future<int> insertChecklistItem(ChecklistItem item) async {
@@ -202,27 +275,23 @@ class DatabaseHelper {
     final wishlist = Sqflite.firstIntValue(await db.rawQuery(
             "SELECT COUNT(*) FROM destinations WHERE status = 'wishlist'")) ??
         0;
-    final pantai = Sqflite.firstIntValue(await db.rawQuery(
-            "SELECT COUNT(*) FROM destinations WHERE category = 'pantai'")) ??
+    final wisataAlam = Sqflite.firstIntValue(await db.rawQuery(
+            "SELECT COUNT(*) FROM destinations WHERE category = 'Wisata Alam'")) ??
         0;
-    final kota = Sqflite.firstIntValue(await db.rawQuery(
-            "SELECT COUNT(*) FROM destinations WHERE category = 'kota'")) ??
+    final budayaSejarah = Sqflite.firstIntValue(await db.rawQuery(
+            "SELECT COUNT(*) FROM destinations WHERE category = 'Budaya & Sejarah'")) ??
         0;
-    final gunung = Sqflite.firstIntValue(await db.rawQuery(
-            "SELECT COUNT(*) FROM destinations WHERE category = 'gunung'")) ??
-        0;
-    final alam = Sqflite.firstIntValue(await db.rawQuery(
-            "SELECT COUNT(*) FROM destinations WHERE category = 'alam'")) ??
+    final kotaUrban = Sqflite.firstIntValue(await db.rawQuery(
+            "SELECT COUNT(*) FROM destinations WHERE category = 'Kota & Urban'")) ??
         0;
 
     return {
       'total': total,
       'visited': visited,
       'wishlist': wishlist,
-      'pantai': pantai,
-      'kota': kota,
-      'gunung': gunung,
-      'alam': alam,
+      'wisata_alam': wisataAlam,
+      'budaya_sejarah': budayaSejarah,
+      'kota_urban': kotaUrban,
     };
   }
 }

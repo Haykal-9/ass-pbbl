@@ -7,14 +7,12 @@ class CategoryChip extends StatelessWidget {
 
   Color _color() {
     switch (category) {
-      case 'pantai':
-        return Colors.blue;
-      case 'kota':
-        return Colors.blueGrey;
-      case 'gunung':
-        return Colors.brown;
-      case 'alam':
+      case 'Wisata Alam':
         return Colors.green;
+      case 'Budaya & Sejarah':
+        return Colors.brown;
+      case 'Kota & Urban':
+        return Colors.blueGrey;
       default:
         return Colors.grey;
     }
@@ -22,32 +20,19 @@ class CategoryChip extends StatelessWidget {
 
   IconData _icon() {
     switch (category) {
-      case 'pantai':
-        return Icons.beach_access;
-      case 'kota':
-        return Icons.location_city;
-      case 'gunung':
-        return Icons.terrain;
-      case 'alam':
+      case 'Wisata Alam':
         return Icons.park;
+      case 'Budaya & Sejarah':
+        return Icons.account_balance;
+      case 'Kota & Urban':
+        return Icons.location_city;
       default:
         return Icons.place;
     }
   }
 
   String _label() {
-    switch (category) {
-      case 'pantai':
-        return 'Pantai';
-      case 'kota':
-        return 'Kota';
-      case 'gunung':
-        return 'Gunung';
-      case 'alam':
-        return 'Alam';
-      default:
-        return category;
-    }
+    return category;
   }
 
   @override

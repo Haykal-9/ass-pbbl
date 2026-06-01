@@ -2,6 +2,7 @@
 
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../models/destination.dart';
@@ -90,19 +91,29 @@ class _DetailScreenState extends State<DetailScreen> {
                 SliverAppBar(
                   expandedHeight: 240,
                   pinned: true,
-                  flexibleSpace: FlexibleSpaceBar(
-                    title: Text(
-                      _destination.name,
-                      style: const TextStyle(
-                        shadows: [Shadow(blurRadius: 4, color: Colors.black54)],
+                  leading: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onPrimary, size: 20),
+                        onPressed: () => Navigator.pop(context),
+                        tooltip: 'Back',
                       ),
                     ),
+                  ),
+                  flexibleSpace: FlexibleSpaceBar(
                     background: _photoBackground(),
                   ),
                   actions: [
-                    // PERSON B — navigate to edit
-                    IconButton(
-                      icon: const Icon(Icons.edit),
+                    _buildCircleButton(
+                      icon: Icons.edit,
                       tooltip: 'Edit',
                       onPressed: () async {
                         await Navigator.push(
@@ -116,8 +127,8 @@ class _DetailScreenState extends State<DetailScreen> {
                         await _reload();
                       },
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.checklist),
+                    _buildCircleButton(
+                      icon: Icons.checklist,
                       tooltip: 'Checklist',
                       onPressed: () {
                         Navigator.push(
@@ -130,6 +141,12 @@ class _DetailScreenState extends State<DetailScreen> {
                         );
                       },
                     ),
+                    _buildCircleButton(
+                      icon: Icons.delete,
+                      tooltip: 'Hapus',
+                      onPressed: _confirmDelete,
+                    ),
+                    const SizedBox(width: 8),
                   ],
                 ),
                 SliverToBoxAdapter(
@@ -139,10 +156,12 @@ class _DetailScreenState extends State<DetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Category + Status row
-                        Row(
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             CategoryChip(_destination.category),
-                            const SizedBox(width: 10),
                             _statusBadge(),
                           ],
                         ),
@@ -246,13 +265,21 @@ class _DetailScreenState extends State<DetailScreen> {
   Widget _photoBackground() {
     final photoPath = _destination.photoPath;
     if (photoPath != null) {
-      final imageFile = File(photoPath);
-      if (imageFile.existsSync()) {
-        return Image.file(
-          imageFile,
+      if (kIsWeb || photoPath.startsWith('http')) {
+        return Image.network(
+          photoPath,
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) => _photoPlaceholder(),
         );
+      } else {
+        final imageFile = File(photoPath);
+        if (imageFile.existsSync()) {
+          return Image.file(
+            imageFile,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => _photoPlaceholder(),
+          );
+        }
       }
     }
 
@@ -276,6 +303,56 @@ class _DetailScreenState extends State<DetailScreen> {
       return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
     } catch (_) {
       return iso;
+    }
+  }
+
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required String tooltip,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary,
+          shape: BoxShape.circle,
+        ),
+        child: IconButton(
+          padding: EdgeInsets.zero,
+          icon: Icon(icon, color: Theme.of(context).colorScheme.onPrimary, size: 20),
+          onPressed: onPressed,
+          tooltip: tooltip,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmDelete() async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus Destinasi'),
+        content: Text('Apakah Anda yakin ingin menghapus "${_destination.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      await _db.deleteDestination(_destination.id!);
+      if (mounted) Navigator.pop(context, true);
     }
   }
 }

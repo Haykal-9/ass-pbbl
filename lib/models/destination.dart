@@ -8,6 +8,8 @@ class Destination {
   final String? photoPath;
   final String? visitedAt;
   final String createdAt;
+  final int checklistTotal;
+  final int checklistDone;
 
   const Destination({
     this.id,
@@ -19,6 +21,8 @@ class Destination {
     this.photoPath,
     this.visitedAt,
     required this.createdAt,
+    this.checklistTotal = 0,
+    this.checklistDone = 0,
   });
 
   factory Destination.fromMap(Map<String, dynamic> map) => Destination(
@@ -31,6 +35,8 @@ class Destination {
         photoPath: map['photo_path'] as String?,
         visitedAt: map['visited_at'] as String?,
         createdAt: map['created_at'] as String,
+        checklistTotal: map['checklist_total'] as int? ?? 0,
+        checklistDone: map['checklist_done'] as int? ?? 0,
       );
 
   Map<String, dynamic> toMap() => {
@@ -55,6 +61,8 @@ class Destination {
     String? photoPath,
     String? visitedAt,
     String? createdAt,
+    int? checklistTotal,
+    int? checklistDone,
   }) =>
       Destination(
         id: id ?? this.id,
@@ -66,5 +74,7 @@ class Destination {
         photoPath: photoPath ?? this.photoPath,
         visitedAt: visitedAt ?? this.visitedAt,
         createdAt: createdAt ?? this.createdAt,
+        checklistTotal: checklistTotal ?? this.checklistTotal,
+        checklistDone: checklistDone ?? this.checklistDone,
       );
 }

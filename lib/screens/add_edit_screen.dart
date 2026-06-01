@@ -3,6 +3,7 @@
 
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
@@ -29,9 +30,9 @@ class _AddEditScreenState extends State<AddEditScreen> {
   late TextEditingController _notesCtrl;
   late TextEditingController _visitedAtCtrl;
 
-  String _category = 'pantai';
+  String _category = 'Wisata Alam';
   String _status = 'wishlist';
-  File? _imageFile;
+  String? _imagePath;
   bool _isSaving = false;
 
   bool get _isEditMode => widget.destination != null;
@@ -45,11 +46,15 @@ class _AddEditScreenState extends State<AddEditScreen> {
     _notesCtrl = TextEditingController(text: d?.notes ?? '');
     _visitedAtCtrl = TextEditingController(text: d?.visitedAt ?? '');
     if (d != null) {
-      _category = d.category;
+      _category = ['Wisata Alam', 'Budaya & Sejarah', 'Kota & Urban'].contains(d.category) ? d.category : 'Wisata Alam';
       _status = d.status;
       if (d.photoPath != null) {
-        final f = File(d.photoPath!);
-        if (f.existsSync()) _imageFile = f;
+        if (kIsWeb) {
+          _imagePath = d.photoPath;
+        } else {
+          final f = File(d.photoPath!);
+          if (f.existsSync()) _imagePath = d.photoPath;
+        }
       }
     }
   }
@@ -73,14 +78,18 @@ class _AddEditScreenState extends State<AddEditScreen> {
     );
     if (picked == null) return;
 
-    final appDir = await getApplicationDocumentsDirectory();
-    final photosDir = Directory(p.join(appDir.path, 'photos'));
-    await photosDir.create(recursive: true);
-    final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-    final destPath = p.join(photosDir.path, fileName);
-    await File(picked.path).copy(destPath);
-
-    if (mounted) setState(() => _imageFile = File(destPath));
+    if (kIsWeb) {
+      if (mounted) setState(() => _imagePath = picked.path);
+    } else {
+      final appDir = await getApplicationDocumentsDirectory();
+      final photosDir = Directory(p.join(appDir.path, 'photos'));
+      await photosDir.create(recursive: true);
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final destPath = p.join(photosDir.path, fileName);
+      await File(picked.path).copy(destPath);
+  
+      if (mounted) setState(() => _imagePath = destPath);
+    }
   }
 
   Future<void> _pickDate() async {
@@ -126,7 +135,7 @@ class _AddEditScreenState extends State<AddEditScreen> {
       category: _category,
       status: _status,
       notes: _notesCtrl.text.trim(),
-      photoPath: _imageFile?.path,
+      photoPath: _imagePath,
       visitedAt: _status == 'visited' && _visitedAtCtrl.text.trim().isNotEmpty
           ? _visitedAtCtrl.text.trim()
           : null,
@@ -170,11 +179,13 @@ class _AddEditScreenState extends State<AddEditScreen> {
                     border: Border.all(color: Colors.grey[300]!),
                   ),
                   clipBehavior: Clip.antiAlias,
-                  child: _imageFile != null
+                  child: _imagePath != null
                       ? Stack(
                           fit: StackFit.expand,
                           children: [
-                            Image.file(_imageFile!, fit: BoxFit.cover),
+                            (kIsWeb || _imagePath!.startsWith('http'))
+                                ? Image.network(_imagePath!, fit: BoxFit.cover)
+                                : Image.file(File(_imagePath!), fit: BoxFit.cover),
                             Positioned(
                               bottom: 8,
                               right: 8,
@@ -232,33 +243,14 @@ class _AddEditScreenState extends State<AddEditScreen> {
                 decoration: _inputDeco('Kategori', Icons.category),
                 items: const [
                   DropdownMenuItem(
-                      value: 'pantai',
-                      child: Row(children: [
-                        Icon(Icons.beach_access, size: 18),
-                        SizedBox(width: 8),
-                        Text('Pantai')
-                      ])),
+                      value: 'Wisata Alam',
+                      child: Text('Wisata Alam')),
                   DropdownMenuItem(
-                      value: 'kota',
-                      child: Row(children: [
-                        Icon(Icons.location_city, size: 18),
-                        SizedBox(width: 8),
-                        Text('Kota')
-                      ])),
+                      value: 'Budaya & Sejarah',
+                      child: Text('Budaya & Sejarah')),
                   DropdownMenuItem(
-                      value: 'gunung',
-                      child: Row(children: [
-                        Icon(Icons.terrain, size: 18),
-                        SizedBox(width: 8),
-                        Text('Gunung')
-                      ])),
-                  DropdownMenuItem(
-                      value: 'alam',
-                      child: Row(children: [
-                        Icon(Icons.park, size: 18),
-                        SizedBox(width: 8),
-                        Text('Alam')
-                      ])),
+                      value: 'Kota & Urban',
+                      child: Text('Kota & Urban')),
                 ],
                 onChanged: (v) {
                   if (v != null) setState(() => _category = v);
@@ -267,28 +259,32 @@ class _AddEditScreenState extends State<AddEditScreen> {
               const SizedBox(height: 12),
 
               // Status
-              DropdownButtonFormField<String>(
-                initialValue: _status,
+              InputDecorator(
                 decoration: _inputDeco('Status', Icons.bookmark),
-                items: const [
-                  DropdownMenuItem(
-                      value: 'wishlist',
-                      child: Row(children: [
-                        Icon(Icons.favorite_border, size: 18),
-                        SizedBox(width: 8),
-                        Text('Wishlist')
-                      ])),
-                  DropdownMenuItem(
-                      value: 'visited',
-                      child: Row(children: [
-                        Icon(Icons.check_circle_outline, size: 18),
-                        SizedBox(width: 8),
-                        Text('Visited')
-                      ])),
-                ],
-                onChanged: (v) {
-                  if (v != null) setState(() => _status = v);
-                },
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: RadioListTile<String>(
+                        title: const Text('Wishlist', style: TextStyle(fontSize: 14)),
+                        value: 'wishlist',
+                        groupValue: _status,
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        onChanged: (v) => setState(() => _status = v!),
+                      ),
+                    ),
+                    Expanded(
+                      child: RadioListTile<String>(
+                        title: const Text('Visited', style: TextStyle(fontSize: 14)),
+                        value: 'visited',
+                        groupValue: _status,
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        onChanged: (v) => setState(() => _status = v!),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 12),
 
