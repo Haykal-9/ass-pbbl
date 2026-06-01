@@ -1,6 +1,7 @@
 // PERSON A — CREATE + READ (home screen & daftar destinasi)
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../models/destination.dart';
 import '../services/database_helper.dart';
@@ -126,9 +127,16 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         foregroundColor: Theme.of(context).colorScheme.primary,
-        title: const Text(
-          'WanderList',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Semantics(
+          label: 'WanderList',
+          child: SizedBox(
+            width: 150,
+            height: 45,
+            child: SvgPicture.asset(
+              'wanderlist-logo-horizontal-transparent.svg',
+              fit: BoxFit.contain,
+            ),
+          ),
         ),
         actions: [
           IconButton(
