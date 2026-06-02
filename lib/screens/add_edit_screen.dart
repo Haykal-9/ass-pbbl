@@ -158,8 +158,14 @@ class _AddEditScreenState extends State<AddEditScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:
-            Text(_isEditMode ? 'Edit Destinasi' : 'Tambah Destinasi'),
+        title: Text(
+          _isEditMode ? 'Edit Destinasi' : 'Tambah Destinasi',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        foregroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: Colors.grey[50],
+        elevation: 0,
+        scrolledUnderElevation: 0,
       ),
       body: Form(
         key: _formKey,

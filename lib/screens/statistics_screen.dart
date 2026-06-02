@@ -34,8 +34,16 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Statistik Perjalanan'),
+        title: const Text(
+          'Statistik Perjalanan',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        foregroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: Colors.grey[50],
+        elevation: 0,
+        scrolledUnderElevation: 0,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -44,13 +52,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    'Ringkasan',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 12),
+                  _sectionHeader('Ringkasan'),
+                  const SizedBox(height: 8),
                   StatCard(
                     label: 'Total Destinasi',
                     count: _stats['total'] ?? 0,
@@ -72,13 +75,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     color: Colors.orange,
                   ),
                   const SizedBox(height: 24),
-                  Text(
-                    'Berdasarkan Kategori',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 12),
+                  _sectionHeader('Berdasarkan Kategori'),
+                  const SizedBox(height: 8),
                   StatCard(
                     label: 'Wisata Alam',
                     count: _stats['wisata_alam'] ?? 0,
@@ -102,6 +100,21 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _sectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 16, 4, 8),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey[500],
+          letterSpacing: 1.2,
+        ),
+      ),
     );
   }
 }
