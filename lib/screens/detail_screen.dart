@@ -10,6 +10,8 @@ import '../services/app_locale.dart';
 import '../services/currency_service.dart';
 import '../services/database_helper.dart';
 import '../widgets/category_chip.dart';
+import '../widgets/detail_info_row.dart';
+import '../widgets/destination_status_badge.dart';
 import 'add_edit_screen.dart';
 import 'budget_screen.dart';
 import 'checklist_screen.dart';
@@ -50,43 +52,6 @@ class _DetailScreenState extends State<DetailScreen> {
     }
   }
 
-  Widget _statusBadge() {
-    final isVisited = _destination.status == 'visited';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      decoration: BoxDecoration(
-        color: isVisited
-            ? Colors.green.withValues(alpha: 0.15)
-            : Colors.orange.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isVisited
-              ? Colors.green.withValues(alpha: 0.5)
-              : Colors.orange.withValues(alpha: 0.5),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isVisited ? Icons.check_circle : Icons.favorite,
-            size: 14,
-            color: isVisited ? Colors.green[700] : Colors.orange[700],
-          ),
-          const SizedBox(width: 5),
-          Text(
-            isVisited ? tr('status_visited') : tr('status_wishlist'),
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: isVisited ? Colors.green[700] : Colors.orange[700],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -108,7 +73,11 @@ class _DetailScreenState extends State<DetailScreen> {
                       ),
                       child: IconButton(
                         padding: EdgeInsets.zero,
-                        icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onPrimary, size: 20),
+                        icon: Icon(
+                          Icons.arrow_back,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          size: 20,
+                        ),
                         onPressed: () => Navigator.pop(context),
                         tooltip: tr('cancel'),
                       ),
@@ -183,7 +152,7 @@ class _DetailScreenState extends State<DetailScreen> {
                           crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             CategoryChip(_destination.category),
-                            _statusBadge(),
+                            DestinationStatusBadge(status: _destination.status),
                           ],
                         ),
                         const SizedBox(height: 16),
@@ -247,21 +216,21 @@ class _DetailScreenState extends State<DetailScreen> {
 
                         // Visited date
                         if (_destination.visitedAt != null) ...[
-                          _infoRow(
-                            Icons.event_available,
-                            tr('visited_on'),
-                            _destination.visitedAt!,
-                            Colors.green,
+                          DetailInfoRow(
+                            icon: Icons.event_available,
+                            label: tr('visited_on'),
+                            value: _destination.visitedAt!,
+                            color: Colors.green,
                           ),
                           const SizedBox(height: 8),
                         ],
 
                         // Created
-                        _infoRow(
-                          Icons.access_time,
-                          tr('added_on'),
-                          _formatDate(_destination.createdAt),
-                          Colors.grey,
+                        DetailInfoRow(
+                          icon: Icons.access_time,
+                          label: tr('added_on'),
+                          value: _formatDate(_destination.createdAt),
+                          color: Colors.grey,
                         ),
                       ],
                     ),
@@ -269,22 +238,6 @@ class _DetailScreenState extends State<DetailScreen> {
                 ),
               ],
             ),
-    );
-  }
-
-  Widget _infoRow(
-      IconData icon, String label, String value, Color color) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: color),
-        const SizedBox(width: 6),
-        Text(
-          '$label: ',
-          style: TextStyle(
-              fontWeight: FontWeight.w500, color: Colors.grey[700]),
-        ),
-        Text(value, style: TextStyle(color: Colors.grey[600])),
-      ],
     );
   }
 
@@ -425,7 +378,9 @@ class _DetailScreenState extends State<DetailScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(tr('delete_dest_title')),
-        content: Text('${tr('delete_dest_confirm_detail')} "${_destination.name}"?'),
+        content: Text(
+          '${tr('delete_dest_confirm_detail')} "${_destination.name}"?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
