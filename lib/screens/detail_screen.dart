@@ -10,6 +10,7 @@ import '../services/app_locale.dart';
 import '../services/currency_service.dart';
 import '../services/database_helper.dart';
 import '../widgets/category_chip.dart';
+import '../widgets/custom_snackbar.dart';
 import '../widgets/detail_info_row.dart';
 import '../widgets/destination_status_badge.dart';
 import 'add_edit_screen.dart';
@@ -397,7 +398,14 @@ class _DetailScreenState extends State<DetailScreen> {
 
     if (confirm == true && mounted) {
       await _db.deleteDestination(_destination.id!);
-      if (mounted) Navigator.pop(context, true);
+      if (mounted) {
+        showSuccessSnackbar(
+          context,
+          'Destinasi "${_destination.name}" berhasil dihapus',
+          icon: Icons.delete_sweep,
+        );
+        Navigator.pop(context, true);
+      }
     }
   }
 }

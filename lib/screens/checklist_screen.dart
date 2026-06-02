@@ -6,6 +6,7 @@ import '../models/checklist_item.dart';
 import '../models/destination.dart';
 import '../services/app_locale.dart';
 import '../services/database_helper.dart';
+import '../widgets/custom_snackbar.dart';
 import '../widgets/swipeable_checklist_item.dart';
 
 class ChecklistScreen extends StatefulWidget {
@@ -66,10 +67,30 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     await _loadItems();
   }
 
-  // PERSON C — DELETE checklist item
-  Future<void> _deleteItem(int id) async {
-    await _db.deleteChecklistItem(id);
+  // PERSON C — EDIT checklist item (Inline)
+  Future<void> _editItem(ChecklistItem item, String newLabel) async {
+    await _db.updateChecklistItem(item.copyWith(label: newLabel));
     await _loadItems();
+    if (mounted) {
+      showSuccessSnackbar(
+        context,
+        'Aktivitas berhasil diperbarui',
+        icon: Icons.check_circle_outline,
+      );
+    }
+  }
+
+  // PERSON C — DELETE checklist item
+  Future<void> _deleteItem(ChecklistItem item) async {
+    await _db.deleteChecklistItem(item.id!);
+    await _loadItems();
+    if (mounted) {
+      showSuccessSnackbar(
+        context,
+        'Aktivitas "${item.label}" berhasil dihapus',
+        icon: Icons.delete_sweep,
+      );
+    }
   }
 
   Future<bool?> _confirmDeleteItem(ChecklistItem item) async {
@@ -199,7 +220,8 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                             item: item,
                             onChanged: (_) => _toggleItem(item),
                             onConfirmDelete: () => _confirmDeleteItem(item),
-                            onDelete: () => _deleteItem(item.id!),
+                            onDelete: () => _deleteItem(item),
+                            onEdit: (newVal) => _editItem(item, newVal),
                           );
                         },
                       ),
