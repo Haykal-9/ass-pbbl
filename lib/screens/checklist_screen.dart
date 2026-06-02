@@ -6,6 +6,7 @@ import '../models/checklist_item.dart';
 import '../models/destination.dart';
 import '../services/app_locale.dart';
 import '../services/database_helper.dart';
+import '../widgets/swipeable_checklist_item.dart';
 
 class ChecklistScreen extends StatefulWidget {
   final Destination destination;
@@ -191,57 +192,14 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                         itemCount: _items.length,
                         itemBuilder: (context, index) {
                           final item = _items[index];
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(color: Colors.grey[200]!),
-                            ),
-                            color: Colors.white,
-                            child: Dismissible(
-                              key: Key('checklist_${item.id}'),
-                              direction: DismissDirection.endToStart,
-                              background: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.red[400],
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                alignment: Alignment.centerRight,
-                                padding: const EdgeInsets.only(right: 20),
-                                child: const Icon(Icons.delete_sweep, color: Colors.white),
-                              ),
-                              confirmDismiss: (_) async {
-                                return await _confirmDeleteItem(item);
-                              },
-                              onDismissed: (_) => _deleteItem(item.id!),
-                              child: CheckboxListTile(
-                                value: item.isDone,
-                                onChanged: (_) => _toggleItem(item),
-                                activeColor: Theme.of(context).colorScheme.primary,
-                                checkColor: Colors.white,
-                                title: Text(
-                                  item.label,
-                                  style: TextStyle(
-                                    fontWeight: item.isDone ? FontWeight.normal : FontWeight.w500,
-                                    decoration: item.isDone ? TextDecoration.lineThrough : null,
-                                    color: item.isDone ? Colors.grey[400] : Colors.black87,
-                                  ),
-                                ),
-                                controlAffinity: ListTileControlAffinity.leading,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                secondary: IconButton(
-                                  icon: const Icon(Icons.close, size: 18),
-                                  color: Colors.grey[300],
-                                  onPressed: () async {
-                                    final confirmed = await _confirmDeleteItem(item);
-                                    if (confirmed == true) {
-                                      await _deleteItem(item.id!);
-                                    }
-                                  },
-                                ),
-                              ),
-                            ),
+                          
+                          // Menggunakan Custom Widget (Lebih rapi dan performa lebih baik)
+                          return SwipeableChecklistItem(
+                            key: ValueKey(item.id),
+                            item: item,
+                            onChanged: (_) => _toggleItem(item),
+                            onConfirmDelete: () => _confirmDeleteItem(item),
+                            onDelete: () => _deleteItem(item.id!),
                           );
                         },
                       ),
