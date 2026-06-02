@@ -283,12 +283,14 @@ class DatabaseHelper {
 
   Future<int> updateChecklistItem(ChecklistItem item) async {
     final db = await database;
-    return db.update(
-      'checklist_items',
-      item.toMap(),
-      where: 'id = ?',
-      whereArgs: [item.id],
-    );
+    return await db.transaction((txn) async {
+      return await txn.update(
+        'checklist_items',
+        item.toMap(),
+        where: 'id = ?',
+        whereArgs: [item.id],
+      );
+    });
   }
 
   Future<int> deleteChecklistItem(int id) async {

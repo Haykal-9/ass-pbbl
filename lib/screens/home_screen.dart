@@ -7,6 +7,7 @@ import '../models/destination.dart';
 import '../services/app_locale.dart';
 import '../services/database_helper.dart';
 import '../services/preferences_service.dart';
+import '../widgets/custom_snackbar.dart';
 import '../widgets/destination_card.dart';
 import 'add_edit_screen.dart';
 import 'detail_screen.dart';
@@ -108,6 +109,13 @@ class _HomeScreenState extends State<HomeScreen> {
     if (confirmed == true) {
       await _db.deleteDestination(dest.id!);
       await _loadDestinations();
+      if (mounted) {
+        showSuccessSnackbar(
+          context,
+          'Destinasi "${dest.name}" berhasil dihapus',
+          icon: Icons.delete_sweep,
+        );
+      }
     }
   }
 

@@ -6,6 +6,7 @@ class SwipeableChecklistItem extends StatefulWidget {
   final ValueChanged<bool?> onChanged;
   final Future<bool?> Function() onConfirmDelete;
   final VoidCallback onDelete;
+  final ValueChanged<String> onEdit;
 
   const SwipeableChecklistItem({
     super.key,
@@ -13,6 +14,7 @@ class SwipeableChecklistItem extends StatefulWidget {
     required this.onChanged,
     required this.onConfirmDelete,
     required this.onDelete,
+    required this.onEdit,
   });
 
   @override
@@ -22,6 +24,20 @@ class SwipeableChecklistItem extends StatefulWidget {
 class _SwipeableChecklistItemState extends State<SwipeableChecklistItem> {
   // State untuk melacak jarak pergeseran (swipe) HANYA untuk item ini
   double _dragOffset = 0.0;
+  bool _isEditing = false;
+  late TextEditingController _editCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _editCtrl = TextEditingController(text: widget.item.label);
+  }
+
+  @override
+  void dispose() {
+    _editCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,23 +104,50 @@ class _SwipeableChecklistItemState extends State<SwipeableChecklistItem> {
                   onChanged: widget.onChanged,
                   activeColor: Theme.of(context).colorScheme.primary,
                   checkColor: Colors.white,
-                  title: Text(
-                    widget.item.label,
-                    style: TextStyle(
-                      fontWeight: widget.item.isDone ? FontWeight.normal : FontWeight.w500,
-                      decoration: widget.item.isDone ? TextDecoration.lineThrough : null,
-                      color: widget.item.isDone ? Colors.grey[400] : Colors.black87,
-                    ),
-                  ),
+                  title: _isEditing
+                      ? TextField(
+                          controller: _editCtrl,
+                          autofocus: true,
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(vertical: 4),
+                          ),
+                          onSubmitted: (val) {
+                            setState(() => _isEditing = false);
+                            if (val.trim().isNotEmpty && val.trim() != widget.item.label) {
+                              widget.onEdit(val.trim());
+                            } else {
+                              _editCtrl.text = widget.item.label;
+                            }
+                          },
+                        )
+                      : Text(
+                          widget.item.label,
+                          style: TextStyle(
+                            fontWeight: widget.item.isDone ? FontWeight.normal : FontWeight.w500,
+                            decoration: widget.item.isDone ? TextDecoration.lineThrough : null,
+                            color: widget.item.isDone ? Colors.grey[400] : Colors.black87,
+                          ),
+                        ),
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   secondary: IconButton(
-                    icon: const Icon(Icons.close, size: 18),
-                    color: Colors.grey[300],
-                    onPressed: () async {
-                      final confirmed = await widget.onConfirmDelete();
-                      if (confirmed == true) {
-                        widget.onDelete();
+                    icon: Icon(_isEditing ? Icons.check : Icons.edit, size: 18),
+                    color: _isEditing ? Colors.green : Colors.grey[400],
+                    onPressed: () {
+                      if (_isEditing) {
+                        setState(() => _isEditing = false);
+                        final val = _editCtrl.text.trim();
+                        if (val.isNotEmpty && val != widget.item.label) {
+                          widget.onEdit(val);
+                        } else {
+                          _editCtrl.text = widget.item.label;
+                        }
+                      } else {
+                        setState(() {
+                          _isEditing = true;
+                          _editCtrl.text = widget.item.label;
+                        });
                       }
                     },
                   ),
