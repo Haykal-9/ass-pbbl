@@ -152,18 +152,16 @@ class DestinationCard extends StatelessWidget {
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         elevation: 2,
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                bottomLeft: Radius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: _photo(width: 90, height: 90),
               ),
-              child: _photo(width: 90, height: 90),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(10),
+              const SizedBox(width: 10),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -194,8 +192,8 @@ class DestinationCard extends StatelessWidget {
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

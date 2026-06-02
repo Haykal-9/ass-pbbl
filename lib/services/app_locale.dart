@@ -244,4 +244,9 @@ const Map<String, Map<String, String>> _translations = {
     'ID': 'Tampilkan bar progres di beranda',
     'EN': 'Show progress bar on home',
   },
+
+  // ── Bottom Navigation ─────────────────────────────────────
+  'nav_home': {'ID': 'Beranda', 'EN': 'Home'},
+  'nav_stats': {'ID': 'Statistik', 'EN': 'Statistics'},
+  'nav_settings': {'ID': 'Pengaturan', 'EN': 'Settings'},
 };

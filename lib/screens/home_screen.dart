@@ -40,6 +40,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final TextEditingController _searchCtrl = TextEditingController();
 
+  // Bottom navigation state
+  int _currentIndex = 0;
+
   @override
   void initState() {
     super.initState();
@@ -123,138 +126,192 @@ class _HomeScreenState extends State<HomeScreen> {
     await _loadDestinations();
   }
 
+  // Dynamic AppBar based on current tab
+  PreferredSizeWidget _buildAppBar() {
+    switch (_currentIndex) {
+      case 1:
+        return AppBar(
+          title: Text(
+            tr('stats_title'),
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          foregroundColor: Theme.of(context).colorScheme.primary,
+          backgroundColor: Colors.grey[50],
+          elevation: 0,
+          scrolledUnderElevation: 0,
+        );
+      case 2:
+        return AppBar(
+          title: Text(
+            tr('settings_title'),
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          foregroundColor: Theme.of(context).colorScheme.primary,
+          backgroundColor: Colors.grey[50],
+          elevation: 0,
+          scrolledUnderElevation: 0,
+        );
+      case 0:
+      default:
+        return AppBar(
+          foregroundColor: Theme.of(context).colorScheme.primary,
+          title: Semantics(
+            label: 'WanderList',
+            child: SizedBox(
+              width: 150,
+              height: 45,
+              child: SvgPicture.asset(
+                'wanderlist-logo-horizontal-transparent.svg',
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(
+                _tampilanMode == 'grid' ? Icons.view_list : Icons.grid_view,
+              ),
+              tooltip: _tampilanMode == 'grid' ? tr('list_view') : tr('grid_view'),
+              onPressed: _toggleTampilan,
+            ),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.sort),
+              tooltip: tr('sort_tooltip'),
+              onSelected: _changeSortBy,
+              itemBuilder: (_) => [
+                _sortMenuItem('terbaru', tr('sort_latest'), Icons.access_time),
+                _sortMenuItem('az', tr('sort_az'), Icons.sort_by_alpha),
+                _sortMenuItem('kategori', tr('sort_category'), Icons.category),
+              ],
+            ),
+          ],
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        foregroundColor: Theme.of(context).colorScheme.primary,
-        title: Semantics(
-          label: 'WanderList',
-          child: SizedBox(
-            width: 150,
-            height: 45,
-            child: SvgPicture.asset(
-              'wanderlist-logo-horizontal-transparent.svg',
-              fit: BoxFit.contain,
+      backgroundColor: Colors.grey[50],
+      appBar: _buildAppBar(),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          // Tab 0: Home (destination list)
+          _buildHomeBody(),
+          // Tab 1: Statistics
+          const StatisticsScreen(),
+          // Tab 2: Settings
+          SettingsScreen(
+            onPrefsChanged: () => _loadPrefs(),
+          ),
+        ],
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) {
+          setState(() => _currentIndex = index);
+        },
+        destinations: [
+          NavigationDestination(
+            icon: const Icon(Icons.home_outlined),
+            selectedIcon: const Icon(Icons.home),
+            label: tr('nav_home'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.bar_chart_outlined),
+            selectedIcon: const Icon(Icons.bar_chart),
+            label: tr('nav_stats'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.settings_outlined),
+            selectedIcon: const Icon(Icons.settings),
+            label: tr('nav_settings'),
+          ),
+        ],
+      ),
+      floatingActionButton: _currentIndex == 0
+          ? FloatingActionButton.extended(
+              onPressed: () async {
+                // PERSON A — CREATE
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AddEditScreen(),
+                  ),
+                );
+                await _loadDestinations();
+              },
+              icon: const Icon(Icons.add),
+              label: Text(tr('add')),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildHomeBody() {
+    return Column(
+      children: [
+        // Search bar
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+          child: TextField(
+            controller: _searchCtrl,
+            decoration: InputDecoration(
+              hintText: tr('search_hint'),
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: _search.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchCtrl.clear();
+                        setState(() => _search = '');
+                        _loadDestinations();
+                      },
+                    )
+                  : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              isDense: true,
+            ),
+            onChanged: (v) {
+              setState(() => _search = v);
+              _loadDestinations();
+            },
+          ),
+        ),
+
+        // Filter chips
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _filterChip('all', tr('filter_all'), Icons.public),
+                const SizedBox(width: 8),
+                _filterChip('wishlist', tr('filter_wishlist'), Icons.favorite),
+                const SizedBox(width: 8),
+                _filterChip('visited', tr('filter_visited'), Icons.check_circle),
+              ],
             ),
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.bar_chart),
-            tooltip: tr('stats_tooltip'),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const StatisticsScreen()),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            tooltip: tr('settings_tooltip'),
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
-              );
-              await _loadPrefs();
-            },
-          ),
-          IconButton(
-            icon: Icon(
-              _tampilanMode == 'grid' ? Icons.view_list : Icons.grid_view,
-            ),
-            tooltip: _tampilanMode == 'grid' ? tr('list_view') : tr('grid_view'),
-            onPressed: _toggleTampilan,
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.sort),
-            tooltip: tr('sort_tooltip'),
-            onSelected: _changeSortBy,
-            itemBuilder: (_) => [
-              _sortMenuItem('terbaru', tr('sort_latest'), Icons.access_time),
-              _sortMenuItem('az', tr('sort_az'), Icons.sort_by_alpha),
-              _sortMenuItem('kategori', tr('sort_category'), Icons.category),
-            ],
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
-            child: TextField(
-              controller: _searchCtrl,
-              decoration: InputDecoration(
-                hintText: tr('search_hint'),
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _search.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchCtrl.clear();
-                          setState(() => _search = '');
-                          _loadDestinations();
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                isDense: true,
-              ),
-              onChanged: (v) {
-                setState(() => _search = v);
-                _loadDestinations();
-              },
-            ),
-          ),
 
-          // Filter chips
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _filterChip('all', tr('filter_all'), Icons.public),
-                  const SizedBox(width: 8),
-                  _filterChip('wishlist', tr('filter_wishlist'), Icons.favorite),
-                  const SizedBox(width: 8),
-                  _filterChip('visited', tr('filter_visited'), Icons.check_circle),
-                ],
-              ),
-            ),
-          ),
-
-          // Destination list / grid
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _destinations.isEmpty
-                    ? _emptyState()
-                    : _tampilanMode == 'grid'
-                        ? _buildGrid()
-                        : _buildList(),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          // PERSON A — CREATE
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const AddEditScreen(),
-            ),
-          );
-          await _loadDestinations();
-        },
-        icon: const Icon(Icons.add),
-        label: Text(tr('add')),
-      ),
+        // Destination list / grid
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _destinations.isEmpty
+                  ? _emptyState()
+                  : _tampilanMode == 'grid'
+                      ? _buildGrid()
+                      : _buildList(),
+        ),
+      ],
     );
   }
 
