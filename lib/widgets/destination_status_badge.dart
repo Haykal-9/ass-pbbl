@@ -17,27 +17,36 @@ class DestinationStatusBadge extends StatelessWidget {
     final isVisited = status == 'visited';
     final color = isVisited ? Colors.green : Colors.orange;
 
-    return Chip(
-      avatar: showIcon
-          ? Icon(
-              isVisited ? Icons.check_circle : Icons.favorite,
-              size: 14,
-              color: color,
-            )
-          : null,
-      label: Text(
-        isVisited ? tr('status_visited') : tr('status_wishlist'),
-        style: TextStyle(
-          fontSize: 11,
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
-      backgroundColor: color.withValues(alpha: 0.12),
-      side: BorderSide(color: color.withValues(alpha: 0.3)),
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      visualDensity: VisualDensity.compact,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (showIcon) ...[
+            Icon(
+              isVisited ? Icons.check_circle : Icons.favorite,
+              size: 12,
+              color: color,
+            ),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            isVisited ? tr('status_visited') : tr('status_wishlist'),
+            style: TextStyle(
+              fontSize: 10,
+              color: color,
+              fontWeight: FontWeight.w600,
+              height: 1.1,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

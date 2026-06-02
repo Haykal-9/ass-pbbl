@@ -40,17 +40,30 @@ class CategoryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _color();
-    return Chip(
-      avatar: Icon(_icon(), size: 14, color: color),
-      label: Text(
-        _label(),
-        style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
-      backgroundColor: color.withValues(alpha: 0.12),
-      side: BorderSide(color: color.withValues(alpha: 0.3)),
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      visualDensity: VisualDensity.compact,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(_icon(), size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            _label(),
+            style: TextStyle(
+              fontSize: 10,
+              color: color,
+              fontWeight: FontWeight.w600,
+              height: 1.1,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

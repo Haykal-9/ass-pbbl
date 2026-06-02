@@ -109,7 +109,6 @@ class DestinationCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         DestinationStatusBadge(
                           status: destination.status,
-                          showIcon: false,
                         ),
                       ],
                     ),
@@ -167,7 +166,6 @@ class DestinationCard extends StatelessWidget {
                         CategoryChip(destination.category),
                         DestinationStatusBadge(
                           status: destination.status,
-                          showIcon: false,
                         ),
                       ],
                     ),
