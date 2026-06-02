@@ -50,7 +50,7 @@ class _AddEditScreenState extends State<AddEditScreen> {
       _category = ['Wisata Alam', 'Budaya & Sejarah', 'Kota & Urban'].contains(d.category) ? d.category : 'Wisata Alam';
       _status = d.status;
       if (d.photoPath != null) {
-        if (kIsWeb) {
+        if (kIsWeb || d.photoPath!.startsWith('http')) {
           _imagePath = d.photoPath;
         } else {
           final f = File(d.photoPath!);
@@ -136,7 +136,7 @@ class _AddEditScreenState extends State<AddEditScreen> {
       category: _category,
       status: _status,
       notes: _notesCtrl.text.trim(),
-      photoPath: _imagePath,
+      photoPath: _imagePath ?? (_isEditMode ? widget.destination!.photoPath : null),
       visitedAt: _status == 'visited' && _visitedAtCtrl.text.trim().isNotEmpty
           ? _visitedAtCtrl.text.trim()
           : null,

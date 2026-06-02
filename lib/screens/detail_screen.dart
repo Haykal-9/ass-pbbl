@@ -278,7 +278,9 @@ class _DetailScreenState extends State<DetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    tr('budget_estimate'),
+                    _destination.status == 'visited'
+                        ? tr('budget_used')
+                        : tr('budget_estimate'),
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey[600],

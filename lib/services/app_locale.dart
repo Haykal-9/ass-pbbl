@@ -193,6 +193,7 @@ const Map<String, Map<String, String>> _translations = {
   // ── Budget screen ────────────────────────────────────────
   'budget_title': {'ID': 'Budget', 'EN': 'Budget'},
   'budget_estimate': {'ID': 'Estimasi Budget', 'EN': 'Budget Estimate'},
+  'budget_used': {'ID': 'Total Budget Digunakan', 'EN': 'Total Budget Used'},
   'budget_total': {'ID': 'Total Estimasi', 'EN': 'Estimated Total'},
   'budget_none': {'ID': 'Belum dianggarkan', 'EN': 'Not budgeted yet'},
   'budget_items_count': {'ID': 'item', 'EN': 'items'},
