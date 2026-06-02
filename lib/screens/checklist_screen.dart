@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../models/checklist_item.dart';
 import '../models/destination.dart';
+import '../services/app_locale.dart';
 import '../services/database_helper.dart';
 
 class ChecklistScreen extends StatefulWidget {
@@ -74,17 +75,17 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     return await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Anda Yakin?'),
-        content: Text('Hapus "${item.label}" dari checklist?'),
+        title: Text(tr('confirm_delete')),
+        content: Text('${tr('delete')} "${item.label}" ${tr('delete_checklist_msg')}'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
+            child: Text(tr('cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Hapus'),
+            child: Text(tr('delete')),
           ),
         ],
       ),
@@ -133,7 +134,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Progres Perjalanan',
+                          tr('checklist_progress'),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.8),
                             fontSize: 13,
@@ -142,7 +143,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          '$doneCount dari ${_items.length} Selesai',
+                          '$doneCount ${tr('checklist_done_of')} ${_items.length} ${tr('checklist_complete')}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -266,7 +267,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                     child: TextField(
                       controller: _addCtrl,
                       decoration: InputDecoration(
-                        hintText: 'Tambah hal yang ingin dilakukan...',
+                        hintText: tr('checklist_add_hint'),
                         hintStyle: TextStyle(
                             color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5), 
                             fontSize: 13),
@@ -337,7 +338,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
           ),
           const SizedBox(height: 20),
           Text(
-            'Belum ada aktivitas',
+            tr('checklist_empty'),
             style: TextStyle(
               color: Colors.grey[700],
               fontWeight: FontWeight.bold,
@@ -346,7 +347,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Ketik di bawah untuk menambahkannya!',
+            tr('checklist_empty_hint'),
             style: TextStyle(color: Colors.grey[500], fontSize: 13),
           ),
         ],

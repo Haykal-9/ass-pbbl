@@ -10,6 +10,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../models/destination.dart';
+import '../services/app_locale.dart';
 import '../services/database_helper.dart';
 
 class AddEditScreen extends StatefulWidget {
@@ -159,7 +160,7 @@ class _AddEditScreenState extends State<AddEditScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _isEditMode ? 'Edit Destinasi' : 'Tambah Destinasi',
+          _isEditMode ? tr('edit_dest') : tr('add_dest'),
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         foregroundColor: Theme.of(context).colorScheme.primary,
@@ -214,7 +215,7 @@ class _AddEditScreenState extends State<AddEditScreen> {
                                 size: 40, color: Colors.grey[400]),
                             const SizedBox(height: 8),
                             Text(
-                              'Tambah Foto',
+                              tr('add_photo'),
                               style: TextStyle(color: Colors.grey[500]),
                             ),
                           ],
@@ -226,27 +227,27 @@ class _AddEditScreenState extends State<AddEditScreen> {
               // Nama
               TextFormField(
                 controller: _nameCtrl,
-                decoration: _inputDeco('Nama Destinasi', Icons.place),
+                decoration: _inputDeco(tr('dest_name'), Icons.place),
                 textCapitalization: TextCapitalization.words,
                 validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
+                    (v == null || v.trim().isEmpty) ? tr('required_field') : null,
               ),
               const SizedBox(height: 12),
 
               // Negara
               TextFormField(
                 controller: _countryCtrl,
-                decoration: _inputDeco('Negara / Kota', Icons.flag),
+                decoration: _inputDeco(tr('country_city'), Icons.flag),
                 textCapitalization: TextCapitalization.words,
                 validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
+                    (v == null || v.trim().isEmpty) ? tr('required_field') : null,
               ),
               const SizedBox(height: 12),
 
               // Kategori
               DropdownButtonFormField<String>(
                 initialValue: _category,
-                decoration: _inputDeco('Kategori', Icons.category),
+                decoration: _inputDeco(tr('category'), Icons.category),
                 items: const [
                   DropdownMenuItem(
                       value: 'Wisata Alam',
@@ -266,7 +267,7 @@ class _AddEditScreenState extends State<AddEditScreen> {
 
               // Status
               InputDecorator(
-                decoration: _inputDeco('Status', Icons.bookmark),
+                decoration: _inputDeco(tr('status'), Icons.bookmark),
                 child: Row(
                   children: [
                     Expanded(
@@ -299,7 +300,7 @@ class _AddEditScreenState extends State<AddEditScreen> {
                 TextFormField(
                   controller: _visitedAtCtrl,
                   decoration: _inputDeco(
-                    'Tanggal Kunjungan (YYYY-MM-DD)',
+                    tr('visit_date'),
                     Icons.calendar_today,
                   ).copyWith(
                     suffixIcon: IconButton(
@@ -312,7 +313,7 @@ class _AddEditScreenState extends State<AddEditScreen> {
                   validator: (v) {
                     if (_status == 'visited' &&
                         (v == null || v.trim().isEmpty)) {
-                      return 'Tanggal kunjungan wajib diisi';
+                      return tr('visit_date_required');
                     }
                     return null;
                   },
@@ -323,7 +324,7 @@ class _AddEditScreenState extends State<AddEditScreen> {
               // Catatan
               TextFormField(
                 controller: _notesCtrl,
-                decoration: _inputDeco('Catatan (opsional)', Icons.notes),
+                decoration: _inputDeco(tr('notes_optional'), Icons.notes),
                 maxLines: 4,
                 textCapitalization: TextCapitalization.sentences,
               ),
@@ -340,7 +341,7 @@ class _AddEditScreenState extends State<AddEditScreen> {
                             CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.save),
-                label: Text(_isSaving ? 'Menyimpan...' : 'Simpan'),
+                label: Text(_isSaving ? tr('saving') : tr('save')),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),

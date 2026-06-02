@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../services/app_locale.dart';
+
 class CategoryChip extends StatelessWidget {
   final String category;
 
@@ -32,7 +34,7 @@ class CategoryChip extends StatelessWidget {
   }
 
   String _label() {
-    return category;
+    return trCategory(category);
   }
 
   @override

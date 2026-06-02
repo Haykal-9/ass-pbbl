@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../models/destination.dart';
+import '../services/app_locale.dart';
 import '../services/database_helper.dart';
 import '../services/preferences_service.dart';
 import '../widgets/destination_card.dart';
@@ -87,19 +88,19 @@ class _HomeScreenState extends State<HomeScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Hapus Destinasi?'),
+        title: Text(tr('delete_title')),
         content: Text(
-          'Hapus "${dest.name}" beserta semua checklist-nya? Aksi ini tidak bisa dibatalkan.',
+          '${tr('delete')} "${dest.name}" ${tr('delete_dest_confirm')}',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
+            child: Text(tr('cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Hapus'),
+            child: Text(tr('delete')),
           ),
         ],
       ),
@@ -141,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.bar_chart),
-            tooltip: 'Statistik',
+            tooltip: tr('stats_tooltip'),
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const StatisticsScreen()),
@@ -149,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.settings),
-            tooltip: 'Pengaturan',
+            tooltip: tr('settings_tooltip'),
             onPressed: () async {
               await Navigator.push(
                 context,
@@ -162,17 +163,17 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(
               _tampilanMode == 'grid' ? Icons.view_list : Icons.grid_view,
             ),
-            tooltip: _tampilanMode == 'grid' ? 'List view' : 'Grid view',
+            tooltip: _tampilanMode == 'grid' ? tr('list_view') : tr('grid_view'),
             onPressed: _toggleTampilan,
           ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.sort),
-            tooltip: 'Urutkan',
+            tooltip: tr('sort_tooltip'),
             onSelected: _changeSortBy,
             itemBuilder: (_) => [
-              _sortMenuItem('terbaru', 'Terbaru', Icons.access_time),
-              _sortMenuItem('az', 'A–Z', Icons.sort_by_alpha),
-              _sortMenuItem('kategori', 'Kategori', Icons.category),
+              _sortMenuItem('terbaru', tr('sort_latest'), Icons.access_time),
+              _sortMenuItem('az', tr('sort_az'), Icons.sort_by_alpha),
+              _sortMenuItem('kategori', tr('sort_category'), Icons.category),
             ],
           ),
         ],
@@ -185,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: TextField(
               controller: _searchCtrl,
               decoration: InputDecoration(
-                hintText: 'Cari destinasi...',
+                hintText: tr('search_hint'),
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _search.isNotEmpty
                     ? IconButton(
@@ -218,11 +219,11 @@ class _HomeScreenState extends State<HomeScreen> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _filterChip('all', 'Semua', Icons.public),
+                  _filterChip('all', tr('filter_all'), Icons.public),
                   const SizedBox(width: 8),
-                  _filterChip('wishlist', 'Wishlist', Icons.favorite),
+                  _filterChip('wishlist', tr('filter_wishlist'), Icons.favorite),
                   const SizedBox(width: 8),
-                  _filterChip('visited', 'Visited', Icons.check_circle),
+                  _filterChip('visited', tr('filter_visited'), Icons.check_circle),
                 ],
               ),
             ),
@@ -252,7 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
           await _loadDestinations();
         },
         icon: const Icon(Icons.add),
-        label: const Text('Tambah'),
+        label: Text(tr('add')),
       ),
     );
   }
@@ -319,8 +320,8 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 16),
           Text(
             hasFilter
-                ? 'Tidak ada hasil'
-                : 'Belum ada destinasi',
+                ? tr('empty_no_results')
+                : tr('empty_no_dest'),
             style: TextStyle(
               fontSize: 18,
               color: Colors.grey[500],
@@ -330,8 +331,8 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 8),
           Text(
             hasFilter
-                ? 'Coba ubah filter atau kata kunci pencarian'
-                : 'Tap + untuk menambahkan destinasi impianmu!',
+                ? tr('empty_hint_filter')
+                : tr('empty_hint_add'),
             style: TextStyle(color: Colors.grey[400], fontSize: 13),
             textAlign: TextAlign.center,
           ),

@@ -6,9 +6,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../models/destination.dart';
+import '../services/app_locale.dart';
+import '../services/currency_service.dart';
 import '../services/database_helper.dart';
 import '../widgets/category_chip.dart';
 import 'add_edit_screen.dart';
+import 'budget_screen.dart';
 import 'checklist_screen.dart';
 
 class DetailScreen extends StatefulWidget {
@@ -24,6 +27,7 @@ class _DetailScreenState extends State<DetailScreen> {
   final DatabaseHelper _db = DatabaseHelper();
   late Destination _destination;
   bool _isLoading = false;
+  double _budgetTotal = 0;
 
   @override
   void initState() {
@@ -36,9 +40,11 @@ class _DetailScreenState extends State<DetailScreen> {
   Future<void> _reload() async {
     setState(() => _isLoading = true);
     final fresh = await _db.getDestinationById(_destination.id!);
+    final budgetTotal = await _db.getDestinationBudgetTotal(_destination.id!);
     if (mounted) {
       setState(() {
         if (fresh != null) _destination = fresh;
+        _budgetTotal = budgetTotal;
         _isLoading = false;
       });
     }
@@ -69,7 +75,7 @@ class _DetailScreenState extends State<DetailScreen> {
           ),
           const SizedBox(width: 5),
           Text(
-            isVisited ? 'Visited' : 'Wishlist',
+            isVisited ? tr('status_visited') : tr('status_wishlist'),
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -104,7 +110,7 @@ class _DetailScreenState extends State<DetailScreen> {
                         padding: EdgeInsets.zero,
                         icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onPrimary, size: 20),
                         onPressed: () => Navigator.pop(context),
-                        tooltip: 'Back',
+                        tooltip: tr('cancel'),
                       ),
                     ),
                   ),
@@ -142,8 +148,23 @@ class _DetailScreenState extends State<DetailScreen> {
                       },
                     ),
                     _buildCircleButton(
+                      icon: Icons.account_balance_wallet,
+                      tooltip: tr('budget_title'),
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BudgetScreen(
+                              destination: _destination,
+                            ),
+                          ),
+                        );
+                        await _reload();
+                      },
+                    ),
+                    _buildCircleButton(
                       icon: Icons.delete,
-                      tooltip: 'Hapus',
+                      tooltip: tr('delete'),
                       onPressed: _confirmDelete,
                     ),
                     const SizedBox(width: 8),
@@ -169,7 +190,7 @@ class _DetailScreenState extends State<DetailScreen> {
 
                         // Name
                         Text(
-                          _destination.name,
+                          trName(_destination.name),
                           style: Theme.of(context)
                               .textTheme
                               .headlineMedium
@@ -184,7 +205,7 @@ class _DetailScreenState extends State<DetailScreen> {
                                 size: 16, color: Colors.grey[500]),
                             const SizedBox(width: 4),
                             Text(
-                              _destination.country,
+                              trCountry(_destination.country),
                               style: Theme.of(context)
                                   .textTheme
                                   .titleMedium
@@ -199,7 +220,7 @@ class _DetailScreenState extends State<DetailScreen> {
 
                         // Notes
                         Text(
-                          'Catatan',
+                          tr('notes_label'),
                           style: Theme.of(context)
                               .textTheme
                               .labelLarge
@@ -219,11 +240,16 @@ class _DetailScreenState extends State<DetailScreen> {
 
                         const SizedBox(height: 20),
 
+                        // Estimated budget summary
+                        _budgetCard(),
+
+                        const SizedBox(height: 20),
+
                         // Visited date
                         if (_destination.visitedAt != null) ...[
                           _infoRow(
                             Icons.event_available,
-                            'Dikunjungi',
+                            tr('visited_on'),
                             _destination.visitedAt!,
                             Colors.green,
                           ),
@@ -233,7 +259,7 @@ class _DetailScreenState extends State<DetailScreen> {
                         // Created
                         _infoRow(
                           Icons.access_time,
-                          'Ditambahkan',
+                          tr('added_on'),
                           _formatDate(_destination.createdAt),
                           Colors.grey,
                         ),
@@ -259,6 +285,70 @@ class _DetailScreenState extends State<DetailScreen> {
         ),
         Text(value, style: TextStyle(color: Colors.grey[600])),
       ],
+    );
+  }
+
+  Widget _budgetCard() {
+    final primary = Theme.of(context).colorScheme.primary;
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => BudgetScreen(destination: _destination),
+          ),
+        );
+        await _reload();
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: primary.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: primary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.account_balance_wallet, color: primary),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tr('budget_estimate'),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _budgetTotal > 0
+                        ? CurrencyService.format(_budgetTotal)
+                        : tr('budget_none'),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: _budgetTotal > 0 ? primary : Colors.grey[500],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: primary),
+          ],
+        ),
+      ),
     );
   }
 
@@ -334,17 +424,17 @@ class _DetailScreenState extends State<DetailScreen> {
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Hapus Destinasi'),
-        content: Text('Apakah Anda yakin ingin menghapus "${_destination.name}"?'),
+        title: Text(tr('delete_dest_title')),
+        content: Text('${tr('delete_dest_confirm_detail')} "${_destination.name}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
+            child: Text(tr('cancel')),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Hapus'),
+            child: Text(tr('delete')),
           ),
         ],
       ),

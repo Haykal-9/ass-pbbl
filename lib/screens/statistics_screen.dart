@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../services/app_locale.dart';
+import '../services/currency_service.dart';
 import '../services/database_helper.dart';
 import '../widgets/stat_card.dart';
 
@@ -13,6 +15,7 @@ class StatisticsScreen extends StatefulWidget {
 class _StatisticsScreenState extends State<StatisticsScreen> {
   final DatabaseHelper _db = DatabaseHelper();
   Map<String, int> _stats = {};
+  double _totalBudget = 0;
   bool _isLoading = true;
 
   @override
@@ -23,9 +26,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   Future<void> _loadStats() async {
     final stats = await _db.getStatistics();
+    final totalBudget = await _db.getTotalBudget();
     if (mounted) {
       setState(() {
         _stats = stats;
+        _totalBudget = totalBudget;
         _isLoading = false;
       });
     }
@@ -36,8 +41,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text(
-          'Statistik Perjalanan',
+        title: Text(
+          tr('stats_title'),
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         foregroundColor: Theme.of(context).colorScheme.primary,
@@ -52,17 +57,17 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _sectionHeader('Ringkasan'),
+                  _sectionHeader(tr('stats_summary')),
                   const SizedBox(height: 8),
                   StatCard(
-                    label: 'Total Destinasi',
+                    label: tr('stats_total'),
                     count: _stats['total'] ?? 0,
                     icon: Icons.public,
                     color: Colors.teal,
                   ),
                   const SizedBox(height: 8),
                   StatCard(
-                    label: 'Sudah Dikunjungi',
+                    label: tr('stats_visited'),
                     count: _stats['visited'] ?? 0,
                     icon: Icons.check_circle,
                     color: Colors.green,
@@ -75,7 +80,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     color: Colors.orange,
                   ),
                   const SizedBox(height: 24),
-                  _sectionHeader('Berdasarkan Kategori'),
+                  _sectionHeader(tr('stats_budget')),
+                  const SizedBox(height: 8),
+                  _budgetCard(),
+                  const SizedBox(height: 24),
+                  _sectionHeader(tr('stats_by_category')),
                   const SizedBox(height: 8),
                   StatCard(
                     label: 'Wisata Alam',
@@ -100,6 +109,53 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _budgetCard() {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: primary,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: primary.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tr('stats_total_budget'),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  CurrencyService.format(_totalBudget),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.savings_outlined, color: Colors.white, size: 44),
+        ],
+      ),
     );
   }
 

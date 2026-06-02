@@ -5,6 +5,7 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
+import '../models/budget_item.dart';
 import '../models/checklist_item.dart';
 import '../models/destination.dart';
 
@@ -23,11 +24,39 @@ class DatabaseHelper {
   Future<Database> _initDb() async {
     if (kIsWeb) {
       databaseFactory = databaseFactoryFfiWeb;
-      return openDatabase('wanderlist.db', version: 1, onCreate: _onCreate);
+      return openDatabase(
+        'wanderlist.db',
+        version: 2,
+        onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
+      );
     } else {
       final dbPath = await getDatabasesPath();
       final path = join(dbPath, 'wanderlist.db');
-      return openDatabase(path, version: 1, onCreate: _onCreate);
+      return openDatabase(
+        path,
+        version: 2,
+        onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
+      );
+    }
+  }
+
+  /// Schema shared by fresh installs (v2) and upgrades from v1.
+  static const String _createBudgetTable = '''
+    CREATE TABLE budget_items (
+      id             INTEGER PRIMARY KEY AUTOINCREMENT,
+      destination_id INTEGER NOT NULL,
+      label          TEXT    NOT NULL,
+      category       TEXT    NOT NULL DEFAULT 'lainnya',
+      amount         REAL    NOT NULL DEFAULT 0,
+      created_at     TEXT    NOT NULL
+    )
+  ''';
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute(_createBudgetTable);
     }
   }
 
@@ -55,6 +84,8 @@ class DatabaseHelper {
         created_at     TEXT    NOT NULL
       )
     ''');
+
+    await db.execute(_createBudgetTable);
 
     final now = DateTime.now().toIso8601String();
     final seeds = [
@@ -225,6 +256,11 @@ class DatabaseHelper {
         where: 'destination_id = ?',
         whereArgs: [id],
       );
+      await txn.delete(
+        'budget_items',
+        where: 'destination_id = ?',
+        whereArgs: [id],
+      );
       return await txn.delete('destinations', where: 'id = ?', whereArgs: [id]);
     });
   }
@@ -258,6 +294,60 @@ class DatabaseHelper {
   Future<int> deleteChecklistItem(int id) async {
     final db = await database;
     return db.delete('checklist_items', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Budget — estimasi budget wisata (CRUD)
+  // ─────────────────────────────────────────────────────────────────
+
+  Future<int> insertBudgetItem(BudgetItem item) async {
+    final db = await database;
+    return db.insert('budget_items', item.toMap());
+  }
+
+  Future<List<BudgetItem>> getBudgetItems(int destinationId) async {
+    final db = await database;
+    final maps = await db.query(
+      'budget_items',
+      where: 'destination_id = ?',
+      whereArgs: [destinationId],
+      orderBy: 'created_at ASC',
+    );
+    return maps.map(BudgetItem.fromMap).toList();
+  }
+
+  Future<int> updateBudgetItem(BudgetItem item) async {
+    final db = await database;
+    return db.update(
+      'budget_items',
+      item.toMap(),
+      where: 'id = ?',
+      whereArgs: [item.id],
+    );
+  }
+
+  Future<int> deleteBudgetItem(int id) async {
+    final db = await database;
+    return db.delete('budget_items', where: 'id = ?', whereArgs: [id]);
+  }
+
+  /// Total estimated budget (in base currency, IDR) for one destination.
+  Future<double> getDestinationBudgetTotal(int destinationId) async {
+    final db = await database;
+    final result = await db.rawQuery(
+      'SELECT IFNULL(SUM(amount), 0) AS total FROM budget_items WHERE destination_id = ?',
+      [destinationId],
+    );
+    return (result.first['total'] as num?)?.toDouble() ?? 0;
+  }
+
+  /// Grand total estimated budget (in base currency, IDR) across all
+  /// destinations.
+  Future<double> getTotalBudget() async {
+    final db = await database;
+    final result =
+        await db.rawQuery('SELECT IFNULL(SUM(amount), 0) AS total FROM budget_items');
+    return (result.first['total'] as num?)?.toDouble() ?? 0;
   }
 
   // ─────────────────────────────────────────────────────────────────

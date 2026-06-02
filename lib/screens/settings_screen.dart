@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../main.dart';
+import '../services/app_locale.dart';
+import '../services/currency_service.dart';
 import '../services/preferences_service.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -69,9 +71,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50], // Modern off-white background
       appBar: AppBar(
-        title: const Text(
-          'Pengaturan',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          tr('settings_title'),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         foregroundColor: Theme.of(context).colorScheme.primary,
         backgroundColor: Colors.grey[50],
@@ -81,12 +83,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         children: [
-          _sectionHeader('Tampilan'),
+          _sectionHeader(tr('settings_display')),
           _buildCardGroup([
             ListTile(
               leading: _iconBox(Icons.dashboard_customize_outlined),
-              title: const Text('Mode Tampilan', style: TextStyle(fontWeight: FontWeight.w500)),
-              subtitle: const Text('Grid atau List di Home'),
+              title: Text(tr('settings_display_mode'), style: const TextStyle(fontWeight: FontWeight.w500)),
+              subtitle: Text(tr('settings_display_desc')),
               trailing: SegmentedButton<String>(
                 segments: const [
                   ButtonSegment(value: 'grid', icon: Icon(Icons.grid_view, size: 18)),
@@ -102,7 +104,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _divider(),
             ListTile(
               leading: _iconBox(Icons.payments_outlined),
-              title: const Text('Mata Uang', style: TextStyle(fontWeight: FontWeight.w500)),
+              title: Text(tr('settings_currency'), style: const TextStyle(fontWeight: FontWeight.w500)),
               subtitle: Text(_mataUang),
               trailing: DropdownButton<String>(
                 value: _mataUang,
@@ -116,16 +118,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (v == null) return;
                   setState(() => _mataUang = v);
                   await _prefs.setMataUang(v);
+                  currencyNotifier.value = v;
                 },
               ),
             ),
           ]),
           
-          _sectionHeader('Preferensi'),
+          _sectionHeader(tr('settings_pref')),
           _buildCardGroup([
             ListTile(
               leading: _iconBox(Icons.language_outlined),
-              title: const Text('Bahasa', style: TextStyle(fontWeight: FontWeight.w500)),
+              title: Text(tr('settings_lang'), style: const TextStyle(fontWeight: FontWeight.w500)),
               trailing: SegmentedButton<String>(
                 segments: const [
                   ButtonSegment(value: 'ID', label: Text('ID')),
@@ -135,21 +138,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onSelectionChanged: (s) async {
                   setState(() => _bahasa = s.first);
                   await _prefs.setBahasa(s.first);
+                  bahasaNotifier.value = s.first;
                 },
               ),
             ),
             _divider(),
             ListTile(
               leading: _iconBox(Icons.sort_outlined),
-              title: const Text('Urutkan Destinasi', style: TextStyle(fontWeight: FontWeight.w500)),
+              title: Text(tr('settings_sort'), style: const TextStyle(fontWeight: FontWeight.w500)),
               subtitle: Text(_sortByLabel(_sortBy)),
               trailing: DropdownButton<String>(
                 value: _sortBy,
                 underline: const SizedBox(),
-                items: const [
-                  DropdownMenuItem(value: 'terbaru', child: Text('Terbaru')),
-                  DropdownMenuItem(value: 'az', child: Text('A–Z')),
-                  DropdownMenuItem(value: 'kategori', child: Text('Kategori')),
+                items: [
+                  DropdownMenuItem(value: 'terbaru', child: Text(tr('sort_latest'))),
+                  DropdownMenuItem(value: 'az', child: Text(tr('sort_az'))),
+                  DropdownMenuItem(value: 'kategori', child: Text(tr('sort_category'))),
                 ],
                 onChanged: (v) async {
                   if (v == null) return;
@@ -160,11 +164,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ]),
 
-          _sectionHeader('Tema & Tampilan Tambahan'),
+          _sectionHeader(tr('settings_theme_section')),
           _buildCardGroup([
             ListTile(
               leading: _iconBox(Icons.palette_outlined),
-              title: const Text('Tema Warna', style: TextStyle(fontWeight: FontWeight.w500)),
+              title: Text(tr('settings_theme'), style: const TextStyle(fontWeight: FontWeight.w500)),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: ['Canopy', 'Ancient Earth', 'Urban Slate'].map((t) {
@@ -197,8 +201,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _divider(),
             SwitchListTile(
               secondary: _iconBox(Icons.checklist_rtl_outlined),
-              title: const Text('Progres Checklist', style: TextStyle(fontWeight: FontWeight.w500)),
-              subtitle: const Text('Tampilkan bar progres di beranda'),
+              title: Text(tr('settings_checklist_progress'), style: const TextStyle(fontWeight: FontWeight.w500)),
+              subtitle: Text(tr('settings_checklist_desc')),
               value: _showChecklistProgress,
               activeColor: Theme.of(context).colorScheme.primary,
               onChanged: (v) async {
@@ -265,11 +269,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _sortByLabel(String v) {
     switch (v) {
       case 'az':
-        return 'A–Z';
+        return tr('sort_az');
       case 'kategori':
-        return 'Kategori';
+        return tr('sort_category');
       default:
-        return 'Terbaru';
+        return tr('sort_latest');
     }
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../models/destination.dart';
+import '../services/app_locale.dart';
 import 'category_chip.dart';
 
 class DestinationCard extends StatelessWidget {
@@ -73,7 +74,7 @@ class DestinationCard extends StatelessWidget {
         ),
       ),
       child: Text(
-        isVisited ? 'Visited' : 'Wishlist',
+        isVisited ? tr('status_visited') : tr('status_wishlist'),
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w600,
@@ -104,7 +105,7 @@ class DestinationCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      destination.name,
+                      trName(destination.name),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
@@ -113,7 +114,7 @@ class DestinationCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      destination.country,
+                      trCountry(destination.country),
                       style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -167,7 +168,7 @@ class DestinationCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      destination.name,
+                      trName(destination.name),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
@@ -176,7 +177,7 @@ class DestinationCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      destination.country,
+                      trCountry(destination.country),
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                     const SizedBox(height: 6),
