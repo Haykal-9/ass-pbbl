@@ -4,10 +4,12 @@ import '../services/app_locale.dart';
 
 class DestinationStatusBadge extends StatelessWidget {
   final String status;
+  final bool showIcon;
 
   const DestinationStatusBadge({
     super.key,
     required this.status,
+    this.showIcon = true,
   });
 
   @override
@@ -16,11 +18,13 @@ class DestinationStatusBadge extends StatelessWidget {
     final color = isVisited ? Colors.green : Colors.orange;
 
     return Chip(
-      avatar: Icon(
-        isVisited ? Icons.check_circle : Icons.favorite,
-        size: 14,
-        color: color,
-      ),
+      avatar: showIcon
+          ? Icon(
+              isVisited ? Icons.check_circle : Icons.favorite,
+              size: 14,
+              color: color,
+            )
+          : null,
       label: Text(
         isVisited ? tr('status_visited') : tr('status_wishlist'),
         style: TextStyle(

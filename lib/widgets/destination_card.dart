@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../models/destination.dart';
 import '../services/app_locale.dart';
 import 'category_chip.dart';
+import 'destination_status_badge.dart';
 
 class DestinationCard extends StatelessWidget {
   final Destination destination;
@@ -58,32 +59,6 @@ class DestinationCard extends StatelessWidget {
     );
   }
 
-  Widget _statusBadge() {
-    final isVisited = destination.status == 'visited';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: isVisited
-            ? Colors.green.withValues(alpha: 0.15)
-            : Colors.orange.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isVisited
-              ? Colors.green.withValues(alpha: 0.5)
-              : Colors.orange.withValues(alpha: 0.5),
-        ),
-      ),
-      child: Text(
-        isVisited ? tr('status_visited') : tr('status_wishlist'),
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color: isVisited ? Colors.green[700] : Colors.orange[700],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (isGrid) {
@@ -132,7 +107,10 @@ class DestinationCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        _statusBadge(),
+                        DestinationStatusBadge(
+                          status: destination.status,
+                          showIcon: false,
+                        ),
                       ],
                     ),
                     _buildChecklistProgress(context),
@@ -187,7 +165,10 @@ class DestinationCard extends StatelessWidget {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         CategoryChip(destination.category),
-                        _statusBadge(),
+                        DestinationStatusBadge(
+                          status: destination.status,
+                          showIcon: false,
+                        ),
                       ],
                     ),
                     _buildChecklistProgress(context),
