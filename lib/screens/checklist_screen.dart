@@ -54,6 +54,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
       destinationId: widget.destination.id!,
       label: label,
       isDone: false,
+      orderIndex: _items.length,
       createdAt: DateTime.now().toIso8601String(),
     );
     await _db.insertChecklistItem(item);
@@ -112,6 +113,19 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _onReorder(int oldIndex, int newIndex) async {
+    setState(() {
+      if (newIndex > oldIndex) newIndex -= 1;
+      final item = _items.removeAt(oldIndex);
+      _items.insert(newIndex, item);
+      
+      for (int i = 0; i < _items.length; i++) {
+        _items[i] = _items[i].copyWith(orderIndex: i);
+      }
+    });
+    await _db.updateChecklistOrder(_items);
   }
 
   @override
@@ -206,9 +220,11 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                 ? const Center(child: CircularProgressIndicator())
                 : _items.isEmpty
                     ? _emptyState()
-                    : ListView.builder(
+                    : ReorderableListView.builder(
+                        buildDefaultDragHandles: false,
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         itemCount: _items.length,
+                        onReorder: _onReorder,
                         itemBuilder: (context, index) {
                           final item = _items[index];
                           
@@ -216,6 +232,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                           return SwipeableChecklistItem(
                             key: ValueKey(item.id),
                             item: item,
+                            index: index,
                             onChanged: (_) => _toggleItem(item),
                             onConfirmDelete: () => _confirmDeleteItem(item),
                             onDelete: () => _deleteItem(item),

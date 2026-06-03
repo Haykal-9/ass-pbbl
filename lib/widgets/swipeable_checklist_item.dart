@@ -3,6 +3,7 @@ import '../models/checklist_item.dart';
 
 class SwipeableChecklistItem extends StatefulWidget {
   final ChecklistItem item;
+  final int index;
   final ValueChanged<bool?> onChanged;
   final Future<bool?> Function() onConfirmDelete;
   final VoidCallback onDelete;
@@ -11,6 +12,7 @@ class SwipeableChecklistItem extends StatefulWidget {
   const SwipeableChecklistItem({
     super.key,
     required this.item,
+    required this.index,
     required this.onChanged,
     required this.onConfirmDelete,
     required this.onDelete,
@@ -131,28 +133,44 @@ class _SwipeableChecklistItemState extends State<SwipeableChecklistItem> {
                         ),
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  secondary: IconButton(
-                    icon: Icon(
-                      _isEditing ? Icons.check : Icons.edit,
-                      size: 18,
-                      color: _isEditing ? Colors.green : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
-                    ),
-                    onPressed: () {
-                      if (_isEditing) {
-                        setState(() => _isEditing = false);
-                        final val = _editCtrl.text.trim();
-                        if (val.isNotEmpty && val != widget.item.label) {
-                          widget.onEdit(val);
-                        } else {
-                          _editCtrl.text = widget.item.label;
-                        }
-                      } else {
-                        setState(() {
-                          _isEditing = true;
-                          _editCtrl.text = widget.item.label;
-                        });
-                      }
-                    },
+                  secondary: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ReorderableDragStartListener(
+                        index: widget.index,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Icon(
+                            Icons.drag_indicator,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          _isEditing ? Icons.check : Icons.edit,
+                          size: 18,
+                          color: _isEditing ? Colors.green : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                        ),
+                        onPressed: () {
+                          if (_isEditing) {
+                            setState(() => _isEditing = false);
+                            final val = _editCtrl.text.trim();
+                            if (val.isNotEmpty && val != widget.item.label) {
+                              widget.onEdit(val);
+                            } else {
+                              _editCtrl.text = widget.item.label;
+                            }
+                          } else {
+                            setState(() {
+                              _isEditing = true;
+                              _editCtrl.text = widget.item.label;
+                            });
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ),

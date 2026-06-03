@@ -26,7 +26,7 @@ class DatabaseHelper {
       databaseFactory = databaseFactoryFfiWeb;
       return openDatabase(
         'wanderlist.db',
-        version: 3,
+        version: 4,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -35,7 +35,7 @@ class DatabaseHelper {
       final path = join(dbPath, 'wanderlist.db');
       return openDatabase(
         path,
-        version: 3,
+        version: 4,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -93,6 +93,11 @@ class DatabaseHelper {
         }
       }
     }
+    if (oldVersion < 4) {
+      await db.execute('ALTER TABLE checklist_items ADD COLUMN order_index INTEGER DEFAULT 0');
+      // Set existing items order_index to their id to maintain creation order
+      await db.execute('UPDATE checklist_items SET order_index = id');
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -116,6 +121,7 @@ class DatabaseHelper {
         destination_id INTEGER NOT NULL,
         label          TEXT    NOT NULL,
         is_done        INTEGER NOT NULL DEFAULT 0,
+        order_index    INTEGER NOT NULL DEFAULT 0,
         created_at     TEXT    NOT NULL
       )
     ''');
@@ -316,7 +322,7 @@ class DatabaseHelper {
       'checklist_items',
       where: 'destination_id = ?',
       whereArgs: [destinationId],
-      orderBy: 'created_at ASC',
+      orderBy: 'order_index ASC, id ASC',
     );
     return maps.map(ChecklistItem.fromMap).toList();
   }
@@ -336,6 +342,20 @@ class DatabaseHelper {
   Future<int> deleteChecklistItem(int id) async {
     final db = await database;
     return db.delete('checklist_items', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> updateChecklistOrder(List<ChecklistItem> items) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      for (var item in items) {
+        await txn.update(
+          'checklist_items',
+          {'order_index': item.orderIndex},
+          where: 'id = ?',
+          whereArgs: [item.id],
+        );
+      }
+    });
   }
 
   // ─────────────────────────────────────────────────────────────────
