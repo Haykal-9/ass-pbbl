@@ -139,6 +139,14 @@ class _HomeScreenState extends State<HomeScreen> {
     switch (_currentIndex) {
       case 1:
         return AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              setState(() {
+                _currentIndex = 0;
+              });
+            },
+          ),
           title: Text(
             tr('stats_title'),
             style: const TextStyle(fontWeight: FontWeight.bold),
@@ -150,6 +158,14 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       case 2:
         return AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              setState(() {
+                _currentIndex = 0;
+              });
+            },
+          ),
           title: Text(
             tr('settings_title'),
             style: const TextStyle(fontWeight: FontWeight.bold),
