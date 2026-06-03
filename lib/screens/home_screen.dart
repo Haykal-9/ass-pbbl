@@ -30,10 +30,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // PERSON A SharedPrefs
   String _tampilanMode = 'grid';
-  bool _showChecklistProgress = false;
 
-  // PERSON B SharedPref
+  // PERSON B SharedPrefs
   String _sortBy = 'terbaru';
+
+  // PERSON C SharedPrefs
+  bool _showChecklistProgress = false;
 
   // Filter & search state
   String _filter = 'all';

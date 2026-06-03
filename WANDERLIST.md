@@ -256,7 +256,7 @@ Haykal mengerjakan:
 - Filter destinasi berdasarkan status.
 - Search destinasi berdasarkan nama atau negara.
 - Tampilan grid/list.
-- Shared Preferences untuk `mata_uang` dan `tampilan_mode`.
+- Shared Preferences untuk `bahasa` dan `tampilan_mode`.
 
 ### File yang menjadi area utama Haykal
 
@@ -316,7 +316,7 @@ Ray mengerjakan:
 - UPDATE data destinasi.
 - Mengubah status dari `wishlist` ke `visited`.
 - Mengatur tanggal kunjungan jika status `visited`.
-- Shared Preferences untuk `bahasa` dan `sort_by`.
+- Shared Preferences untuk `mata_uang` dan `sort_by`.
 
 ### File yang menjadi area utama Ray
 
@@ -406,8 +406,8 @@ Jangan mengubah query `insertDestination()` dan `getDestinations()` tanpa koordi
 Ray boleh mengubah bagian berikut di `preferences_service.dart`:
 
 ```dart
-getBahasa()
-setBahasa(String lang)
+getMataUang()
+setMataUang(String value)
 getSortBy()
 setSortBy(String sortBy)
 ```
@@ -484,9 +484,9 @@ lib/services/preferences_service.dart
 
 | Pemilik | Key | Tipe | Default | Keterangan |
 |---|---|---|---|---|
-| Haykal | `mata_uang` | String | `IDR` | Preferensi mata uang |
+| Haykal | `bahasa` | String | `ID` | Bahasa antarmuka ID/EN |
 | Haykal | `tampilan_mode` | String | `grid` | Grid atau list di Home Screen |
-| Ray | `bahasa` | String | `ID` | Bahasa antarmuka ID/EN |
+| Ray | `mata_uang` | String | `IDR` | Preferensi mata uang |
 | Ray | `sort_by` | String | `terbaru` | Urutan destinasi |
 | Diki | `tema_warna` | String | `teal` | Warna tema aplikasi |
 | Diki | `show_map_default` | bool | `false` | Preferensi peta default |
@@ -593,7 +593,7 @@ Fungsi:
 Aturan aman:
 
 - Jika mengubah section tertentu, jangan merusak section orang lain.
-- Ray hanya fokus ke bagian `Bahasa` dan `Urutkan Destinasi`.
+- Ray hanya fokus ke bagian `Mata Uang` dan `Urutkan Destinasi`.
 
 ### 11.7 `statistics_screen.dart`
 
@@ -690,6 +690,7 @@ Sprint ASM2 fokus pada:
 - Pastikan list destinasi refresh setelah tambah data.
 - Pastikan filter wishlist dan visited berjalan.
 - Pastikan search berdasarkan nama atau negara berjalan.
+- Pastikan `bahasa` tersimpan di Shared Preferences walaupun belum full translate UI.
 - Pastikan tampilan grid/list tersimpan di Shared Preferences.
 
 ### Backlog ASM2 — Ray
@@ -700,8 +701,8 @@ Sprint ASM2 fokus pada:
 - Pastikan update nama, negara, kategori, status, catatan, dan foto berhasil.
 - Pastikan status `visited` dapat menyimpan `visited_at`.
 - Pastikan detail refresh setelah update.
+- Pastikan `mata_uang` tersimpan di Shared Preferences dan dipakai di tampilan budget.
 - Pastikan `sort_by` tersimpan dan dipakai di Home Screen.
-- Pastikan `bahasa` tersimpan di Shared Preferences walaupun belum full translate UI.
 
 ### Backlog ASM2 — Diki
 
@@ -794,7 +795,7 @@ Tolong bantu hanya pada area berikut:
 - lib/screens/detail_screen.dart
 - bagian edit mode di lib/screens/add_edit_screen.dart
 - getDestinationById dan updateDestination di lib/services/database_helper.dart
-- getBahasa, setBahasa, getSortBy, setSortBy di lib/services/preferences_service.dart
+- getMataUang, setMataUang, getSortBy, setSortBy di lib/services/preferences_service.dart
 
 Jangan merusak fitur CREATE dan READ list milik Person A.
 Jangan mengubah delete/checklist milik Person C.

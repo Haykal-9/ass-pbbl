@@ -6,20 +6,21 @@ class PreferencesService {
   PreferencesService._();
 
   // ─────────────────────────────────────────────────────────────────
-  // PERSON A — mata_uang + tampilan_mode
+  // PERSON A — bahasa + tampilan_mode
   // ─────────────────────────────────────────────────────────────────
 
-  static const String _kMataUang = 'mata_uang';
+  static const String _kBahasa = 'bahasa';
   static const String _kTampilanMode = 'tampilan_mode';
 
-  Future<String> getMataUang() async {
+  /// Returns 'ID' or 'EN'
+  Future<String> getBahasa() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kMataUang) ?? 'IDR';
+    return prefs.getString(_kBahasa) ?? 'ID';
   }
 
-  Future<void> setMataUang(String value) async {
+  Future<void> setBahasa(String lang) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kMataUang, value);
+    await prefs.setString(_kBahasa, lang);
   }
 
   /// Returns 'grid' or 'list'
@@ -34,21 +35,20 @@ class PreferencesService {
   }
 
   // ─────────────────────────────────────────────────────────────────
-  // PERSON B — bahasa + sort_by
+  // PERSON B — mata_uang + sort_by
   // ─────────────────────────────────────────────────────────────────
 
-  static const String _kBahasa = 'bahasa';
+  static const String _kMataUang = 'mata_uang';
   static const String _kSortBy = 'sort_by';
 
-  /// Returns 'ID' or 'EN'
-  Future<String> getBahasa() async {
+  Future<String> getMataUang() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kBahasa) ?? 'ID';
+    return prefs.getString(_kMataUang) ?? 'IDR';
   }
 
-  Future<void> setBahasa(String lang) async {
+  Future<void> setMataUang(String value) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kBahasa, lang);
+    await prefs.setString(_kMataUang, value);
   }
 
   /// Returns 'az' | 'terbaru' | 'kategori'
