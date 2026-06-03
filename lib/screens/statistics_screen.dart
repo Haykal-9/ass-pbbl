@@ -75,11 +75,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             icon: Icons.favorite,
             color: Colors.orange,
           ),
-          const SizedBox(height: 24),
-          _sectionHeader(tr('stats_budget')),
-          const SizedBox(height: 8),
-          _budgetCard(),
-          const SizedBox(height: 24),
           _sectionHeader(tr('stats_by_category')),
           const SizedBox(height: 8),
           StatCard(
@@ -102,6 +97,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             icon: Icons.location_city,
             color: Colors.blueGrey,
           ),
+          const SizedBox(height: 24),
+          _sectionHeader(tr('stats_budget')),
+          const SizedBox(height: 8),
+          _budgetCard(),
         ],
       ),
     );
