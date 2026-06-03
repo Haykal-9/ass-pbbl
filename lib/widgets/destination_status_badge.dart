@@ -15,7 +15,16 @@ class DestinationStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isVisited = status == 'visited';
-    final color = isVisited ? Colors.green : Colors.orange;
+    final isInTrip = status == 'in_trip';
+    
+    Color color;
+    if (isVisited) {
+      color = Colors.green;
+    } else if (isInTrip) {
+      color = Colors.blue;
+    } else {
+      color = Colors.orange;
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -30,14 +39,18 @@ class DestinationStatusBadge extends StatelessWidget {
         children: [
           if (showIcon) ...[
             Icon(
-              isVisited ? Icons.check_circle : Icons.favorite,
+              isVisited
+                  ? Icons.check_circle
+                  : (isInTrip ? Icons.flight_takeoff : Icons.favorite),
               size: 12,
               color: color,
             ),
             const SizedBox(width: 4),
           ],
           Text(
-            isVisited ? tr('status_visited') : tr('status_wishlist'),
+            isVisited
+                ? tr('status_visited')
+                : (isInTrip ? tr('status_in_trip') : tr('status_wishlist')),
             style: TextStyle(
               fontSize: 10,
               color: color,

@@ -85,10 +85,11 @@ const Map<String, Map<String, String>> _translations = {
   'cat_kota_urban': {'ID': 'Kota & Urban', 'EN': 'City & Urban'},
   'status_visited': {'ID': 'Visited', 'EN': 'Visited'},
   'status_wishlist': {'ID': 'Wishlist', 'EN': 'Wishlist'},
+  'status_in_trip': {'ID': 'In Trip', 'EN': 'In Trip'},
 
   // ── Home screen ──────────────────────────────────────────
   'search_hint': {'ID': 'Cari destinasi...', 'EN': 'Search destination...'},
-  'filter_all': {'ID': 'Semua', 'EN': 'All'},
+  'filter_in_trip': {'ID': 'In Trip', 'EN': 'In Trip'},
   'filter_wishlist': {'ID': 'Wishlist', 'EN': 'Wishlist'},
   'filter_visited': {'ID': 'Visited', 'EN': 'Visited'},
   'sort_latest': {'ID': 'Terbaru', 'EN': 'Latest'},
@@ -180,6 +181,7 @@ const Map<String, Map<String, String>> _translations = {
   'stats_summary': {'ID': 'Ringkasan', 'EN': 'Summary'},
   'stats_total': {'ID': 'Total Destinasi', 'EN': 'Total Destinations'},
   'stats_visited': {'ID': 'Sudah Dikunjungi', 'EN': 'Already Visited'},
+  'stats_in_trip': {'ID': 'Sedang Perjalanan', 'EN': 'In Trip'},
   'stats_by_category': {
     'ID': 'Berdasarkan Kategori',
     'EN': 'By Category',

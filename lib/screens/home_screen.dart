@@ -36,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _sortBy = 'terbaru';
 
   // Filter & search state
-  String _filter = 'all';
+  String _filter = 'in_trip';
   String _search = '';
 
   final TextEditingController _searchCtrl = TextEditingController();
@@ -315,7 +315,7 @@ class _HomeScreenState extends State<HomeScreen> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _filterChip('all', tr('filter_all'), Icons.public),
+                _filterChip('in_trip', tr('filter_in_trip'), Icons.flight_takeoff),
                 const SizedBox(width: 8),
                 _filterChip('wishlist', tr('filter_wishlist'), Icons.favorite),
                 const SizedBox(width: 8),
@@ -388,7 +388,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _emptyState() {
-    final hasFilter = _filter != 'all' || _search.isNotEmpty;
+    final hasFilter = _filter != 'in_trip' || _search.isNotEmpty;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,

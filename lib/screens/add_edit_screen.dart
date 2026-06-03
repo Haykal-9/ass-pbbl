@@ -266,32 +266,17 @@ class _AddEditScreenState extends State<AddEditScreen> {
               const SizedBox(height: 12),
 
               // Status
-              InputDecorator(
+              DropdownButtonFormField<String>(
+                initialValue: _status,
                 decoration: _inputDeco(tr('status'), Icons.bookmark),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: RadioListTile<String>(
-                        title: const Text('Wishlist', style: TextStyle(fontSize: 14)),
-                        value: 'wishlist',
-                        groupValue: _status,
-                        contentPadding: EdgeInsets.zero,
-                        dense: true,
-                        onChanged: (v) => setState(() => _status = v!),
-                      ),
-                    ),
-                    Expanded(
-                      child: RadioListTile<String>(
-                        title: const Text('Visited', style: TextStyle(fontSize: 14)),
-                        value: 'visited',
-                        groupValue: _status,
-                        contentPadding: EdgeInsets.zero,
-                        dense: true,
-                        onChanged: (v) => setState(() => _status = v!),
-                      ),
-                    ),
-                  ],
-                ),
+                items: const [
+                  DropdownMenuItem(value: 'wishlist', child: Text('Wishlist')),
+                  DropdownMenuItem(value: 'in_trip', child: Text('In Trip')),
+                  DropdownMenuItem(value: 'visited', child: Text('Visited')),
+                ],
+                onChanged: (v) {
+                  if (v != null) setState(() => _status = v);
+                },
               ),
               const SizedBox(height: 12),
 

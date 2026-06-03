@@ -26,7 +26,7 @@ class DatabaseHelper {
       databaseFactory = databaseFactoryFfiWeb;
       return openDatabase(
         'wanderlist.db',
-        version: 2,
+        version: 3,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -35,7 +35,7 @@ class DatabaseHelper {
       final path = join(dbPath, 'wanderlist.db');
       return openDatabase(
         path,
-        version: 2,
+        version: 3,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -57,6 +57,41 @@ class DatabaseHelper {
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute(_createBudgetTable);
+    }
+    if (oldVersion < 3) {
+      // Migrate Marina Bay Sands to 'in_trip'
+      await db.update(
+        'destinations',
+        {'status': 'in_trip'},
+        where: 'name = ?',
+        whereArgs: ['Marina Bay Sands'],
+      );
+      
+      final dests = await db.query(
+        'destinations',
+        columns: ['id'],
+        where: 'name = ?',
+        whereArgs: ['Marina Bay Sands'],
+      );
+      if (dests.isNotEmpty) {
+        final destId = dests.first['id'] as int;
+        final items = await db.query(
+          'checklist_items',
+          columns: ['id'],
+          where: 'destination_id = ?',
+          whereArgs: [destId],
+          orderBy: 'id ASC',
+          limit: 2,
+        );
+        for (var item in items) {
+          await db.update(
+            'checklist_items',
+            {'is_done': 1},
+            where: 'id = ?',
+            whereArgs: [item['id']],
+          );
+        }
+      }
     }
   }
 
@@ -102,7 +137,7 @@ class DatabaseHelper {
       "('Burj Khalifa', 'Dubai, UAE', 'Kota & Urban', 'wishlist', 'https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?q=80&w=600', '$now')",
       "('Menara Eiffel', 'Paris, Prancis', 'Kota & Urban', 'visited', 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/960px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg', '$now')",
       "('Shibuya Crossing', 'Tokyo, Jepang', 'Kota & Urban', 'visited', 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Shibuya_skyline_from_Tokyu_Plaza_in_Omotesando%2C_Harajuku%2C_Tokyo%2C_2024_May.jpg/960px-Shibuya_skyline_from_Tokyu_Plaza_in_Omotesando%2C_Harajuku%2C_Tokyo%2C_2024_May.jpg', '$now')",
-      "('Marina Bay Sands', 'Singapura, Singapura', 'Kota & Urban', 'wishlist', 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?q=80&w=600', '$now')",
+      "('Marina Bay Sands', 'Singapura, Singapura', 'Kota & Urban', 'in_trip', 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?q=80&w=600', '$now')",
       "('Times Square', 'New York, Amerika Serikat', 'Kota & Urban', 'visited', 'https://images.unsplash.com/photo-1534430480872-3498386e7856?q=80&w=600', '$now')"
     ];
 
@@ -136,12 +171,17 @@ class DatabaseHelper {
     for (final entry in checklistSeeds.entries) {
       final destId = entry.key;
       final items = entry.value;
-      final isDone = visitedIds.contains(destId) ? 1 : 0;
+      final defaultIsDone = visitedIds.contains(destId) ? 1 : 0;
       
-      for (final label in items) {
+      for (int i = 0; i < items.length; i++) {
+        final label = items[i];
+        int itemIsDone = defaultIsDone;
+        if (destId == 14 && i < 2) {
+          itemIsDone = 1; // Marina Bay Sands: checklist 2/4 done
+        }
         await db.execute('''
           INSERT INTO checklist_items (destination_id, label, is_done, created_at)
-          VALUES ($destId, '$label', $isDone, '$now')
+          VALUES ($destId, '$label', $itemIsDone, '$now')
         ''');
       }
     }
@@ -361,6 +401,9 @@ class DatabaseHelper {
     final total = Sqflite.firstIntValue(
             await db.rawQuery('SELECT COUNT(*) FROM destinations')) ??
         0;
+    final inTrip = Sqflite.firstIntValue(await db.rawQuery(
+            "SELECT COUNT(*) FROM destinations WHERE status = 'in_trip'")) ??
+        0;
     final visited = Sqflite.firstIntValue(await db.rawQuery(
             "SELECT COUNT(*) FROM destinations WHERE status = 'visited'")) ??
         0;
@@ -379,6 +422,7 @@ class DatabaseHelper {
 
     return {
       'total': total,
+      'in_trip': inTrip,
       'visited': visited,
       'wishlist': wishlist,
       'wisata_alam': wisataAlam,

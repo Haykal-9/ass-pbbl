@@ -63,6 +63,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           ),
           const SizedBox(height: 8),
           StatCard(
+            label: tr('stats_in_trip'),
+            count: _stats['in_trip'] ?? 0,
+            icon: Icons.flight_takeoff,
+            color: Colors.blue,
+          ),
+          const SizedBox(height: 8),
+          StatCard(
             label: 'Wishlist',
             count: _stats['wishlist'] ?? 0,
             icon: Icons.favorite,
