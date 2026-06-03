@@ -182,11 +182,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       color: _themeColor(t),
                       shape: BoxShape.circle,
                       border: selected
-                          ? Border.all(color: Colors.black54, width: 2.5)
+                          ? Border.all(color: Theme.of(context).colorScheme.onSurface, width: 2.5)
                           : null,
                     ),
                     child: selected
-                        ? const Icon(Icons.check, color: Colors.white, size: 16)
+                        ? Icon(Icons.check, color: _themeColor(t).computeLuminance() > 0.5 ? Colors.black : Colors.white, size: 16)
                         : null,
                   ),
                 );
@@ -215,11 +215,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildCardGroup(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Theme.of(context).shadowColor.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           )
@@ -243,7 +243,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _divider() {
-    return Divider(height: 1, indent: 56, endIndent: 16, color: Colors.grey[200]);
+    return Divider(height: 1, indent: 56, endIndent: 16, color: Theme.of(context).dividerColor.withValues(alpha: 0.2));
   }
 
   Widget _sectionHeader(String title) {
@@ -254,7 +254,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.bold,
-          color: Colors.grey[500],
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
           letterSpacing: 1.2,
         ),
       ),

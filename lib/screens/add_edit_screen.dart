@@ -164,7 +164,6 @@ class _AddEditScreenState extends State<AddEditScreen> {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         foregroundColor: Theme.of(context).colorScheme.primary,
-        backgroundColor: Colors.grey[50],
         elevation: 0,
         scrolledUnderElevation: 0,
       ),
@@ -181,9 +180,9 @@ class _AddEditScreenState extends State<AddEditScreen> {
                 child: Container(
                   height: 180,
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey[300]!),
+                    border: Border.all(color: Theme.of(context).dividerColor),
                   ),
                   clipBehavior: Clip.antiAlias,
                   child: _imagePath != null
@@ -212,11 +211,11 @@ class _AddEditScreenState extends State<AddEditScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.add_a_photo,
-                                size: 40, color: Colors.grey[400]),
+                                size: 40, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                             const SizedBox(height: 8),
                             Text(
                               tr('add_photo'),
-                              style: TextStyle(color: Colors.grey[500]),
+                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
                             ),
                           ],
                         ),

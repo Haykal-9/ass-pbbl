@@ -120,14 +120,12 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     final progress = _items.isEmpty ? 0.0 : doneCount / _items.length;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50], // Match settings screen background
       appBar: AppBar(
         title: Text(
           'Checklist ${widget.destination.name}',
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         foregroundColor: Theme.of(context).colorScheme.primary,
-        backgroundColor: Colors.grey[50],
         elevation: 0,
         scrolledUnderElevation: 0,
       ),
@@ -158,7 +156,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                         Text(
                           tr('checklist_progress'),
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.8),
+                            color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.8),
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
                           ),
@@ -166,8 +164,8 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                         const SizedBox(height: 6),
                         Text(
                           '$doneCount ${tr('checklist_done_of')} ${_items.length} ${tr('checklist_complete')}',
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
@@ -183,15 +181,15 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                         height: 54,
                         child: CircularProgressIndicator(
                           value: progress,
-                          backgroundColor: Colors.white.withValues(alpha: 0.2),
-                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                          backgroundColor: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.2),
+                          valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.onPrimary),
                           strokeWidth: 5,
                         ),
                       ),
                       Text(
                         '${(progress * 100).toInt()}%',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
@@ -231,10 +229,10 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: Theme.of(context).shadowColor.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -4),
                 )
@@ -286,7 +284,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                     radius: 24,
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_upward, color: Colors.white, size: 22),
+                      icon: Icon(Icons.arrow_upward, color: Theme.of(context).colorScheme.onPrimary, size: 22),
                       onPressed: _addItem,
                     ),
                   ),
@@ -320,7 +318,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
           Text(
             tr('checklist_empty'),
             style: TextStyle(
-              color: Colors.grey[700],
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
@@ -328,7 +326,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
           const SizedBox(height: 6),
           Text(
             tr('checklist_empty_hint'),
-            style: TextStyle(color: Colors.grey[500], fontSize: 13),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 13),
           ),
         ],
       ),

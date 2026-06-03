@@ -154,7 +154,6 @@ class _HomeScreenState extends State<HomeScreen> {
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           foregroundColor: Theme.of(context).colorScheme.primary,
-          backgroundColor: Colors.grey[50],
           elevation: 0,
           scrolledUnderElevation: 0,
         );
@@ -173,7 +172,6 @@ class _HomeScreenState extends State<HomeScreen> {
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           foregroundColor: Theme.of(context).colorScheme.primary,
-          backgroundColor: Colors.grey[50],
           elevation: 0,
           scrolledUnderElevation: 0,
         );
@@ -218,7 +216,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: _buildAppBar(),
       body: IndexedStack(
         index: _currentIndex,
@@ -416,7 +413,10 @@ class _HomeScreenState extends State<HomeScreen> {
             hasFilter
                 ? tr('empty_hint_filter')
                 : tr('empty_hint_add'),
-            style: TextStyle(color: Colors.grey[400], fontSize: 13),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+              fontSize: 13,
+            ),
             textAlign: TextAlign.center,
           ),
         ],

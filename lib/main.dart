@@ -22,15 +22,69 @@ void main() async {
 class WanderListApp extends StatelessWidget {
   const WanderListApp({super.key});
 
-  Color _seedColor(String temaWarna) {
+  ThemeData _buildTheme(String temaWarna) {
     switch (temaWarna) {
       case 'Ancient Earth':
-        return const Color(0xFF8B5E3C);
+        final colorScheme = ColorScheme.fromSeed(
+          seedColor: const Color(0xFF8B5E3C),
+          brightness: Brightness.light,
+        ).copyWith(
+          onPrimary: Colors.white,
+        );
+        return ThemeData(
+          colorScheme: colorScheme,
+          scaffoldBackgroundColor: const Color(0xFFFDF5E6),
+          cardColor: const Color(0xFFFFFBF0),
+          useMaterial3: true,
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Color(0xFFFDF5E6),
+            foregroundColor: Color(0xFF3E2723),
+          ),
+          bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+            backgroundColor: Color(0xFFFFFBF0),
+          ),
+        );
       case 'Urban Slate':
-        return const Color(0xFF3D4451);
+        final colorScheme = ColorScheme.fromSeed(
+          seedColor: const Color(0xFF607D8B),
+          brightness: Brightness.dark,
+        ).copyWith(
+          onPrimary: const Color(0xFF0B192C), // Navy/Dark color for better contrast
+        );
+        return ThemeData(
+          colorScheme: colorScheme,
+          scaffoldBackgroundColor: const Color(0xFF1E2329),
+          cardColor: const Color(0xFF282C34),
+          useMaterial3: true,
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Color(0xFF1E2329),
+            foregroundColor: Colors.white,
+          ),
+          bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+            backgroundColor: Color(0xFF282C34),
+          ),
+        );
       case 'Canopy':
       default:
-        return const Color(0xFF3A6B4A);
+        final colorScheme = ColorScheme.fromSeed(
+          seedColor: const Color(0xFF3A6B4A),
+          brightness: Brightness.light,
+        ).copyWith(
+          onPrimary: Colors.white,
+        );
+        return ThemeData(
+          colorScheme: colorScheme,
+          scaffoldBackgroundColor: const Color(0xFFF1F8F4),
+          cardColor: Colors.white,
+          useMaterial3: true,
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Color(0xFFF1F8F4),
+            foregroundColor: Color(0xFF1B3D26),
+          ),
+          bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+            backgroundColor: Colors.white,
+          ),
+        );
     }
   }
 
@@ -48,11 +102,7 @@ class WanderListApp extends StatelessWidget {
                 return MaterialApp(
                   title: 'WanderList',
                   debugShowCheckedModeBanner: false,
-                  theme: ThemeData(
-                    colorScheme:
-                        ColorScheme.fromSeed(seedColor: _seedColor(temaWarna)),
-                    useMaterial3: true,
-                  ),
+                  theme: _buildTheme(temaWarna),
                   home: const HomeScreen(),
                 );
               },

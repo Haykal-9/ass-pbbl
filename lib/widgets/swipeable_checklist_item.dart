@@ -47,9 +47,9 @@ class _SwipeableChecklistItemState extends State<SwipeableChecklistItem> {
       clipBehavior: Clip.antiAlias, // Penting agar background merah dipotong sesuai lengkungan sudut Card
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey[200]!),
+        side: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.1)),
       ),
-      color: Colors.white,
+      color: Theme.of(context).cardColor,
       child: GestureDetector(
         // Mendeteksi gerakan geser secara horizontal (kiri-kanan)
         onHorizontalDragUpdate: (details) {
@@ -98,12 +98,12 @@ class _SwipeableChecklistItemState extends State<SwipeableChecklistItem> {
             Transform.translate(
               offset: Offset(_dragOffset, 0),
               child: Container(
-                color: Colors.white, // Menutupi latar merah saat offset = 0
+                color: Theme.of(context).cardColor,
                 child: CheckboxListTile(
                   value: widget.item.isDone,
                   onChanged: widget.onChanged,
                   activeColor: Theme.of(context).colorScheme.primary,
-                  checkColor: Colors.white,
+                  checkColor: Theme.of(context).colorScheme.onPrimary,
                   title: _isEditing
                       ? TextField(
                           controller: _editCtrl,
@@ -124,16 +124,19 @@ class _SwipeableChecklistItemState extends State<SwipeableChecklistItem> {
                       : Text(
                           widget.item.label,
                           style: TextStyle(
-                            fontWeight: widget.item.isDone ? FontWeight.normal : FontWeight.w500,
+                            fontSize: 15,
                             decoration: widget.item.isDone ? TextDecoration.lineThrough : null,
-                            color: widget.item.isDone ? Colors.grey[400] : Colors.black87,
+                            color: widget.item.isDone ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4) : Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   secondary: IconButton(
-                    icon: Icon(_isEditing ? Icons.check : Icons.edit, size: 18),
-                    color: _isEditing ? Colors.green : Colors.grey[400],
+                    icon: Icon(
+                      _isEditing ? Icons.check : Icons.edit,
+                      size: 18,
+                      color: _isEditing ? Colors.green : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
                     onPressed: () {
                       if (_isEditing) {
                         setState(() => _isEditing = false);

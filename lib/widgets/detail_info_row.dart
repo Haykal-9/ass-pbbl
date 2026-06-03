@@ -24,10 +24,10 @@ class DetailInfoRow extends StatelessWidget {
           '$label: ',
           style: TextStyle(
             fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
-        Text(value, style: TextStyle(color: Colors.grey[600])),
+        Text(value, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
       ],
     );
   }

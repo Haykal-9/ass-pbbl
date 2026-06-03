@@ -131,24 +131,24 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 Text(
                   tr('stats_total_budget'),
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    fontSize: 13,
+                    color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.85),
+                    fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   CurrencyService.format(_totalBudget),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    fontSize: 28,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.savings_outlined, color: Colors.white, size: 44),
+          Icon(Icons.savings_outlined, color: Theme.of(context).colorScheme.onPrimary, size: 44),
         ],
       ),
     );

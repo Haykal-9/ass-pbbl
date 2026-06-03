@@ -106,14 +106,12 @@ class _BudgetScreenState extends State<BudgetScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Text(
           '${tr('budget_title')} · ${trName(widget.destination.name)}',
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         foregroundColor: Theme.of(context).colorScheme.primary,
-        backgroundColor: Colors.grey[50],
         elevation: 0,
         scrolledUnderElevation: 0,
       ),
@@ -167,7 +165,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                 Text(
                   tr('budget_total'),
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.8),
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
@@ -175,8 +173,8 @@ class _BudgetScreenState extends State<BudgetScreen> {
                 const SizedBox(height: 6),
                 Text(
                   CurrencyService.format(_total),
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimary,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
@@ -185,14 +183,14 @@ class _BudgetScreenState extends State<BudgetScreen> {
                 Text(
                   '${_items.length} ${tr('budget_items_count')}',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.8),
                     fontSize: 12,
                   ),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.savings_outlined, color: Colors.white, size: 44),
+          Icon(Icons.savings_outlined, color: Theme.of(context).colorScheme.onPrimary, size: 44),
         ],
       ),
     );
@@ -204,9 +202,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey[200]!),
+        side: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.1)),
       ),
-      color: Colors.white,
+      color: Theme.of(context).cardColor,
       child: Dismissible(
         key: Key('budget_${item.id}'),
         direction: DismissDirection.endToStart,
@@ -277,7 +275,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
           Text(
             tr('budget_empty'),
             style: TextStyle(
-              color: Colors.grey[700],
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
@@ -285,7 +283,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
           const SizedBox(height: 6),
           Text(
             tr('budget_empty_hint'),
-            style: TextStyle(color: Colors.grey[500], fontSize: 13),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 13),
           ),
         ],
       ),
@@ -381,8 +379,8 @@ class _BudgetEditorSheetState extends State<_BudgetEditorSheet> {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
@@ -398,7 +396,7 @@ class _BudgetEditorSheetState extends State<_BudgetEditorSheet> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: Theme.of(context).dividerColor,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),

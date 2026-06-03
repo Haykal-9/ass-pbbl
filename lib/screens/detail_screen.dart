@@ -172,14 +172,14 @@ class _DetailScreenState extends State<DetailScreen> {
                         Row(
                           children: [
                             Icon(Icons.location_on,
-                                size: 16, color: Colors.grey[500]),
+                                size: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                             const SizedBox(width: 4),
                             Text(
                               trCountry(_destination.country),
                               style: Theme.of(context)
                                   .textTheme
                                   .titleMedium
-                                  ?.copyWith(color: Colors.grey[600]),
+                                  ?.copyWith(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
                             ),
                           ],
                         ),
@@ -231,7 +231,7 @@ class _DetailScreenState extends State<DetailScreen> {
                           icon: Icons.access_time,
                           label: tr('added_on'),
                           value: _formatDate(_destination.createdAt),
-                          color: Colors.grey,
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                         ),
                       ],
                     ),
@@ -283,7 +283,7 @@ class _DetailScreenState extends State<DetailScreen> {
                         : tr('budget_estimate'),
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.grey[600],
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -295,7 +295,7 @@ class _DetailScreenState extends State<DetailScreen> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: _budgetTotal > 0 ? primary : Colors.grey[500],
+                      color: _budgetTotal > 0 ? primary : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
@@ -334,11 +334,11 @@ class _DetailScreenState extends State<DetailScreen> {
 
   Widget _photoPlaceholder() {
     return Container(
-      color: Colors.grey[300],
-      child: Icon(
-        Icons.landscape,
-        size: 80,
-        color: Colors.grey[400],
+      color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+      child: Center(
+        child: Icon(Icons.broken_image,
+            size: 50,
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
       ),
     );
   }

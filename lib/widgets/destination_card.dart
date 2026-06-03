@@ -24,7 +24,7 @@ class DestinationCard extends StatelessWidget {
     required this.onDelete,
   });
 
-  Widget _photo({double? height, double? width, BoxFit fit = BoxFit.cover}) {
+  Widget _photo(BuildContext context, {double? height, double? width, BoxFit fit = BoxFit.cover}) {
     if (destination.photoPath != null) {
       if (kIsWeb || destination.photoPath!.startsWith('http')) {
         return Image.network(
@@ -32,7 +32,7 @@ class DestinationCard extends StatelessWidget {
           height: height,
           width: width,
           fit: fit,
-          errorBuilder: (_, __, ___) => _placeholder(height, width),
+          errorBuilder: (_, __, ___) => _placeholder(context, height, width),
         );
       } else {
         final f = File(destination.photoPath!);
@@ -42,20 +42,20 @@ class DestinationCard extends StatelessWidget {
             height: height,
             width: width,
             fit: fit,
-            errorBuilder: (_, __, ___) => _placeholder(height, width),
+            errorBuilder: (_, __, ___) => _placeholder(context, height, width),
           );
         }
       }
     }
-    return _placeholder(height, width);
+    return _placeholder(context, height, width);
   }
 
-  Widget _placeholder(double? height, double? width) {
+  Widget _placeholder(BuildContext context, double? height, double? width) {
     return Container(
       height: height,
       width: width,
-      color: Colors.grey[200],
-      child: Icon(Icons.landscape, size: 40, color: Colors.grey[400]),
+      color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+      child: Icon(Icons.landscape, size: 40, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
     );
   }
 
@@ -72,7 +72,7 @@ class DestinationCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: _photo(width: double.infinity),
+                child: _photo(context, width: double.infinity),
               ),
               Padding(
                 padding: const EdgeInsets.all(8),
@@ -90,7 +90,7 @@ class DestinationCard extends StatelessWidget {
                     ),
                     Text(
                       trCountry(destination.country),
-                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -135,7 +135,7 @@ class DestinationCard extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: _photo(width: 90, height: 90),
+                child: _photo(context, width: 90, height: 90),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -153,7 +153,7 @@ class DestinationCard extends StatelessWidget {
                     ),
                     Text(
                       trCountry(destination.country),
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
                     ),
                     const SizedBox(height: 6),
                     Wrap(
@@ -201,7 +201,7 @@ class DestinationCard extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: progress,
                   minHeight: 6,
-                  backgroundColor: Colors.grey[200],
+                  backgroundColor: Theme.of(context).dividerColor.withValues(alpha: 0.2),
                   valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
                 ),
               ),
@@ -213,7 +213,7 @@ class DestinationCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w600,
-              color: progress == 1.0 ? Colors.green[700] : Colors.grey[600],
+              color: progress == 1.0 ? Colors.green : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],
