@@ -18,11 +18,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final PreferencesService _prefs = PreferencesService();
 
   // PERSON A
+  String _bahasa = 'ID';
   String _tampilanMode = 'grid';
-  String _mataUang = 'IDR';
 
   // PERSON B
-  String _bahasa = 'ID';
+  String _mataUang = 'IDR';
   String _sortBy = 'terbaru';
 
   // PERSON C
