@@ -50,6 +50,17 @@ class _BudgetScreenState extends State<BudgetScreen> {
   void initState() {
     super.initState();
     _loadItems();
+    currencyNotifier.addListener(_onCurrencyChanged);
+  }
+
+  @override
+  void dispose() {
+    currencyNotifier.removeListener(_onCurrencyChanged);
+    super.dispose();
+  }
+
+  void _onCurrencyChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadItems() async {

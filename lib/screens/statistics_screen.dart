@@ -22,6 +22,17 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   void initState() {
     super.initState();
     _loadStats();
+    currencyNotifier.addListener(_onCurrencyChanged);
+  }
+
+  @override
+  void dispose() {
+    currencyNotifier.removeListener(_onCurrencyChanged);
+    super.dispose();
+  }
+
+  void _onCurrencyChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadStats() async {

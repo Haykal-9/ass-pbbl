@@ -37,6 +37,17 @@ class _DetailScreenState extends State<DetailScreen> {
     super.initState();
     _destination = widget.destination;
     _reload();
+    currencyNotifier.addListener(_onCurrencyChanged);
+  }
+
+  @override
+  void dispose() {
+    currencyNotifier.removeListener(_onCurrencyChanged);
+    super.dispose();
+  }
+
+  void _onCurrencyChanged() {
+    if (mounted) setState(() {});
   }
 
   // PERSON B — READ single destination by ID
