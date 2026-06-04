@@ -9,6 +9,8 @@ import '../models/budget_item.dart';
 import '../models/checklist_item.dart';
 import '../models/destination.dart';
 
+final ValueNotifier<int> budgetChangedNotifier = ValueNotifier<int>(0);
+
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
@@ -364,7 +366,9 @@ class DatabaseHelper {
 
   Future<int> insertBudgetItem(BudgetItem item) async {
     final db = await database;
-    return db.insert('budget_items', item.toMap());
+    final id = await db.insert('budget_items', item.toMap());
+    if (id > 0) budgetChangedNotifier.value++;
+    return id;
   }
 
   Future<List<BudgetItem>> getBudgetItems(int destinationId) async {
@@ -380,17 +384,25 @@ class DatabaseHelper {
 
   Future<int> updateBudgetItem(BudgetItem item) async {
     final db = await database;
-    return db.update(
+    final count = await db.update(
       'budget_items',
       item.toMap(),
       where: 'id = ?',
       whereArgs: [item.id],
     );
+    if (count > 0) budgetChangedNotifier.value++;
+    return count;
   }
 
   Future<int> deleteBudgetItem(int id) async {
     final db = await database;
-    return db.delete('budget_items', where: 'id = ?', whereArgs: [id]);
+    final count = await db.delete(
+      'budget_items',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    if (count > 0) budgetChangedNotifier.value++;
+    return count;
   }
 
   /// Total estimated budget (in base currency, IDR) for one destination.
@@ -407,8 +419,9 @@ class DatabaseHelper {
   /// destinations.
   Future<double> getTotalBudget() async {
     final db = await database;
-    final result =
-        await db.rawQuery('SELECT IFNULL(SUM(amount), 0) AS total FROM budget_items');
+    final result = await db.rawQuery(
+      'SELECT IFNULL(SUM(amount), 0) AS total FROM budget_items',
+    );
     return (result.first['total'] as num?)?.toDouble() ?? 0;
   }
 
