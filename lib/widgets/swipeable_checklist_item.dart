@@ -136,14 +136,17 @@ class _SwipeableChecklistItemState extends State<SwipeableChecklistItem> {
                   secondary: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      ReorderableDragStartListener(
-                        index: widget.index,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Icon(
-                            Icons.drag_indicator,
-                            size: 18,
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                      MouseRegion(
+                        cursor: SystemMouseCursors.grab,
+                        child: ReorderableDragStartListener(
+                          index: widget.index,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Icon(
+                              Icons.drag_indicator,
+                              size: 22,
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                            ),
                           ),
                         ),
                       ),
