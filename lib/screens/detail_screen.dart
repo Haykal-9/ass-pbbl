@@ -16,6 +16,7 @@ import '../widgets/destination_status_badge.dart';
 import 'add_edit_screen.dart';
 import 'budget_screen.dart';
 import 'checklist_screen.dart';
+import 'gallery_screen.dart';
 
 class DetailScreen extends StatefulWidget {
   final Destination destination;
@@ -31,6 +32,8 @@ class _DetailScreenState extends State<DetailScreen> {
   late Destination _destination;
   bool _isLoading = false;
   double _budgetTotal = 0;
+  int _checklistTotal = 0;
+  int _checklistDone = 0;
 
   @override
   void initState() {
@@ -55,10 +58,14 @@ class _DetailScreenState extends State<DetailScreen> {
     setState(() => _isLoading = true);
     final fresh = await _db.getDestinationById(_destination.id!);
     final budgetTotal = await _db.getDestinationBudgetTotal(_destination.id!);
+    final checklistItems = await _db.getChecklistItems(_destination.id!);
+    
     if (mounted) {
       setState(() {
         if (fresh != null) _destination = fresh;
         _budgetTotal = budgetTotal;
+        _checklistTotal = checklistItems.length;
+        _checklistDone = checklistItems.where((item) => item.isDone).length;
         _isLoading = false;
       });
     }
@@ -107,35 +114,6 @@ class _DetailScreenState extends State<DetailScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (_) => AddEditScreen(
-                              destination: _destination,
-                            ),
-                          ),
-                        );
-                        await _reload();
-                      },
-                    ),
-                    _buildCircleButton(
-                      icon: Icons.checklist,
-                      tooltip: 'Checklist',
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ChecklistScreen(
-                              destination: _destination,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildCircleButton(
-                      icon: Icons.account_balance_wallet,
-                      tooltip: tr('budget_title'),
-                      onPressed: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => BudgetScreen(
                               destination: _destination,
                             ),
                           ),
@@ -221,10 +199,14 @@ class _DetailScreenState extends State<DetailScreen> {
 
                         const SizedBox(height: 20),
 
-                        // Estimated budget summary
+                        // Action Cards (Checklist, Budget, Gallery)
+                        _checklistCard(),
+                        const SizedBox(height: 12),
                         _budgetCard(),
+                        const SizedBox(height: 12),
+                        _galleryCard(),
 
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 24),
 
                         // Visited date
                         if (_destination.visitedAt != null) ...[
@@ -250,6 +232,72 @@ class _DetailScreenState extends State<DetailScreen> {
                 ),
               ],
             ),
+    );
+  }
+
+  Widget _checklistCard() {
+    final primary = Theme.of(context).colorScheme.primary;
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChecklistScreen(destination: _destination),
+          ),
+        );
+        await _reload();
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: primary.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: primary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.checklist, color: primary),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Checklist Perjalanan',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _checklistTotal > 0
+                        ? '$_checklistDone dari $_checklistTotal selesai'
+                        : 'Belum ada daftar',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: _checklistDone == _checklistTotal && _checklistTotal > 0
+                          ? Colors.green
+                          : primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: primary),
+          ],
+        ),
+      ),
     );
   }
 
@@ -307,6 +355,67 @@ class _DetailScreenState extends State<DetailScreen> {
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: _budgetTotal > 0 ? primary : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: primary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _galleryCard() {
+    final primary = Theme.of(context).colorScheme.primary;
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => GalleryScreen(destination: _destination),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: primary.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: primary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.photo_library, color: primary),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Galeri Polaroid',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Lihat Kenangan',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: primary,
                     ),
                   ),
                 ],

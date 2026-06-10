@@ -25,19 +25,20 @@ class DatabaseHelper {
 
   Future<Database> _initDb() async {
     if (kIsWeb) {
-      databaseFactory = databaseFactoryFfiWeb;
-      return openDatabase(
+      return databaseFactoryFfiWebNoWebWorker.openDatabase(
         'wanderlist.db',
-        version: 4,
-        onCreate: _onCreate,
-        onUpgrade: _onUpgrade,
+        options: OpenDatabaseOptions(
+          version: 5,
+          onCreate: _onCreate,
+          onUpgrade: _onUpgrade,
+        ),
       );
     } else {
       final dbPath = await getDatabasesPath();
       final path = join(dbPath, 'wanderlist.db');
       return openDatabase(
         path,
-        version: 4,
+        version: 5,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -100,6 +101,35 @@ class DatabaseHelper {
       // Set existing items order_index to their id to maintain creation order
       await db.execute('UPDATE checklist_items SET order_index = id');
     }
+    if (oldVersion < 5) {
+      // Add contextual notes to existing default destinations
+      final updates = {
+        'Raja Ampat': 'Kepulauan eksotis dengan keanekaragaman hayati laut terbaik untuk diving.',
+        'Taman Nasional Komodo': 'Habitat asli kadal raksasa purba dan pemandangan pulau sabana yang indah.',
+        'Gunung Fuji': 'Ikon gunung berapi suci di Jepang dengan pemandangan bersalju yang epik.',
+        'Air Terjun Niagara': 'Air terjun raksasa di perbatasan dengan debit air terbesar di Amerika Utara.',
+        'Taman Nasional Yellowstone': 'Kawasan vulkanik dengan geyser alami dan satwa liar Amerika yang bebas.',
+        'Candi Borobudur': 'Mahakarya candi Buddha terbesar di dunia peninggalan wangsa Syailendra.',
+        'Angkor Wat': 'Kompleks kuil Hindu-Buddha terbesar dengan arsitektur kuno Khmer yang megah.',
+        'Colosseum': 'Amfiteater gladiator bersejarah peninggalan Kekaisaran Romawi Kuno.',
+        'Machu Picchu': 'Kota peninggalan peradaban Inca yang tersembunyi di pegunungan Andes.',
+        'Tembok Besar China': 'Struktur pertahanan militer raksasa yang membentang melintasi pegunungan.',
+        'Burj Khalifa': 'Gedung pencakar langit tertinggi di dunia dengan observatorium spektakuler.',
+        'Menara Eiffel': 'Ikon romantis kota Paris berupa menara besi dengan pemandangan gemerlap lampu malam.',
+        'Shibuya Crossing': 'Persimpangan jalan tersibuk di dunia dengan lautan pejalan kaki yang ikonik.',
+        'Marina Bay Sands': 'Resor mewah dengan infinity pool di atas kapal yang melayang di langit Singapura.',
+        'Times Square': 'Pusat hiburan gemerlap neon di New York yang tak pernah tidur.',
+      };
+      
+      for (final entry in updates.entries) {
+        await db.update(
+          'destinations',
+          {'notes': entry.value},
+          where: 'name = ? AND (notes IS NULL OR notes = "")',
+          whereArgs: [entry.key],
+        );
+      }
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -132,26 +162,26 @@ class DatabaseHelper {
 
     final now = DateTime.now().toIso8601String();
     final seeds = [
-      "('Raja Ampat', 'Sorong, Indonesia', 'Wisata Alam', 'wishlist', 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Raja_Ampat%2C_West_Papua%2C_Indonesia.jpg/960px-Raja_Ampat%2C_West_Papua%2C_Indonesia.jpg', '$now')",
-      "('Taman Nasional Komodo', 'Labuan Bajo, Indonesia', 'Wisata Alam', 'visited', 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?q=80&w=600', '$now')",
-      "('Gunung Fuji', 'Shizuoka, Jepang', 'Wisata Alam', 'wishlist', 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?q=80&w=600', '$now')",
-      "('Air Terjun Niagara', 'Ontario, Kanada', 'Wisata Alam', 'wishlist', 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/3Falls_Niagara.jpg/960px-3Falls_Niagara.jpg', '$now')",
-      "('Taman Nasional Yellowstone', 'Wyoming, Amerika Serikat', 'Wisata Alam', 'wishlist', 'https://upload.wikimedia.org/wikipedia/commons/7/73/Grand_Canyon_of_yellowstone.jpg', '$now')",
-      "('Candi Borobudur', 'Magelang, Indonesia', 'Budaya & Sejarah', 'visited', 'https://images.unsplash.com/photo-1596402184320-417e7178b2cd?q=80&w=600', '$now')",
-      "('Angkor Wat', 'Siem Reap, Kamboja', 'Budaya & Sejarah', 'wishlist', 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Buddhist_monks_in_front_of_the_Angkor_Wat.jpg/960px-Buddhist_monks_in_front_of_the_Angkor_Wat.jpg', '$now')",
-      "('Colosseum', 'Roma, Italia', 'Budaya & Sejarah', 'visited', 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=600', '$now')",
-      "('Machu Picchu', 'Cusco, Peru', 'Budaya & Sejarah', 'wishlist', 'https://images.unsplash.com/photo-1526392060635-9d6019884377?q=80&w=600', '$now')",
-      "('Tembok Besar China', 'Beijing, China', 'Budaya & Sejarah', 'wishlist', 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?q=80&w=600', '$now')",
-      "('Burj Khalifa', 'Dubai, UAE', 'Kota & Urban', 'wishlist', 'https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?q=80&w=600', '$now')",
-      "('Menara Eiffel', 'Paris, Prancis', 'Kota & Urban', 'visited', 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/960px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg', '$now')",
-      "('Shibuya Crossing', 'Tokyo, Jepang', 'Kota & Urban', 'visited', 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Shibuya_skyline_from_Tokyu_Plaza_in_Omotesando%2C_Harajuku%2C_Tokyo%2C_2024_May.jpg/960px-Shibuya_skyline_from_Tokyu_Plaza_in_Omotesando%2C_Harajuku%2C_Tokyo%2C_2024_May.jpg', '$now')",
-      "('Marina Bay Sands', 'Singapura, Singapura', 'Kota & Urban', 'in_trip', 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?q=80&w=600', '$now')",
-      "('Times Square', 'New York, Amerika Serikat', 'Kota & Urban', 'visited', 'https://images.unsplash.com/photo-1534430480872-3498386e7856?q=80&w=600', '$now')"
+      "('Raja Ampat', 'Sorong, Indonesia', 'Wisata Alam', 'wishlist', 'Kepulauan eksotis dengan keanekaragaman hayati laut terbaik untuk diving.', 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Raja_Ampat%2C_West_Papua%2C_Indonesia.jpg/960px-Raja_Ampat%2C_West_Papua%2C_Indonesia.jpg', '$now')",
+      "('Taman Nasional Komodo', 'Labuan Bajo, Indonesia', 'Wisata Alam', 'visited', 'Habitat asli kadal raksasa purba dan pemandangan pulau sabana yang indah.', 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?q=80&w=600', '$now')",
+      "('Gunung Fuji', 'Shizuoka, Jepang', 'Wisata Alam', 'wishlist', 'Ikon gunung berapi suci di Jepang dengan pemandangan bersalju yang epik.', 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?q=80&w=600', '$now')",
+      "('Air Terjun Niagara', 'Ontario, Kanada', 'Wisata Alam', 'wishlist', 'Air terjun raksasa di perbatasan dengan debit air terbesar di Amerika Utara.', 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/3Falls_Niagara.jpg/960px-3Falls_Niagara.jpg', '$now')",
+      "('Taman Nasional Yellowstone', 'Wyoming, Amerika Serikat', 'Wisata Alam', 'wishlist', 'Kawasan vulkanik dengan geyser alami dan satwa liar Amerika yang bebas.', 'https://upload.wikimedia.org/wikipedia/commons/7/73/Grand_Canyon_of_yellowstone.jpg', '$now')",
+      "('Candi Borobudur', 'Magelang, Indonesia', 'Budaya & Sejarah', 'visited', 'Mahakarya candi Buddha terbesar di dunia peninggalan wangsa Syailendra.', 'https://images.unsplash.com/photo-1596402184320-417e7178b2cd?q=80&w=600', '$now')",
+      "('Angkor Wat', 'Siem Reap, Kamboja', 'Budaya & Sejarah', 'wishlist', 'Kompleks kuil Hindu-Buddha terbesar dengan arsitektur kuno Khmer yang megah.', 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Buddhist_monks_in_front_of_the_Angkor_Wat.jpg/960px-Buddhist_monks_in_front_of_the_Angkor_Wat.jpg', '$now')",
+      "('Colosseum', 'Roma, Italia', 'Budaya & Sejarah', 'visited', 'Amfiteater gladiator bersejarah peninggalan Kekaisaran Romawi Kuno.', 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=600', '$now')",
+      "('Machu Picchu', 'Cusco, Peru', 'Budaya & Sejarah', 'wishlist', 'Kota peninggalan peradaban Inca yang tersembunyi di pegunungan Andes.', 'https://images.unsplash.com/photo-1526392060635-9d6019884377?q=80&w=600', '$now')",
+      "('Tembok Besar China', 'Beijing, China', 'Budaya & Sejarah', 'wishlist', 'Struktur pertahanan militer raksasa yang membentang melintasi pegunungan.', 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?q=80&w=600', '$now')",
+      "('Burj Khalifa', 'Dubai, UAE', 'Kota & Urban', 'wishlist', 'Gedung pencakar langit tertinggi di dunia dengan observatorium spektakuler.', 'https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?q=80&w=600', '$now')",
+      "('Menara Eiffel', 'Paris, Prancis', 'Kota & Urban', 'visited', 'Ikon romantis kota Paris berupa menara besi dengan pemandangan gemerlap lampu malam.', 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/960px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg', '$now')",
+      "('Shibuya Crossing', 'Tokyo, Jepang', 'Kota & Urban', 'visited', 'Persimpangan jalan tersibuk di dunia dengan lautan pejalan kaki yang ikonik.', 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Shibuya_skyline_from_Tokyu_Plaza_in_Omotesando%2C_Harajuku%2C_Tokyo%2C_2024_May.jpg/960px-Shibuya_skyline_from_Tokyu_Plaza_in_Omotesando%2C_Harajuku%2C_Tokyo%2C_2024_May.jpg', '$now')",
+      "('Marina Bay Sands', 'Singapura, Singapura', 'Kota & Urban', 'in_trip', 'Resor mewah dengan infinity pool di atas kapal yang melayang di langit Singapura.', 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?q=80&w=600', '$now')",
+      "('Times Square', 'New York, Amerika Serikat', 'Kota & Urban', 'visited', 'Pusat hiburan gemerlap neon di New York yang tak pernah tidur.', 'https://images.unsplash.com/photo-1534430480872-3498386e7856?q=80&w=600', '$now')"
     ];
 
     for (var val in seeds) {
       await db.execute('''
-        INSERT INTO destinations (name, country, category, status, photo_path, created_at)
+        INSERT INTO destinations (name, country, category, status, notes, photo_path, created_at)
         VALUES $val
       ''');
     }
