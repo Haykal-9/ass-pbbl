@@ -11,8 +11,14 @@ import '../widgets/custom_snackbar.dart';
 import '../widgets/destination_card.dart';
 import 'add_edit_screen.dart';
 import 'detail_screen.dart';
+import 'scratch_card_screen.dart';
 import 'settings_screen.dart';
 import 'statistics_screen.dart';
+
+bool canScratchDestination(Destination destination) {
+  return destination.status == 'wishlist' &&
+      destination.photoPath?.trim().isNotEmpty == true;
+}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -124,6 +130,50 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _onLongPress(Destination dest) async {
+    if (dest.status != 'wishlist') {
+      await _confirmDelete(dest);
+      return;
+    }
+
+    final hasPhoto = canScratchDestination(dest);
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (hasPhoto)
+              ListTile(
+                leading: Icon(
+                  Icons.auto_awesome,
+                  color: Theme.of(sheetContext).colorScheme.primary,
+                ),
+                title: Text(tr('scratch_reveal')),
+                onTap: () => Navigator.pop(sheetContext, 'scratch'),
+              ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: Colors.red),
+              title: Text(tr('delete')),
+              onTap: () => Navigator.pop(sheetContext, 'delete'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+    if (action == 'scratch') {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => ScratchCardScreen(destination: dest)),
+      );
+      await _loadDestinations();
+    } else if (action == 'delete') {
+      await _confirmDelete(dest);
+    }
+  }
+
   Future<void> _toggleTampilan() async {
     final next = _tampilanMode == 'grid' ? 'list' : 'grid';
     await _prefs.setTampilanMode(next);
@@ -195,7 +245,9 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Icon(
                 _tampilanMode == 'grid' ? Icons.view_list : Icons.grid_view,
               ),
-              tooltip: _tampilanMode == 'grid' ? tr('list_view') : tr('grid_view'),
+              tooltip: _tampilanMode == 'grid'
+                  ? tr('list_view')
+                  : tr('grid_view'),
               onPressed: _toggleTampilan,
             ),
             PopupMenuButton<String>(
@@ -225,9 +277,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Tab 1: Statistics
           const StatisticsScreen(),
           // Tab 2: Settings
-          SettingsScreen(
-            onPrefsChanged: () => _loadPrefs(),
-          ),
+          SettingsScreen(onPrefsChanged: () => _loadPrefs()),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -259,9 +309,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // PERSON A — CREATE
                 await Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => const AddEditScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const AddEditScreen()),
                 );
                 await _loadDestinations();
               },
@@ -296,8 +344,10 @@ class _HomeScreenState extends State<HomeScreen> {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 10,
+              ),
               isDense: true,
             ),
             onChanged: (v) {
@@ -314,11 +364,19 @@ class _HomeScreenState extends State<HomeScreen> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _filterChip('in_trip', tr('filter_in_trip'), Icons.flight_takeoff),
+                _filterChip(
+                  'in_trip',
+                  tr('filter_in_trip'),
+                  Icons.flight_takeoff,
+                ),
                 const SizedBox(width: 8),
                 _filterChip('wishlist', tr('filter_wishlist'), Icons.favorite),
                 const SizedBox(width: 8),
-                _filterChip('visited', tr('filter_visited'), Icons.check_circle),
+                _filterChip(
+                  'visited',
+                  tr('filter_visited'),
+                  Icons.check_circle,
+                ),
               ],
             ),
           ),
@@ -329,10 +387,10 @@ class _HomeScreenState extends State<HomeScreen> {
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _destinations.isEmpty
-                  ? _emptyState()
-                  : _tampilanMode == 'grid'
-                      ? _buildGrid()
-                      : _buildList(),
+              ? _emptyState()
+              : _tampilanMode == 'grid'
+              ? _buildGrid()
+              : _buildList(),
         ),
       ],
     );
@@ -355,7 +413,7 @@ class _HomeScreenState extends State<HomeScreen> {
           isGrid: true,
           showChecklistProgress: _showChecklistProgress,
           onTap: () => _openDetail(dest),
-          onDelete: () => _confirmDelete(dest),
+          onDelete: () => _onLongPress(dest),
         );
       },
     );
@@ -372,7 +430,7 @@ class _HomeScreenState extends State<HomeScreen> {
           isGrid: false,
           showChecklistProgress: _showChecklistProgress,
           onTap: () => _openDetail(dest),
-          onDelete: () => _confirmDelete(dest),
+          onDelete: () => _onLongPress(dest),
         );
       },
     );
@@ -399,9 +457,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            hasFilter
-                ? tr('empty_no_results')
-                : tr('empty_no_dest'),
+            hasFilter ? tr('empty_no_results') : tr('empty_no_dest'),
             style: TextStyle(
               fontSize: 18,
               color: Colors.grey[500],
@@ -410,11 +466,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            hasFilter
-                ? tr('empty_hint_filter')
-                : tr('empty_hint_add'),
+            hasFilter ? tr('empty_hint_filter') : tr('empty_hint_add'),
             style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.5),
               fontSize: 13,
             ),
             textAlign: TextAlign.center,
@@ -438,7 +494,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   PopupMenuItem<String> _sortMenuItem(
-      String value, String label, IconData icon) {
+    String value,
+    String label,
+    IconData icon,
+  ) {
     return PopupMenuItem(
       value: value,
       child: Row(
@@ -448,9 +507,11 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(label),
           if (_sortBy == value) ...[
             const Spacer(),
-            Icon(Icons.check,
-                size: 16,
-                color: Theme.of(context).colorScheme.primary),
+            Icon(
+              Icons.check,
+              size: 16,
+              color: Theme.of(context).colorScheme.primary,
+            ),
           ],
         ],
       ),
