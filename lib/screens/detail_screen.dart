@@ -203,8 +203,6 @@ class _DetailScreenState extends State<DetailScreen> {
                         _checklistCard(),
                         const SizedBox(height: 12),
                         _budgetCard(),
-                        const SizedBox(height: 12),
-                        _galleryCard(),
 
                         const SizedBox(height: 24),
 
@@ -355,67 +353,6 @@ class _DetailScreenState extends State<DetailScreen> {
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: _budgetTotal > 0 ? primary : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: primary),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _galleryCard() {
-    final primary = Theme.of(context).colorScheme.primary;
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () async {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => GalleryScreen(destination: _destination),
-          ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: primary.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: primary.withValues(alpha: 0.2)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: primary.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(Icons.photo_library, color: primary),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Galeri Polaroid',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Lihat Kenangan',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: primary,
                     ),
                   ),
                 ],
