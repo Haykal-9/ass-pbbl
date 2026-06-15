@@ -35,15 +35,24 @@ String trCountry(String dbCountry) {
 
 const Map<String, Map<String, String>> _destNames = {
   'Raja Ampat': {'ID': 'Raja Ampat', 'EN': 'Raja Ampat'},
-  'Taman Nasional Komodo': {'ID': 'Taman Nasional Komodo', 'EN': 'Komodo National Park'},
+  'Taman Nasional Komodo': {
+    'ID': 'Taman Nasional Komodo',
+    'EN': 'Komodo National Park',
+  },
   'Gunung Fuji': {'ID': 'Gunung Fuji', 'EN': 'Mount Fuji'},
   'Air Terjun Niagara': {'ID': 'Air Terjun Niagara', 'EN': 'Niagara Falls'},
-  'Taman Nasional Yellowstone': {'ID': 'Taman Nasional Yellowstone', 'EN': 'Yellowstone National Park'},
+  'Taman Nasional Yellowstone': {
+    'ID': 'Taman Nasional Yellowstone',
+    'EN': 'Yellowstone National Park',
+  },
   'Candi Borobudur': {'ID': 'Candi Borobudur', 'EN': 'Borobudur Temple'},
   'Angkor Wat': {'ID': 'Angkor Wat', 'EN': 'Angkor Wat'},
   'Colosseum': {'ID': 'Colosseum', 'EN': 'Colosseum'},
   'Machu Picchu': {'ID': 'Machu Picchu', 'EN': 'Machu Picchu'},
-  'Tembok Besar China': {'ID': 'Tembok Besar China', 'EN': 'Great Wall of China'},
+  'Tembok Besar China': {
+    'ID': 'Tembok Besar China',
+    'EN': 'Great Wall of China',
+  },
   'Burj Khalifa': {'ID': 'Burj Khalifa', 'EN': 'Burj Khalifa'},
   'Menara Eiffel': {'ID': 'Menara Eiffel', 'EN': 'Eiffel Tower'},
   'Shibuya Crossing': {'ID': 'Shibuya Crossing', 'EN': 'Shibuya Crossing'},
@@ -53,20 +62,38 @@ const Map<String, Map<String, String>> _destNames = {
 
 const Map<String, Map<String, String>> _countryNames = {
   'Sorong, Indonesia': {'ID': 'Sorong, Indonesia', 'EN': 'Sorong, Indonesia'},
-  'Labuan Bajo, Indonesia': {'ID': 'Labuan Bajo, Indonesia', 'EN': 'Labuan Bajo, Indonesia'},
+  'Labuan Bajo, Indonesia': {
+    'ID': 'Labuan Bajo, Indonesia',
+    'EN': 'Labuan Bajo, Indonesia',
+  },
   'Shizuoka, Jepang': {'ID': 'Shizuoka, Jepang', 'EN': 'Shizuoka, Japan'},
   'Ontario, Kanada': {'ID': 'Ontario, Kanada', 'EN': 'Ontario, Canada'},
-  'Wyoming, Amerika Serikat': {'ID': 'Wyoming, Amerika Serikat', 'EN': 'Wyoming, United States'},
-  'Magelang, Indonesia': {'ID': 'Magelang, Indonesia', 'EN': 'Magelang, Indonesia'},
-  'Siem Reap, Kamboja': {'ID': 'Siem Reap, Kamboja', 'EN': 'Siem Reap, Cambodia'},
+  'Wyoming, Amerika Serikat': {
+    'ID': 'Wyoming, Amerika Serikat',
+    'EN': 'Wyoming, United States',
+  },
+  'Magelang, Indonesia': {
+    'ID': 'Magelang, Indonesia',
+    'EN': 'Magelang, Indonesia',
+  },
+  'Siem Reap, Kamboja': {
+    'ID': 'Siem Reap, Kamboja',
+    'EN': 'Siem Reap, Cambodia',
+  },
   'Roma, Italia': {'ID': 'Roma, Italia', 'EN': 'Rome, Italy'},
   'Cusco, Peru': {'ID': 'Cusco, Peru', 'EN': 'Cusco, Peru'},
   'Beijing, China': {'ID': 'Beijing, China', 'EN': 'Beijing, China'},
   'Dubai, UAE': {'ID': 'Dubai, UAE', 'EN': 'Dubai, UAE'},
   'Paris, Prancis': {'ID': 'Paris, Prancis', 'EN': 'Paris, France'},
   'Tokyo, Jepang': {'ID': 'Tokyo, Jepang', 'EN': 'Tokyo, Japan'},
-  'Singapura, Singapura': {'ID': 'Singapura, Singapura', 'EN': 'Singapore, Singapore'},
-  'New York, Amerika Serikat': {'ID': 'New York, Amerika Serikat', 'EN': 'New York, United States'},
+  'Singapura, Singapura': {
+    'ID': 'Singapura, Singapura',
+    'EN': 'Singapore, Singapore',
+  },
+  'New York, Amerika Serikat': {
+    'ID': 'New York, Amerika Serikat',
+    'EN': 'New York, United States',
+  },
 };
 
 const Map<String, Map<String, String>> _translations = {
@@ -101,10 +128,7 @@ const Map<String, Map<String, String>> _translations = {
   'list_view': {'ID': 'List view', 'EN': 'List view'},
   'grid_view': {'ID': 'Grid view', 'EN': 'Grid view'},
   'empty_no_results': {'ID': 'Tidak ada hasil', 'EN': 'No results'},
-  'empty_no_dest': {
-    'ID': 'Belum ada destinasi',
-    'EN': 'No destinations yet',
-  },
+  'empty_no_dest': {'ID': 'Belum ada destinasi', 'EN': 'No destinations yet'},
   'empty_hint_filter': {
     'ID': 'Coba ubah filter atau kata kunci pencarian',
     'EN': 'Try changing filters or search keyword',
@@ -118,6 +142,22 @@ const Map<String, Map<String, String>> _translations = {
     'ID': 'beserta semua checklist-nya? Aksi ini tidak bisa dibatalkan.',
     'EN': 'along with all checklists? This action cannot be undone.',
   },
+
+  // Scratch card
+  'scratch_reveal': {'ID': 'Gosok untuk Reveal', 'EN': 'Scratch to Reveal'},
+  'scratch_title': {'ID': 'Gosok untuk Reveal', 'EN': 'Scratch to Reveal'},
+  'scratch_title_revealed': {'ID': 'Terungkap!', 'EN': 'Revealed!'},
+  'scratch_hint': {
+    'ID': 'Gosok layar untuk membuka foto!',
+    'EN': 'Scratch the screen to reveal the photo!',
+  },
+  'scratch_revealed_msg': {
+    'ID': 'Destinasi impianmu terungkap!',
+    'EN': 'Your dream destination is revealed!',
+  },
+  'scratch_progress': {'ID': 'Terungkap', 'EN': 'Revealed'},
+  'scratch_reset': {'ID': 'Gosok Ulang', 'EN': 'Scratch Again'},
+  'scratch_view_detail': {'ID': 'Lihat Detail', 'EN': 'View Detail'},
 
   // ── Add / Edit screen ────────────────────────────────────
   'add_dest': {'ID': 'Tambah Destinasi', 'EN': 'Add Destination'},
@@ -149,16 +189,10 @@ const Map<String, Map<String, String>> _translations = {
 
   // ── Checklist screen ─────────────────────────────────────
   'checklist_title': {'ID': 'Checklist', 'EN': 'Checklist'},
-  'checklist_progress': {
-    'ID': 'Progres Perjalanan',
-    'EN': 'Travel Progress',
-  },
+  'checklist_progress': {'ID': 'Progres Perjalanan', 'EN': 'Travel Progress'},
   'checklist_done_of': {'ID': 'dari', 'EN': 'of'},
   'checklist_complete': {'ID': 'Selesai', 'EN': 'Done'},
-  'checklist_empty': {
-    'ID': 'Belum ada aktivitas',
-    'EN': 'No activities yet',
-  },
+  'checklist_empty': {'ID': 'Belum ada aktivitas', 'EN': 'No activities yet'},
   'checklist_empty_hint': {
     'ID': 'Ketik di bawah untuk menambahkannya!',
     'EN': 'Type below to add one!',
@@ -168,24 +202,15 @@ const Map<String, Map<String, String>> _translations = {
     'EN': 'Add something to do...',
   },
   'confirm_delete': {'ID': 'Anda Yakin?', 'EN': 'Are you sure?'},
-  'delete_checklist_msg': {
-    'ID': 'dari checklist?',
-    'EN': 'from checklist?',
-  },
+  'delete_checklist_msg': {'ID': 'dari checklist?', 'EN': 'from checklist?'},
 
   // ── Statistics screen ────────────────────────────────────
-  'stats_title': {
-    'ID': 'Statistik Perjalanan',
-    'EN': 'Travel Statistics',
-  },
+  'stats_title': {'ID': 'Statistik Perjalanan', 'EN': 'Travel Statistics'},
   'stats_summary': {'ID': 'Ringkasan', 'EN': 'Summary'},
   'stats_total': {'ID': 'Total Destinasi', 'EN': 'Total Destinations'},
   'stats_visited': {'ID': 'Sudah Dikunjungi', 'EN': 'Already Visited'},
   'stats_in_trip': {'ID': 'Sedang Perjalanan', 'EN': 'In Trip'},
-  'stats_by_category': {
-    'ID': 'Berdasarkan Kategori',
-    'EN': 'By Category',
-  },
+  'stats_by_category': {'ID': 'Berdasarkan Kategori', 'EN': 'By Category'},
   'stats_budget': {'ID': 'Anggaran', 'EN': 'Budget'},
   'stats_total_budget': {
     'ID': 'Total Estimasi Budget',
@@ -208,10 +233,7 @@ const Map<String, Map<String, String>> _translations = {
     'EN': 'Enter a valid amount',
   },
   'budget_category': {'ID': 'Kategori', 'EN': 'Category'},
-  'budget_empty': {
-    'ID': 'Belum ada anggaran',
-    'EN': 'No budget items yet',
-  },
+  'budget_empty': {'ID': 'Belum ada anggaran', 'EN': 'No budget items yet'},
   'budget_empty_hint': {
     'ID': 'Tap + untuk menambahkan estimasi biaya!',
     'EN': 'Tap + to add a cost estimate!',
@@ -219,7 +241,10 @@ const Map<String, Map<String, String>> _translations = {
   'budget_cat_transport': {'ID': 'Transportasi', 'EN': 'Transport'},
   'budget_cat_akomodasi': {'ID': 'Akomodasi', 'EN': 'Accommodation'},
   'budget_cat_makanan': {'ID': 'Makanan', 'EN': 'Food'},
-  'budget_cat_aktivitas': {'ID': 'Tiket & Aktivitas', 'EN': 'Tickets & Activities'},
+  'budget_cat_aktivitas': {
+    'ID': 'Tiket & Aktivitas',
+    'EN': 'Tickets & Activities',
+  },
   'budget_cat_lainnya': {'ID': 'Lainnya', 'EN': 'Other'},
 
   // ── Settings screen ──────────────────────────────────────
