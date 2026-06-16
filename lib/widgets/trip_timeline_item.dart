@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import '../models/trip_stop.dart';
 import '../services/app_locale.dart';
 
-class TripTimelineItem extends StatelessWidget {
+class TripTimelineItem extends StatefulWidget {
   final TripStop stop;
   final TripStop? nextStop; // kept for API compat
   final bool isLast;
   final bool isFirst;
+  final int index;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const TripTimelineItem({
@@ -16,17 +18,26 @@ class TripTimelineItem extends StatelessWidget {
     this.nextStop,
     required this.isLast,
     this.isFirst = false,
+    required this.index,
+    required this.onEdit,
     required this.onDelete,
   });
 
   @override
+  State<TripTimelineItem> createState() => _TripTimelineItemState();
+}
+
+class _TripTimelineItemState extends State<TripTimelineItem> {
+  bool _isExpanded = false;
+
+  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final hasTransitInfo = stop.distanceMeters != null || stop.travelMinutes != null;
-    final showTransit = !isFirst && hasTransitInfo;
+    final hasTransitInfo = widget.stop.distanceMeters != null || widget.stop.travelMinutes != null;
+    final showTransit = widget.stop.isBasecamp ? false : (hasTransitInfo); // Basecamp has no transit strip above it
 
     return Dismissible(
-      key: ValueKey('trip_stop_${stop.id}'),
+      key: ValueKey('trip_stop_${widget.stop.id}'),
       direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
@@ -43,7 +54,7 @@ class TripTimelineItem extends StatelessWidget {
           context: context,
           builder: (ctx) => AlertDialog(
             title: Text(tr('confirm_delete')),
-            content: Text('${tr('trip_delete_confirm')} "${stop.placeName}"?'),
+            content: Text('${tr('trip_delete_confirm')} "${widget.stop.placeName}"?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
@@ -58,7 +69,7 @@ class TripTimelineItem extends StatelessWidget {
           ),
         );
       },
-      onDismissed: (_) => onDelete(),
+      onDismissed: (_) => widget.onDelete(),
       child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -72,7 +83,7 @@ class TripTimelineItem extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 24),
                     child: Text(
-                      stop.visitTime ?? '--:--',
+                      widget.stop.visitTime ?? '--:--',
                       style: TextStyle(
                         color: colorScheme.primary,
                         fontWeight: FontWeight.w700,
@@ -81,7 +92,7 @@ class TripTimelineItem extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  if (!isLast)
+                  if (!widget.isLast)
                     Expanded(
                       child: Container(
                         width: 1,
@@ -107,72 +118,154 @@ class TripTimelineItem extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // ── Top row: Photo + Title ──
-                    Row(
-                      children: [
-                        // Thumbnail
-                        ClipRRect(
-                          borderRadius: BorderRadius.only(
-                            topLeft: const Radius.circular(12),
-                            bottomLeft: Radius.circular(showTransit ? 0 : 12),
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      _isExpanded = !_isExpanded;
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // ── Top row: Photo + Title ──
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Thumbnail
+                          ClipRRect(
+                            borderRadius: BorderRadius.only(
+                              topLeft: const Radius.circular(12),
+                              bottomLeft: Radius.circular(showTransit && !_isExpanded ? 0 : 12),
+                            ),
+                            child: widget.stop.photoUrl != null && widget.stop.photoUrl!.isNotEmpty
+                                ? Image.network(
+                                    widget.stop.photoUrl!,
+                                    width: 110,
+                                    height: 90,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => _placeholderImg(colorScheme),
+                                  )
+                                : _placeholderImg(colorScheme),
                           ),
-                          child: stop.photoUrl != null && stop.photoUrl!.isNotEmpty
-                              ? Image.network(
-                                  stop.photoUrl!,
-                                  width: 110,
-                                  height: 90,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => _placeholderImg(colorScheme),
-                                )
-                              : _placeholderImg(colorScheme),
-                        ),
-                        // Title + address
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  stop.placeName,
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color: colorScheme.onSurface,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                if (stop.placeAddress != null && stop.placeAddress!.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 4),
-                                    child: Text(
-                                      stop.placeAddress!,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: colorScheme.onSurface.withValues(alpha: 0.5),
+                          // Title + address
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          widget.stop.placeName,
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                            color: colorScheme.onSurface,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
+                                            icon: Icon(Icons.edit, size: 16, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+                                            onPressed: widget.onEdit,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          IconButton(
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
+                                            icon: Icon(Icons.delete_outline, size: 16, color: colorScheme.error.withValues(alpha: 0.7)),
+                                            onPressed: widget.onDelete,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
-                              ],
+                                  if (widget.stop.placeAddress != null && widget.stop.placeAddress!.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4),
+                                      child: Text(
+                                        widget.stop.placeAddress!,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: colorScheme.onSurface.withValues(alpha: 0.5),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                        // Chevron
-                        Padding(
-                          padding: const EdgeInsets.only(right: 12),
-                          child: Icon(Icons.expand_more,
-                              color: colorScheme.onSurface.withValues(alpha: 0.3), size: 20),
-                        ),
-                      ],
-                    ),
+                          // Drag Handle
+                          if (!widget.stop.isBasecamp)
+                            ReorderableDragStartListener(
+                              index: widget.index,
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 8, right: 12),
+                                child: Icon(Icons.drag_handle,
+                                    color: colorScheme.onSurface.withValues(alpha: 0.3), size: 20),
+                              ),
+                            ),
+                          // Chevron
+                          Padding(
+                            padding: EdgeInsets.only(right: widget.stop.isBasecamp ? 12 : 0),
+                            child: AnimatedRotation(
+                              turns: _isExpanded ? 0.5 : 0,
+                              duration: const Duration(milliseconds: 200),
+                              child: Icon(Icons.expand_more,
+                                  color: colorScheme.onSurface.withValues(alpha: 0.3), size: 20),
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      // ── Expanded Content ──
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeInOut,
+                        child: _isExpanded
+                            ? Padding(
+                                padding: const EdgeInsets.all(14),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (widget.stop.description != null && widget.stop.description!.isNotEmpty) ...[
+                                      Text(
+                                        widget.stop.description!,
+                                        style: TextStyle(fontSize: 13, color: colorScheme.onSurface.withValues(alpha: 0.8)),
+                                      ),
+                                      const SizedBox(height: 12),
+                                    ],
+                                    if (widget.stop.latitude != null && widget.stop.longitude != null) ...[
+                                      Row(
+                                        children: [
+                                          Icon(Icons.location_on_outlined, size: 14, color: colorScheme.primary),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${widget.stop.latitude!.toStringAsFixed(4)}, ${widget.stop.longitude!.toStringAsFixed(4)}',
+                                            style: TextStyle(fontSize: 12, color: colorScheme.primary),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
                     // ── Transit info strip (inside the card) ──
                     if (showTransit)
                       Container(
@@ -196,20 +289,20 @@ class TripTimelineItem extends StatelessWidget {
                           children: [
                             _transitChip(
                               context,
-                              _transportIcon(stop.transportMode),
-                              stop.transportMode,
+                              _transportIcon(widget.stop.transportMode),
+                              (widget.isFirst && !widget.stop.isBasecamp) ? 'Dari hotel · ${widget.stop.transportMode}' : widget.stop.transportMode,
                             ),
-                            if (stop.distanceMeters != null)
+                            if (widget.stop.distanceMeters != null)
                               _transitChip(
                                 context,
                                 Icons.straighten,
-                                _formatDistance(stop.distanceMeters!),
+                                _formatDistance(widget.stop.distanceMeters!),
                               ),
-                            if (stop.travelMinutes != null)
+                            if (widget.stop.travelMinutes != null)
                               _transitChip(
                                 context,
                                 Icons.schedule,
-                                _formatMinutes(stop.travelMinutes!),
+                                _formatMinutes(widget.stop.travelMinutes!),
                               ),
                           ],
                         ),

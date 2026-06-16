@@ -252,6 +252,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
         onPressed: _addPhoto,
         icon: const Icon(Icons.add_a_photo),
         label: const Text('Tambah Memori'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
       ),
     );
   }

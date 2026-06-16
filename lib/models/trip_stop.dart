@@ -16,6 +16,7 @@ class TripStop {
   final String transportMode;
   final double? distanceMeters;
   final int? travelMinutes;
+  final bool isBasecamp;
   final String createdAt;
 
   const TripStop({
@@ -36,6 +37,7 @@ class TripStop {
     this.transportMode = 'walk',
     this.distanceMeters,
     this.travelMinutes,
+    this.isBasecamp = false,
     required this.createdAt,
   });
 
@@ -58,6 +60,7 @@ class TripStop {
         transportMode: map['transport_mode'] as String? ?? 'walk',
         distanceMeters: (map['distance_meters'] as num?)?.toDouble(),
         travelMinutes: map['travel_minutes'] as int?,
+        isBasecamp: map['is_basecamp'] == 1,
         createdAt: map['created_at'] as String,
       );
 
@@ -79,6 +82,7 @@ class TripStop {
         'transport_mode': transportMode,
         'distance_meters': distanceMeters,
         'travel_minutes': travelMinutes,
+        'is_basecamp': isBasecamp ? 1 : 0,
         'created_at': createdAt,
       };
 
@@ -100,6 +104,7 @@ class TripStop {
     String? transportMode,
     double? distanceMeters,
     int? travelMinutes,
+    bool? isBasecamp,
     String? createdAt,
   }) =>
       TripStop(
@@ -121,6 +126,7 @@ class TripStop {
         transportMode: transportMode ?? this.transportMode,
         distanceMeters: distanceMeters ?? this.distanceMeters,
         travelMinutes: travelMinutes ?? this.travelMinutes,
+        isBasecamp: isBasecamp ?? this.isBasecamp,
         createdAt: createdAt ?? this.createdAt,
       );
 }

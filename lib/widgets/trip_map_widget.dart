@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/trip_stop.dart';
+import '../services/openrouteservice_service.dart';
 
 class TripMapWidget extends StatefulWidget {
   final List<TripStop> stops;
@@ -21,12 +22,73 @@ class TripMapWidget extends StatefulWidget {
 
 class _TripMapWidgetState extends State<TripMapWidget> {
   final MapController _mapController = MapController();
+  final OpenRouteService _orsService = OpenRouteService();
+  
+  // Cache routes to avoid spamming the API when switching tabs.
+  // Key: day number (or unique ID of stops), Value: List of route points
+  static final Map<String, List<LatLng>> _routeCache = {};
+  
+  List<LatLng> _routePoints = [];
+  bool _isLoadingRoute = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRoute();
+  }
 
   @override
   void didUpdateWidget(TripMapWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.stops != oldWidget.stops) {
+      _fetchRoute();
+    }
     if (widget.stops != oldWidget.stops || widget.highlightedStop != oldWidget.highlightedStop) {
       _fitBounds();
+    }
+  }
+
+  Future<void> _fetchRoute() async {
+    final validStops = widget.stops.where((s) => s.latitude != null && s.longitude != null).toList();
+    if (validStops.length < 2) {
+      setState(() => _routePoints = []);
+      return;
+    }
+
+    validStops.sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+    
+    // Generate a simple cache key based on stop IDs/coordinates
+    final cacheKey = validStops.map((s) => '${s.latitude},${s.longitude}').join('|');
+    
+    if (_routeCache.containsKey(cacheKey)) {
+      setState(() {
+        _routePoints = _routeCache[cacheKey]!;
+      });
+      return;
+    }
+
+    setState(() => _isLoadingRoute = true);
+
+    try {
+      final waypoints = validStops.map((s) => LatLng(s.latitude!, s.longitude!)).toList();
+      final route = await _orsService.getRoute(waypoints);
+      
+      _routeCache[cacheKey] = route;
+      
+      if (mounted) {
+        setState(() => _routePoints = route);
+      }
+    } catch (e) {
+      // Fallback to straight lines
+      if (mounted) {
+        setState(() {
+          _routePoints = validStops.map((s) => LatLng(s.latitude!, s.longitude!)).toList();
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingRoute = false);
+      }
     }
   }
 
@@ -70,57 +132,84 @@ class _TripMapWidgetState extends State<TripMapWidget> {
     final validStops = widget.stops.where((s) => s.latitude != null && s.longitude != null).toList();
     validStops.sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
 
-    final points = validStops.map((s) => LatLng(s.latitude!, s.longitude!)).toList();
+    final pinPoints = validStops.map((s) => LatLng(s.latitude!, s.longitude!)).toList();
 
-    return FlutterMap(
-      mapController: _mapController,
-      options: MapOptions(
-        initialCenter: points.isNotEmpty ? points.first : const LatLng(0, 0),
-        initialZoom: 13,
-        interactionOptions: const InteractionOptions(
-          flags: InteractiveFlag.all,
-        ),
-        onMapReady: _fitBounds,
-      ),
+    return Stack(
       children: [
-        TileLayer(
-          urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-          subdomains: const ['a', 'b', 'c', 'd'],
-          userAgentPackageName: 'com.example.wanderlist',
-        ),
-        if (points.length > 1)
-          PolylineLayer(
-            polylines: [
-              Polyline(
-                points: points,
-                strokeWidth: 4.0,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ],
+        FlutterMap(
+          mapController: _mapController,
+          options: MapOptions(
+            initialCenter: pinPoints.isNotEmpty ? pinPoints.first : const LatLng(0, 0),
+            initialZoom: 13,
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.all,
+            ),
+            onMapReady: _fitBounds,
           ),
-        MarkerLayer(
-          markers: validStops.asMap().entries.map((entry) {
-            final idx = entry.key;
-            final stop = entry.value;
-            final isHighlighted = widget.highlightedStop?.id == stop.id;
-            
-            return Marker(
-              point: LatLng(stop.latitude!, stop.longitude!),
-              width: 40,
-              height: 40,
-              child: GestureDetector(
-                onTap: () => widget.onStopTapped?.call(stop),
-                child: CustomPaint(
-                  painter: NumberedMarkerPainter(
-                    number: idx + 1,
+          children: [
+            TileLayer(
+              urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+              subdomains: const ['a', 'b', 'c', 'd'],
+              userAgentPackageName: 'com.example.wanderlist',
+            ),
+            if (_routePoints.length > 1)
+              PolylineLayer(
+                polylines: [
+                  Polyline(
+                    points: _routePoints,
+                    strokeWidth: 4.0,
                     color: Theme.of(context).colorScheme.primary,
-                    isHighlighted: isHighlighted,
                   ),
-                ),
+                ],
               ),
-            );
-          }).toList(),
+            MarkerLayer(
+              markers: validStops.asMap().entries.map((entry) {
+                final idx = entry.key;
+                final stop = entry.value;
+                final isHighlighted = widget.highlightedStop?.id == stop.id;
+                
+                return Marker(
+                  point: LatLng(stop.latitude!, stop.longitude!),
+                  width: 40,
+                  height: 40,
+                  child: GestureDetector(
+                    onTap: () => widget.onStopTapped?.call(stop),
+                    child: CustomPaint(
+                      painter: NumberedMarkerPainter(
+                        number: idx + 1,
+                        color: Theme.of(context).colorScheme.primary,
+                        isHighlighted: isHighlighted,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
         ),
+        if (_isLoadingRoute)
+          Positioned(
+            top: 16,
+            right: 16,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor.withValues(alpha: 0.9),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+              child: const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
+            ),
+          ),
       ],
     );
   }

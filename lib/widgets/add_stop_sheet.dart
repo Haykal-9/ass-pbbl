@@ -5,8 +5,15 @@ import '../services/osm_nominatim_service.dart';
 
 class AddStopSheet extends StatefulWidget {
   final int dayNumber;
+  final bool isBasecamp;
+  final TripStop? existingStop;
 
-  const AddStopSheet({super.key, required this.dayNumber});
+  const AddStopSheet({
+    super.key, 
+    required this.dayNumber,
+    this.isBasecamp = false,
+    this.existingStop,
+  });
 
   @override
   State<AddStopSheet> createState() => _AddStopSheetState();
@@ -24,6 +31,26 @@ class _AddStopSheetState extends State<AddStopSheet> {
   List<Map<String, dynamic>> _searchResults = [];
   Timer? _debounce;
   Map<String, dynamic>? _selectedPlaceDetails;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existingStop != null) {
+      final stop = widget.existingStop!;
+      _nameCtrl.text = stop.placeName;
+      _addressCtrl.text = stop.placeAddress ?? '';
+      _timeCtrl.text = stop.visitTime ?? '09:00';
+      _transport = stop.transportMode;
+      if (stop.latitude != null && stop.longitude != null) {
+        _selectedPlaceDetails = {
+          'lat': stop.latitude,
+          'lon': stop.longitude,
+          'xid': stop.otmXid,
+          'photoUrl': stop.photoUrl,
+        };
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -104,9 +131,18 @@ class _AddStopSheetState extends State<AddStopSheet> {
                 decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2)),
               ),
             ),
-            Text(
-              tr('trip_add_stop'),
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.existingStop != null
+                      ? 'Edit ${widget.isBasecamp ? "Basecamp" : "Tempat"}'
+                      : (widget.isBasecamp ? 'Set Accommodation / Basecamp' : tr('trip_new_place')),
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                if (widget.isBasecamp)
+                  const Icon(Icons.hotel, color: Colors.blue)
+              ],
             ),
             const SizedBox(height: 16),
             

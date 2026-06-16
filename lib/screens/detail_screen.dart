@@ -36,7 +36,7 @@ class _DetailScreenState extends State<DetailScreen> {
   int _checklistTotal = 0;
   int _checklistDone = 0;
   int _tripStopCount = 0;
-  int _galleryPhotoCount = 0;
+  List<DestinationPhoto> _galleryPhotos = [];
 
   @override
   void initState() {
@@ -73,7 +73,7 @@ class _DetailScreenState extends State<DetailScreen> {
         _checklistTotal = checklistItems.length;
         _checklistDone = checklistItems.where((item) => item.isDone).length;
         _tripStopCount = tripStopCount;
-        _galleryPhotoCount = galleryPhotos.length;
+        _galleryPhotos = galleryPhotos;
         _isLoading = false;
       });
     }
@@ -311,6 +311,8 @@ class _DetailScreenState extends State<DetailScreen> {
 
   Widget _galleryCard() {
     final primary = Theme.of(context).colorScheme.primary;
+    final hasPhotos = _galleryPhotos.isNotEmpty;
+    
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: () async {
@@ -323,50 +325,98 @@ class _DetailScreenState extends State<DetailScreen> {
         await _reload();
       },
       child: Container(
+        width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: primary.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: primary.withValues(alpha: 0.2)),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: primary.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(Icons.photo_library_outlined, color: primary),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tr('gallery_title'),
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                      fontWeight: FontWeight.w500,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.photo_library_outlined, color: primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      tr('gallery_title'),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
                     ),
+                  ],
+                ),
+                Text(
+                  hasPhotos ? '${_galleryPhotos.length} foto' : 'Belum ada',
+                  style: TextStyle(
+                    color: hasPhotos ? primary : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                    fontWeight: FontWeight.w600,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    _galleryPhotoCount > 0
-                        ? '$_galleryPhotoCount foto'
-                        : 'Belum ada foto',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: _galleryPhotoCount > 0 ? primary : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            Icon(Icons.chevron_right, color: primary),
+            const SizedBox(height: 16),
+            if (hasPhotos)
+              SizedBox(
+                height: 130,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _galleryPhotos.length,
+                  itemBuilder: (context, index) {
+                    final photo = _galleryPhotos[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 16, bottom: 8, top: 4),
+                      child: Transform.rotate(
+                        angle: (index % 2 == 0) ? 0.04 : -0.04,
+                        child: Container(
+                          width: 100,
+                          padding: const EdgeInsets.fromLTRB(6, 6, 6, 20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.15),
+                                blurRadius: 6,
+                                offset: const Offset(2, 4),
+                              )
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(2),
+                            child: photo.imagePath.startsWith('http')
+                                ? Image.network(photo.imagePath, fit: BoxFit.cover)
+                                : Image.file(File(photo.imagePath), fit: BoxFit.cover),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              )
+            else
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                decoration: BoxDecoration(
+                  color: primary.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: primary.withValues(alpha: 0.1), style: BorderStyle.solid),
+                ),
+                child: Column(
+                  children: [
+                    Icon(Icons.add_a_photo_outlined, color: primary.withValues(alpha: 0.5), size: 32),
+                    const SizedBox(height: 8),
+                    Text('Tambah Momen Liburan', style: TextStyle(color: primary, fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              ),
           ],
         ),
       ),

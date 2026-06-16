@@ -165,14 +165,14 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
 
   // ── CRUD Actions ──
 
-  Future<void> _addStop() async {
+  Future<void> _addStop({bool isBasecamp = false}) async {
     final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => AddStopSheet(dayNumber: _selectedDay),
+      builder: (ctx) => AddStopSheet(dayNumber: _selectedDay, isBasecamp: isBasecamp),
     );
 
     if (result != null && mounted) {
@@ -200,7 +200,7 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
       final stop = TripStop(
         destinationId: _destination.id!,
         dayNumber: _selectedDay,
-        orderIndex: _currentDayStops.length,
+        orderIndex: isBasecamp ? -1 : _currentDayStops.where((s) => !s.isBasecamp).length,
         placeName: result['name'] as String,
         placeAddress: (result['address'] as String?)?.isEmpty ?? true ? null : result['address'],
         visitTime: result['time'] as String,
@@ -210,6 +210,7 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
         longitude: lng,
         distanceMeters: distanceMeters,
         travelMinutes: travelMinutes,
+        isBasecamp: isBasecamp,
         otmXid: result['xid'] as String?,
         createdAt: DateTime.now().toIso8601String(),
       );
@@ -226,6 +227,13 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
   }
 
   void _recalculateDistances(List<TripStop> dayStops) {
+    // Sort dayStops explicitly: basecamp first, then by old orderIndex
+    dayStops.sort((a, b) {
+      if (a.isBasecamp && !b.isBasecamp) return -1;
+      if (!a.isBasecamp && b.isBasecamp) return 1;
+      return a.orderIndex.compareTo(b.orderIndex);
+    });
+
     for (int i = 0; i < dayStops.length; i++) {
       double? dist;
       int? mins;
@@ -242,8 +250,7 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
         }
       }
       dayStops[i] = dayStops[i].copyWith(
-        orderIndex: i,
-        // For the first stop, distance and time must be null (it has no previous stop to travel from)
+        orderIndex: dayStops[i].isBasecamp ? -1 : (dayStops.first.isBasecamp ? i - 1 : i),
         distanceMeters: i == 0 ? null : dist,
         travelMinutes: i == 0 ? null : mins,
       );
@@ -275,6 +282,54 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
       _recalculateDistances(updatedStops);
       await _db.updateTripStopOrder(updatedStops);
       await _loadStops();
+    }
+  }
+
+  Future<void> _editStop(TripStop stop) async {
+    final result = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => AddStopSheet(
+        dayNumber: _selectedDay,
+        isBasecamp: stop.isBasecamp,
+        existingStop: stop,
+      ),
+    );
+
+    if (result != null && mounted) {
+      final updatedStop = stop.copyWith(
+        placeName: result['name'] as String,
+        placeAddress: (result['address'] as String?)?.isEmpty ?? true ? null : result['address'],
+        visitTime: result['time'] as String,
+        transportMode: result['transport'] as String,
+        photoUrl: result['photoUrl'] as String?,
+        latitude: result['lat'] as double?,
+        longitude: result['lng'] as double?,
+        otmXid: result['xid'] as String?,
+      );
+
+      await _db.updateTripStop(updatedStop);
+      
+      // Need to recalculate distances if location or transport mode changed
+      final currentStops = List<TripStop>.from(_currentDayStops);
+      final index = currentStops.indexWhere((s) => s.id == stop.id);
+      if (index != -1) {
+        currentStops[index] = updatedStop;
+        _recalculateDistances(currentStops);
+        await _db.updateTripStopOrder(currentStops);
+      }
+
+      await _loadStops();
+      if (mounted) {
+        showSuccessSnackbar(
+          context,
+          '${result['name']} diperbarui',
+          icon: Icons.edit_location_alt,
+        );
+      }
     }
   }
 
@@ -353,6 +408,9 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    final basecampStop = _currentDayStops.where((s) => s.isBasecamp).firstOrNull;
+    final regularStops = _currentDayStops.where((s) => !s.isBasecamp).toList();
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -422,7 +480,7 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
                                   Icon(Icons.date_range, size: 16, color: colorScheme.primary),
                                   const SizedBox(width: 6),
                                   Text(
-                                    '${_destination.startDate} → ${_destination.endDate}',
+                                    '${_destination.startDate} → ${_destination.endDate} (${_destination.tripDays} hari)',
                                     style: TextStyle(
                                       color: colorScheme.onSurface.withValues(alpha: 0.7),
                                       fontWeight: FontWeight.w500,
@@ -455,7 +513,6 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
                           _statItem(Icons.place, '$_totalStops', tr('trip_stat_places')),
                           _statItem(Icons.straighten, '${_totalDistanceKm.toStringAsFixed(1)} km', tr('trip_stat_distance')),
                           _statItem(Icons.schedule, _formatMinutes(_totalTravelMinutes), tr('trip_stat_travel_time')),
-                          _statItem(Icons.calendar_today, '${_destination.tripDays}', tr('trip_stat_days')),
                         ],
                       ),
                     ),
@@ -532,8 +589,16 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
                     ),
                   ),
 
+                  // ── Basecamp UI ──
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: _buildBasecampSection(basecampStop),
+                    ),
+                  ),
+
                   // ── Timeline Items ──
-                  if (_currentDayStops.isEmpty)
+                  if (regularStops.isEmpty)
                     SliverToBoxAdapter(
                       child: _emptyState(),
                     )
@@ -542,17 +607,19 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
                       sliver: SliverReorderableList(
                         onReorder: _onReorder,
-                        itemCount: _currentDayStops.length,
+                        itemCount: regularStops.length,
                         itemBuilder: (context, index) {
-                          final stop = _currentDayStops[index];
-                          final nextStop = index < _currentDayStops.length - 1 ? _currentDayStops[index + 1] : null;
-                          final isLast = index == _currentDayStops.length - 1;
+                          final stop = regularStops[index];
+                          final nextStop = index < regularStops.length - 1 ? regularStops[index + 1] : null;
+                          final isLast = index == regularStops.length - 1;
                           return TripTimelineItem(
                             key: ValueKey(stop.id ?? stop.createdAt),
                             stop: stop,
                             nextStop: nextStop,
                             isLast: isLast,
                             isFirst: index == 0,
+                            index: index,
+                            onEdit: () => _editStop(stop),
                             onDelete: () => _deleteStop(stop),
                           );
                         },
@@ -577,11 +644,20 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
   // ── Widget Builders ──
 
   Widget _headerBackground() {
-    final validStops = _allStops.where((s) => s.latitude != null && s.longitude != null).toList();
+    final validStops = _currentDayStops.where((s) => s.latitude != null && s.longitude != null).toList();
     Widget background;
     
     if (validStops.isNotEmpty) {
-      background = TripMapWidget(stops: _allStops);
+      background = AnimatedSwitcher(
+        duration: const Duration(milliseconds: 500),
+        transitionBuilder: (Widget child, Animation<double> animation) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        child: TripMapWidget(
+          key: ValueKey('map_day_$_selectedDay'),
+          stops: _currentDayStops,
+        ),
+      );
     } else if (_destination.latitude != null && _destination.longitude != null) {
       background = FlutterMap(
         options: MapOptions(
@@ -680,6 +756,57 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
               style: TextStyle(
                 fontSize: 13,
                 color: colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBasecampSection(TripStop? basecamp) {
+    final colorScheme = Theme.of(context).colorScheme;
+    if (basecamp != null) {
+      return Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+        ),
+        child: TripTimelineItem(
+          key: ValueKey(basecamp.id ?? basecamp.createdAt),
+          stop: basecamp,
+          nextStop: _currentDayStops.length > 1 ? _currentDayStops[1] : null,
+          isLast: false,
+          isFirst: true,
+          index: -1,
+          onEdit: () => _editStop(basecamp),
+          onDelete: () => _deleteStop(basecamp),
+        ),
+      );
+    }
+
+    return InkWell(
+      onTap: () => _addStop(isBasecamp: true),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colorScheme.outlineVariant, style: BorderStyle.solid),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.hotel, color: colorScheme.primary.withValues(alpha: 0.8)),
+            const SizedBox(width: 12),
+            Text(
+              '+ Tambah Titik Keberangkatan / Hotel',
+              style: TextStyle(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
               ),
             ),
           ],

@@ -30,7 +30,7 @@ class DatabaseHelper {
       return databaseFactoryFfiWebNoWebWorker.openDatabase(
         'wanderlist.db',
         options: OpenDatabaseOptions(
-          version: 9,
+          version: 10,
           onCreate: (db, version) async {
             await _onCreate(db, version);
             await _seedV9DummyTripStops(db);
@@ -43,7 +43,7 @@ class DatabaseHelper {
       final path = join(dbPath, 'wanderlist.db');
       return openDatabase(
         path,
-        version: 9,
+        version: 10,
         onCreate: (db, version) async {
           await _onCreate(db, version);
           await _seedV9DummyTripStops(db);
@@ -95,6 +95,7 @@ class DatabaseHelper {
       transport_mode             TEXT    DEFAULT 'walk',
       distance_meters            REAL,
       travel_minutes             INTEGER,
+      is_basecamp                INTEGER DEFAULT 0,
       created_at                 TEXT    NOT NULL,
       FOREIGN KEY(destination_id) REFERENCES destinations(id) ON DELETE CASCADE
     )
@@ -246,6 +247,11 @@ class DatabaseHelper {
     // ── v9: Seed dummy trip stops & dates for map route testing ──
     if (oldVersion < 9) {
       await _seedV9DummyTripStops(db);
+    }
+
+    // ── v10: Add is_basecamp column to trip_stops ──
+    if (oldVersion < 10) {
+      await db.execute('ALTER TABLE trip_stops ADD COLUMN is_basecamp INTEGER DEFAULT 0');
     }
   }
 
