@@ -277,4 +277,57 @@ const Map<String, Map<String, String>> _translations = {
   'nav_home': {'ID': 'Beranda', 'EN': 'Home'},
   'nav_stats': {'ID': 'Statistik', 'EN': 'Statistics'},
   'nav_settings': {'ID': 'Pengaturan', 'EN': 'Settings'},
+
+  // ── Trip Planner ──────────────────────────────────────────
+  'trip_planner_title': {
+    'ID': 'Rencana Perjalanan',
+    'EN': 'Trip Planner',
+  },
+  'trip_add_stop': {'ID': 'Tambah Tempat', 'EN': 'Add Stop'},
+  'trip_add_day': {'ID': 'Tambah Hari', 'EN': 'Add Day'},
+  'trip_place_name': {'ID': 'Nama Tempat', 'EN': 'Place Name'},
+  'trip_place_address': {
+    'ID': 'Alamat (opsional)',
+    'EN': 'Address (optional)',
+  },
+  'trip_visit_time': {'ID': 'Jam Kunjungan', 'EN': 'Visit Time'},
+  'trip_transport_mode': {
+    'ID': 'Mode Transportasi',
+    'EN': 'Transport Mode',
+  },
+  'trip_stat_places': {'ID': 'Tempat', 'EN': 'Places'},
+  'trip_stat_distance': {'ID': 'Jarak', 'EN': 'Distance'},
+  'trip_stat_travel_time': {
+    'ID': 'Waktu Tempuh',
+    'EN': 'Travel Time',
+  },
+  'trip_stat_days': {'ID': 'Hari', 'EN': 'Days'},
+  'trip_empty': {
+    'ID': 'Belum ada rencana',
+    'EN': 'No plans yet',
+  },
+  'trip_empty_hint': {
+    'ID': 'Tap tombol di bawah untuk menambahkan tempat kunjungan!',
+    'EN': 'Tap the button below to add a place to visit!',
+  },
+  'trip_added_success': {
+    'ID': 'berhasil ditambahkan',
+    'EN': 'added successfully',
+  },
+  'trip_delete_confirm': {
+    'ID': 'Hapus tempat',
+    'EN': 'Delete stop',
+  },
+  'trip_new_place': {
+    'ID': 'Tempat Baru',
+    'EN': 'New Place',
+  },
+  'trip_start_date': {
+    'ID': 'Tanggal Mulai',
+    'EN': 'Start Date',
+  },
+  'trip_end_date': {
+    'ID': 'Tanggal Selesai',
+    'EN': 'End Date',
+  },
 };

@@ -30,6 +30,8 @@ class _AddEditScreenState extends State<AddEditScreen> {
   late TextEditingController _countryCtrl;
   late TextEditingController _notesCtrl;
   late TextEditingController _visitedAtCtrl;
+  late TextEditingController _startDateCtrl;
+  late TextEditingController _endDateCtrl;
 
   String _category = 'Wisata Alam';
   String _status = 'wishlist';
@@ -46,6 +48,8 @@ class _AddEditScreenState extends State<AddEditScreen> {
     _countryCtrl = TextEditingController(text: d?.country ?? '');
     _notesCtrl = TextEditingController(text: d?.notes ?? '');
     _visitedAtCtrl = TextEditingController(text: d?.visitedAt ?? '');
+    _startDateCtrl = TextEditingController(text: d?.startDate ?? '');
+    _endDateCtrl = TextEditingController(text: d?.endDate ?? '');
     if (d != null) {
       _category = ['Wisata Alam', 'Budaya & Sejarah', 'Kota & Urban'].contains(d.category) ? d.category : 'Wisata Alam';
       _status = d.status;
@@ -66,6 +70,8 @@ class _AddEditScreenState extends State<AddEditScreen> {
     _countryCtrl.dispose();
     _notesCtrl.dispose();
     _visitedAtCtrl.dispose();
+    _startDateCtrl.dispose();
+    _endDateCtrl.dispose();
     super.dispose();
   }
 
@@ -122,6 +128,58 @@ class _AddEditScreenState extends State<AddEditScreen> {
     }
   }
 
+  Future<void> _pickStartDate() async {
+    final firstDate = DateTime(2000);
+    final lastDate = DateTime(2030);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _parseDateOrDefault(_startDateCtrl.text, DateTime.now()),
+      firstDate: firstDate,
+      lastDate: lastDate,
+    );
+    if (picked != null) {
+      _startDateCtrl.text = _formatDate(picked);
+      // If end date is before start date, auto-correct
+      if (_endDateCtrl.text.isNotEmpty) {
+        try {
+          final endDate = DateTime.parse(_endDateCtrl.text);
+          if (endDate.isBefore(picked)) {
+            _endDateCtrl.text = _formatDate(picked);
+          }
+        } catch (_) {}
+      }
+    }
+  }
+
+  Future<void> _pickEndDate() async {
+    final firstDate = _startDateCtrl.text.isNotEmpty
+        ? _parseDateOrDefault(_startDateCtrl.text, DateTime(2000))
+        : DateTime(2000);
+    final lastDate = DateTime(2030);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _parseDateOrDefault(_endDateCtrl.text, firstDate),
+      firstDate: firstDate,
+      lastDate: lastDate,
+    );
+    if (picked != null) {
+      _endDateCtrl.text = _formatDate(picked);
+    }
+  }
+
+  DateTime _parseDateOrDefault(String value, DateTime fallback) {
+    if (value.isEmpty) return fallback;
+    try {
+      return DateTime.parse(value);
+    } catch (_) {
+      return fallback;
+    }
+  }
+
+  String _formatDate(DateTime dt) {
+    return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+  }
+
   // PERSON A — INSERT (create mode)
   // PERSON B — UPDATE (edit mode)
   Future<void> _save() async {
@@ -140,6 +198,14 @@ class _AddEditScreenState extends State<AddEditScreen> {
       visitedAt: _status == 'visited' && _visitedAtCtrl.text.trim().isNotEmpty
           ? _visitedAtCtrl.text.trim()
           : null,
+      startDate: _startDateCtrl.text.trim().isNotEmpty
+          ? _startDateCtrl.text.trim()
+          : null,
+      endDate: _endDateCtrl.text.trim().isNotEmpty
+          ? _endDateCtrl.text.trim()
+          : null,
+      latitude: _isEditMode ? widget.destination!.latitude : null,
+      longitude: _isEditMode ? widget.destination!.longitude : null,
       createdAt: _isEditMode ? widget.destination!.createdAt : now,
     );
 
@@ -304,6 +370,46 @@ class _AddEditScreenState extends State<AddEditScreen> {
                 ),
                 const SizedBox(height: 12),
               ],
+
+              // Rentang tanggal perjalanan (Trip date range)
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _startDateCtrl,
+                      decoration: _inputDeco(
+                        tr('trip_start_date'),
+                        Icons.flight_takeoff,
+                      ).copyWith(
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.date_range, size: 20),
+                          onPressed: _pickStartDate,
+                        ),
+                      ),
+                      readOnly: true,
+                      onTap: _pickStartDate,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _endDateCtrl,
+                      decoration: _inputDeco(
+                        tr('trip_end_date'),
+                        Icons.flight_land,
+                      ).copyWith(
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.date_range, size: 20),
+                          onPressed: _pickEndDate,
+                        ),
+                      ),
+                      readOnly: true,
+                      onTap: _pickEndDate,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
 
               // Catatan
               TextFormField(

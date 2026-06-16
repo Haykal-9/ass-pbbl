@@ -225,8 +225,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           )
         ],
       ),
-      child: Column(
-        children: children,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: children,
+        ),
       ),
     );
   }

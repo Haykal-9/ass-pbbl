@@ -99,7 +99,7 @@ class _SwipeableChecklistItemState extends State<SwipeableChecklistItem> {
             // Lapisan Atas: Konten Checklist (Bergeser ke kiri mengikuti dragOffset)
             Transform.translate(
               offset: Offset(_dragOffset, 0),
-              child: Container(
+              child: Material(
                 color: Theme.of(context).cardColor,
                 child: CheckboxListTile(
                   value: widget.item.isDone,

@@ -1,14 +1,27 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'screens/home_screen.dart';
 import 'services/app_locale.dart';
 import 'services/currency_service.dart';
 import 'services/preferences_service.dart';
 
+class AppScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+      };
+}
+
 final ValueNotifier<String> themeNotifier = ValueNotifier('Canopy');
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   final prefs = PreferencesService();
   final temaWarna = await prefs.getTemaWarna();
   final bahasa = await prefs.getBahasa();
@@ -103,6 +116,7 @@ class WanderListApp extends StatelessWidget {
                   title: 'WanderList',
                   debugShowCheckedModeBanner: false,
                   theme: _buildTheme(temaWarna),
+                  scrollBehavior: AppScrollBehavior(),
                   home: const HomeScreen(),
                 );
               },

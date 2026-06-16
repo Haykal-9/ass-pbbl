@@ -2,11 +2,15 @@ class Destination {
   final int? id;
   final String name;
   final String country;
-  final String category; // pantai | kota | gunung | alam
-  final String status; // wishlist | visited
+  final String category; // Wisata Alam | Budaya & Sejarah | Kota & Urban
+  final String status; // wishlist | in_trip | visited
   final String notes;
   final String? photoPath;
   final String? visitedAt;
+  final String? startDate; // Trip start date (YYYY-MM-DD)
+  final String? endDate; // Trip end date (YYYY-MM-DD)
+  final double? latitude;
+  final double? longitude;
   final String createdAt;
   final int checklistTotal;
   final int checklistDone;
@@ -20,10 +24,26 @@ class Destination {
     required this.notes,
     this.photoPath,
     this.visitedAt,
+    this.startDate,
+    this.endDate,
+    this.latitude,
+    this.longitude,
     required this.createdAt,
     this.checklistTotal = 0,
     this.checklistDone = 0,
   });
+
+  /// Number of days in the trip (derived from startDate/endDate).
+  int get tripDays {
+    if (startDate == null || endDate == null) return 0;
+    try {
+      final start = DateTime.parse(startDate!);
+      final end = DateTime.parse(endDate!);
+      return end.difference(start).inDays + 1;
+    } catch (_) {
+      return 0;
+    }
+  }
 
   factory Destination.fromMap(Map<String, dynamic> map) => Destination(
         id: map['id'] as int?,
@@ -34,6 +54,10 @@ class Destination {
         notes: map['notes'] as String,
         photoPath: map['photo_path'] as String?,
         visitedAt: map['visited_at'] as String?,
+        startDate: map['start_date'] as String?,
+        endDate: map['end_date'] as String?,
+        latitude: (map['latitude'] as num?)?.toDouble(),
+        longitude: (map['longitude'] as num?)?.toDouble(),
         createdAt: map['created_at'] as String,
         checklistTotal: map['checklist_total'] as int? ?? 0,
         checklistDone: map['checklist_done'] as int? ?? 0,
@@ -48,6 +72,10 @@ class Destination {
         'notes': notes,
         'photo_path': photoPath,
         'visited_at': visitedAt,
+        'start_date': startDate,
+        'end_date': endDate,
+        'latitude': latitude,
+        'longitude': longitude,
         'created_at': createdAt,
       };
 
@@ -60,6 +88,10 @@ class Destination {
     String? notes,
     String? photoPath,
     String? visitedAt,
+    String? startDate,
+    String? endDate,
+    double? latitude,
+    double? longitude,
     String? createdAt,
     int? checklistTotal,
     int? checklistDone,
@@ -73,6 +105,10 @@ class Destination {
         notes: notes ?? this.notes,
         photoPath: photoPath ?? this.photoPath,
         visitedAt: visitedAt ?? this.visitedAt,
+        startDate: startDate ?? this.startDate,
+        endDate: endDate ?? this.endDate,
+        latitude: latitude ?? this.latitude,
+        longitude: longitude ?? this.longitude,
         createdAt: createdAt ?? this.createdAt,
         checklistTotal: checklistTotal ?? this.checklistTotal,
         checklistDone: checklistDone ?? this.checklistDone,

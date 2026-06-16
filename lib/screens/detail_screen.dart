@@ -17,6 +17,7 @@ import 'add_edit_screen.dart';
 import 'budget_screen.dart';
 import 'checklist_screen.dart';
 import 'gallery_screen.dart';
+import 'trip_planner_screen.dart';
 
 class DetailScreen extends StatefulWidget {
   final Destination destination;
@@ -34,6 +35,7 @@ class _DetailScreenState extends State<DetailScreen> {
   double _budgetTotal = 0;
   int _checklistTotal = 0;
   int _checklistDone = 0;
+  int _tripStopCount = 0;
 
   @override
   void initState() {
@@ -59,6 +61,7 @@ class _DetailScreenState extends State<DetailScreen> {
     final fresh = await _db.getDestinationById(_destination.id!);
     final budgetTotal = await _db.getDestinationBudgetTotal(_destination.id!);
     final checklistItems = await _db.getChecklistItems(_destination.id!);
+    final tripStopCount = await _db.getTripStopCount(_destination.id!);
     
     if (mounted) {
       setState(() {
@@ -66,6 +69,7 @@ class _DetailScreenState extends State<DetailScreen> {
         _budgetTotal = budgetTotal;
         _checklistTotal = checklistItems.length;
         _checklistDone = checklistItems.where((item) => item.isDone).length;
+        _tripStopCount = tripStopCount;
         _isLoading = false;
       });
     }
@@ -199,7 +203,9 @@ class _DetailScreenState extends State<DetailScreen> {
 
                         const SizedBox(height: 20),
 
-                        // Action Cards (Checklist, Budget, Gallery)
+                        // Action Cards (Trip Planner, Checklist, Budget)
+                        _tripPlannerCard(),
+                        const SizedBox(height: 12),
                         _checklistCard(),
                         const SizedBox(height: 12),
                         _budgetCard(),
@@ -230,6 +236,70 @@ class _DetailScreenState extends State<DetailScreen> {
                 ),
               ],
             ),
+    );
+  }
+
+  Widget _tripPlannerCard() {
+    final primary = Theme.of(context).colorScheme.primary;
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => TripPlannerScreen(destination: _destination),
+          ),
+        );
+        await _reload();
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: primary.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: primary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.map_outlined, color: primary),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tr('trip_planner_title'),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _tripStopCount > 0
+                        ? '$_tripStopCount ${tr('trip_stat_places')}'
+                        : tr('trip_empty'),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: primary),
+          ],
+        ),
+      ),
     );
   }
 
