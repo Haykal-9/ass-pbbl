@@ -36,7 +36,10 @@ class OpenRouteService {
           final geometry = data['features'][0]['geometry'];
           if (geometry != null && geometry['coordinates'] != null) {
             final List coords = geometry['coordinates'];
-            return coords.map((c) => LatLng(c[1] as double, c[0] as double)).toList();
+            final List<LatLng> polyline = [waypoints.first];
+            polyline.addAll(coords.map((c) => LatLng(c[1] as double, c[0] as double)));
+            polyline.add(waypoints.last);
+            return polyline;
           }
         }
       }

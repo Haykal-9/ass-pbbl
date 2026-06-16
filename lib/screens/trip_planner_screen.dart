@@ -137,6 +137,49 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
     return total;
   }
 
+  String get _effectiveTime {
+    int totalMinutes = 0;
+    
+    final Map<int, List<TripStop>> dayMap = {};
+    for (final stop in _allStops) {
+      if (stop.visitTime?.isNotEmpty == true) {
+        dayMap.putIfAbsent(stop.dayNumber, () => []).add(stop);
+      }
+    }
+    
+    for (final stops in dayMap.values) {
+      if (stops.length < 2) continue;
+      stops.sort((a, b) {
+        if (a.isBasecamp && !b.isBasecamp) return -1;
+        if (!a.isBasecamp && b.isBasecamp) return 1;
+        return a.orderIndex.compareTo(b.orderIndex);
+      });
+      
+      final firstStop = stops.first;
+      final lastStop = stops.last;
+      
+      try {
+        final firstParts = firstStop.visitTime!.split(':');
+        final lastParts = lastStop.visitTime!.split(':');
+        final startMin = int.parse(firstParts[0]) * 60 + int.parse(firstParts[1]);
+        // Add 60 mins as default duration for the last stop
+        final endMin = int.parse(lastParts[0]) * 60 + int.parse(lastParts[1]) + (lastStop.estimatedDurationMinutes ?? 60);
+        
+        if (endMin > startMin) {
+          totalMinutes += (endMin - startMin);
+        }
+      } catch (_) {}
+    }
+    
+    if (totalMinutes == 0) return '-';
+    
+    final h = totalMinutes ~/ 60;
+    final m = totalMinutes % 60;
+    if (h == 0) return '${m}m';
+    if (m == 0) return '${h}j';
+    return '${h}j ${m}m';
+  }
+
   // ── Date helpers ──
 
   String _dayDate(int dayNumber) {
@@ -419,16 +462,6 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
           icon: Icons.arrow_back,
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          _circleButton(
-            icon: Icons.more_vert,
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Menu opsi tambahan belum diimplementasikan.')),
-              );
-            },
-          ),
-        ],
       ),
       extendBodyBehindAppBar: true,
       body: Column(
@@ -507,12 +540,14 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
                           ),
                         ),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      child: Wrap(
+                        alignment: WrapAlignment.spaceAround,
+                        runSpacing: 12,
                         children: [
                           _statItem(Icons.place, '$_totalStops', tr('trip_stat_places')),
                           _statItem(Icons.straighten, '${_totalDistanceKm.toStringAsFixed(1)} km', tr('trip_stat_distance')),
                           _statItem(Icons.schedule, _formatMinutes(_totalTravelMinutes), tr('trip_stat_travel_time')),
+                          _statItem(Icons.timer, _effectiveTime, 'Waktu Efektif'),
                         ],
                       ),
                     ),
@@ -605,24 +640,25 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
                   else
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                      sliver: SliverReorderableList(
-                        onReorder: _onReorder,
-                        itemCount: regularStops.length,
-                        itemBuilder: (context, index) {
-                          final stop = regularStops[index];
-                          final nextStop = index < regularStops.length - 1 ? regularStops[index + 1] : null;
-                          final isLast = index == regularStops.length - 1;
-                          return TripTimelineItem(
-                            key: ValueKey(stop.id ?? stop.createdAt),
-                            stop: stop,
-                            nextStop: nextStop,
-                            isLast: isLast,
-                            isFirst: index == 0,
-                            index: index,
-                            onEdit: () => _editStop(stop),
-                            onDelete: () => _deleteStop(stop),
-                          );
-                        },
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final stop = regularStops[index];
+                            final nextStop = index < regularStops.length - 1 ? regularStops[index + 1] : null;
+                            final isLast = index == regularStops.length - 1;
+                            return TripTimelineItem(
+                              key: ValueKey(stop.id ?? stop.createdAt),
+                              stop: stop,
+                              nextStop: nextStop,
+                              isLast: isLast,
+                              isFirst: index == 0,
+                              index: index,
+                              onEdit: () => _editStop(stop),
+                              onDelete: () => _deleteStop(stop),
+                            );
+                          },
+                          childCount: regularStops.length,
+                        ),
                       ),
                     ),
                 ],
@@ -784,6 +820,11 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
           onDelete: () => _deleteStop(basecamp),
         ),
       );
+    }
+
+    // Hide button if there are already regular stops
+    if (_currentDayStops.isNotEmpty) {
+      return const SizedBox.shrink();
     }
 
     return InkWell(

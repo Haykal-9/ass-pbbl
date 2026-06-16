@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:image_picker/image_picker.dart';
 import '../services/app_locale.dart';
 import '../services/osm_nominatim_service.dart';
+import '../models/trip_stop.dart';
 
 class AddStopSheet extends StatefulWidget {
   final int dayNumber;
@@ -31,6 +34,7 @@ class _AddStopSheetState extends State<AddStopSheet> {
   List<Map<String, dynamic>> _searchResults = [];
   Timer? _debounce;
   Map<String, dynamic>? _selectedPlaceDetails;
+  String? _photoUrl;
 
   @override
   void initState() {
@@ -41,6 +45,7 @@ class _AddStopSheetState extends State<AddStopSheet> {
       _addressCtrl.text = stop.placeAddress ?? '';
       _timeCtrl.text = stop.visitTime ?? '09:00';
       _transport = stop.transportMode;
+      _photoUrl = stop.photoUrl;
       if (stop.latitude != null && stop.longitude != null) {
         _selectedPlaceDetails = {
           'lat': stop.latitude,
@@ -114,6 +119,14 @@ class _AddStopSheetState extends State<AddStopSheet> {
       selectedColor: Theme.of(context).colorScheme.primary,
       onSelected: (_) => setState(() => _transport = mode),
     );
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() => _photoUrl = pickedFile.path);
+    }
   }
 
   @override
@@ -229,6 +242,36 @@ class _AddStopSheetState extends State<AddStopSheet> {
                 _transportChip('public', Icons.directions_bus),
               ],
             ),
+            const SizedBox(height: 16),
+            Text('Foto Tempat (Opsional)', style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: _pickImage,
+              child: Container(
+                height: 150,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.2)),
+                ),
+                child: _photoUrl != null && _photoUrl!.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: _photoUrl!.startsWith('http')
+                            ? Image.network(_photoUrl!, fit: BoxFit.cover)
+                            : Image.file(File(_photoUrl!), fit: BoxFit.cover),
+                      )
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add_a_photo, size: 40, color: Theme.of(context).colorScheme.primary),
+                          const SizedBox(height: 8),
+                          Text('Pilih Foto dari Galeri', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7))),
+                        ],
+                      ),
+              ),
+            ),
             const SizedBox(height: 20),
             FilledButton.icon(
               onPressed: () {
@@ -249,7 +292,7 @@ class _AddStopSheetState extends State<AddStopSheet> {
                   'address': _addressCtrl.text.trim(),
                   'time': _timeCtrl.text.trim(),
                   'transport': _transport,
-                  'photoUrl': photoUrl,
+                  'photoUrl': _photoUrl,
                   'lat': lat,
                   'lng': lng,
                   'xid': xid,

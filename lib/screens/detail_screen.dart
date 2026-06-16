@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../models/destination.dart';
+import '../models/destination_photo.dart';
 import '../services/app_locale.dart';
 import '../services/currency_service.dart';
 import '../services/database_helper.dart';
@@ -390,9 +391,9 @@ class _DetailScreenState extends State<DetailScreen> {
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(2),
-                            child: photo.imagePath.startsWith('http')
-                                ? Image.network(photo.imagePath, fit: BoxFit.cover)
-                                : Image.file(File(photo.imagePath), fit: BoxFit.cover),
+                            child: photo.photoPath.startsWith('http')
+                                ? Image.network(photo.photoPath, fit: BoxFit.cover)
+                                : Image.file(File(photo.photoPath), fit: BoxFit.cover),
                           ),
                         ),
                       ),

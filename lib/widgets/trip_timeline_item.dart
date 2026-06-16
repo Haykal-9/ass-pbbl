@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../models/trip_stop.dart';
@@ -70,38 +71,39 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
         );
       },
       onDismissed: (_) => widget.onDelete(),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // ── Time + Timeline line ──
-            SizedBox(
-              width: 55,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 24),
-                    child: Text(
-                      widget.stop.visitTime ?? '--:--',
-                      style: TextStyle(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  if (!widget.isLast)
-                    Expanded(
-                      child: Container(
-                        width: 1,
-                        color: colorScheme.onSurface.withValues(alpha: 0.15),
-                      ),
-                    ),
-                ],
+      child: Stack(
+        children: [
+          // ── Timeline line ──
+          if (!widget.isLast)
+            Positioned(
+              top: 44,
+              bottom: 0,
+              left: 27,
+              width: 1,
+              child: Container(
+                color: colorScheme.onSurface.withValues(alpha: 0.15),
               ),
             ),
+          // ── Main Content ──
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Time ──
+              SizedBox(
+                width: 55,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 24),
+                  child: Text(
+                    widget.stop.visitTime ?? '--:--',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ),
             const SizedBox(width: 8),
             // ── Right Content ──
             Expanded(
@@ -140,13 +142,21 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
                               bottomLeft: Radius.circular(showTransit && !_isExpanded ? 0 : 12),
                             ),
                             child: widget.stop.photoUrl != null && widget.stop.photoUrl!.isNotEmpty
-                                ? Image.network(
-                                    widget.stop.photoUrl!,
-                                    width: 110,
-                                    height: 90,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => _placeholderImg(colorScheme),
-                                  )
+                                ? (widget.stop.photoUrl!.startsWith('http')
+                                    ? Image.network(
+                                        widget.stop.photoUrl!,
+                                        width: 76,
+                                        height: 76,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => _placeholderImg(colorScheme),
+                                      )
+                                    : Image.file(
+                                        File(widget.stop.photoUrl!),
+                                        width: 76,
+                                        height: 76,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => _placeholderImg(colorScheme),
+                                      ))
                                 : _placeholderImg(colorScheme),
                           ),
                           // Title + address
@@ -157,40 +167,15 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          widget.stop.placeName,
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w600,
-                                            color: colorScheme.onSurface,
-                                          ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          IconButton(
-                                            padding: EdgeInsets.zero,
-                                            constraints: const BoxConstraints(),
-                                            icon: Icon(Icons.edit, size: 16, color: colorScheme.onSurface.withValues(alpha: 0.5)),
-                                            onPressed: widget.onEdit,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          IconButton(
-                                            padding: EdgeInsets.zero,
-                                            constraints: const BoxConstraints(),
-                                            icon: Icon(Icons.delete_outline, size: 16, color: colorScheme.error.withValues(alpha: 0.7)),
-                                            onPressed: widget.onDelete,
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                  Text(
+                                    widget.stop.placeName,
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: colorScheme.onSurface,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                   if (widget.stop.placeAddress != null && widget.stop.placeAddress!.isNotEmpty)
                                     Padding(
@@ -209,16 +194,6 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
                               ),
                             ),
                           ),
-                          // Drag Handle
-                          if (!widget.stop.isBasecamp)
-                            ReorderableDragStartListener(
-                              index: widget.index,
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 8, right: 12),
-                                child: Icon(Icons.drag_handle,
-                                    color: colorScheme.onSurface.withValues(alpha: 0.3), size: 20),
-                              ),
-                            ),
                           // Chevron
                           Padding(
                             padding: EdgeInsets.only(right: widget.stop.isBasecamp ? 12 : 0),
@@ -261,6 +236,35 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
                                         ],
                                       ),
                                     ],
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        OutlinedButton.icon(
+                                          onPressed: widget.onEdit,
+                                          icon: Icon(Icons.edit, size: 14, color: colorScheme.primary),
+                                          label: Text('Edit', style: TextStyle(color: colorScheme.primary, fontSize: 12)),
+                                          style: OutlinedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                            minimumSize: Size.zero,
+                                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                            side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.5)),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        OutlinedButton.icon(
+                                          onPressed: widget.onDelete,
+                                          icon: Icon(Icons.delete_outline, size: 14, color: colorScheme.error),
+                                          label: Text('Hapus', style: TextStyle(color: colorScheme.error, fontSize: 12)),
+                                          style: OutlinedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                            minimumSize: Size.zero,
+                                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                            side: BorderSide(color: colorScheme.error.withValues(alpha: 0.5)),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 ),
                               )
@@ -269,6 +273,7 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
                     // ── Transit info strip (inside the card) ──
                     if (showTransit)
                       Container(
+                        width: double.infinity,
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                         decoration: BoxDecoration(
                           color: colorScheme.primary.withValues(alpha: 0.06),
@@ -290,7 +295,7 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
                             _transitChip(
                               context,
                               _transportIcon(widget.stop.transportMode),
-                              (widget.isFirst && !widget.stop.isBasecamp) ? 'Dari hotel · ${widget.stop.transportMode}' : widget.stop.transportMode,
+                              widget.stop.transportMode,
                             ),
                             if (widget.stop.distanceMeters != null)
                               _transitChip(
@@ -311,9 +316,11 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
                 ),
               ),
             ),
+            ),
             const SizedBox(width: 16),
           ],
         ),
+        ],
       ),
     );
   }
@@ -335,8 +342,8 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
 
   Widget _placeholderImg(ColorScheme colorScheme) {
     return Container(
-      width: 110,
-      height: 90,
+      width: 76,
+      height: 76,
       color: colorScheme.primary.withValues(alpha: 0.08),
       child: Icon(Icons.image, color: colorScheme.onSurface.withValues(alpha: 0.25)),
     );

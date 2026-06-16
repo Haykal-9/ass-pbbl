@@ -176,9 +176,10 @@ class _TripMapWidgetState extends State<TripMapWidget> {
                     onTap: () => widget.onStopTapped?.call(stop),
                     child: CustomPaint(
                       painter: NumberedMarkerPainter(
-                        number: idx + 1,
-                        color: Theme.of(context).colorScheme.primary,
+                        number: stop.isBasecamp ? 0 : idx + (validStops.isNotEmpty && validStops.first.isBasecamp ? 0 : 1),
+                        color: stop.isBasecamp ? Colors.blueGrey.shade800 : Theme.of(context).colorScheme.primary,
                         isHighlighted: isHighlighted,
+                        isBasecamp: stop.isBasecamp,
                       ),
                     ),
                   ),
@@ -219,11 +220,13 @@ class NumberedMarkerPainter extends CustomPainter {
   final int number;
   final Color color;
   final bool isHighlighted;
+  final bool isBasecamp;
 
   NumberedMarkerPainter({
     required this.number,
     required this.color,
     required this.isHighlighted,
+    this.isBasecamp = false,
   });
 
   @override
@@ -258,23 +261,42 @@ class NumberedMarkerPainter extends CustomPainter {
       ..strokeWidth = 2.0;
     canvas.drawCircle(center, radius, borderPaint);
 
-    // Number text
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: number.toString(),
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
+    if (isBasecamp) {
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: String.fromCharCode(Icons.home.codePoint),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontFamily: Icons.home.fontFamily,
+            package: Icons.home.fontPackage,
+          ),
         ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    textPainter.layout();
-    textPainter.paint(
-      canvas,
-      center - Offset(textPainter.width / 2, textPainter.height / 2),
-    );
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        center - Offset(textPainter.width / 2, textPainter.height / 2),
+      );
+    } else {
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: number.toString(),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        center - Offset(textPainter.width / 2, textPainter.height / 2),
+      );
+    }
   }
 
   @override
