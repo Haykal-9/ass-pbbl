@@ -36,6 +36,7 @@ class _DetailScreenState extends State<DetailScreen> {
   int _checklistTotal = 0;
   int _checklistDone = 0;
   int _tripStopCount = 0;
+  int _galleryPhotoCount = 0;
 
   @override
   void initState() {
@@ -63,6 +64,8 @@ class _DetailScreenState extends State<DetailScreen> {
     final checklistItems = await _db.getChecklistItems(_destination.id!);
     final tripStopCount = await _db.getTripStopCount(_destination.id!);
     
+    final galleryPhotos = await _db.getDestinationPhotos(_destination.id!);
+    
     if (mounted) {
       setState(() {
         if (fresh != null) _destination = fresh;
@@ -70,6 +73,7 @@ class _DetailScreenState extends State<DetailScreen> {
         _checklistTotal = checklistItems.length;
         _checklistDone = checklistItems.where((item) => item.isDone).length;
         _tripStopCount = tripStopCount;
+        _galleryPhotoCount = galleryPhotos.length;
         _isLoading = false;
       });
     }
@@ -203,12 +207,14 @@ class _DetailScreenState extends State<DetailScreen> {
 
                         const SizedBox(height: 20),
 
-                        // Action Cards (Trip Planner, Checklist, Budget)
+                        // Action Cards (Trip Planner, Galeri, Budget, Checklist)
                         _tripPlannerCard(),
                         const SizedBox(height: 12),
-                        _checklistCard(),
+                        _galleryCard(),
                         const SizedBox(height: 12),
                         _budgetCard(),
+                        const SizedBox(height: 12),
+                        _checklistCard(),
 
                         const SizedBox(height: 24),
 
@@ -291,6 +297,70 @@ class _DetailScreenState extends State<DetailScreen> {
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: primary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _galleryCard() {
+    final primary = Theme.of(context).colorScheme.primary;
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => GalleryScreen(destination: _destination),
+          ),
+        );
+        await _reload();
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: primary.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: primary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.photo_library_outlined, color: primary),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tr('gallery_title'),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _galleryPhotoCount > 0
+                        ? '$_galleryPhotoCount foto'
+                        : 'Belum ada foto',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: _galleryPhotoCount > 0 ? primary : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                 ],

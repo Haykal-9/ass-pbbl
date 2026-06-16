@@ -330,4 +330,10 @@ const Map<String, Map<String, String>> _translations = {
     'ID': 'Tanggal Selesai',
     'EN': 'End Date',
   },
+
+  // ── Gallery ──────────────────────────────────────────
+  'gallery_title': {
+    'ID': 'Galeri Polaroid',
+    'EN': 'Polaroid Gallery',
+  },
 };

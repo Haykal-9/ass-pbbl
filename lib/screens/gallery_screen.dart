@@ -108,6 +108,32 @@ class _GalleryScreenState extends State<GalleryScreen> {
     }
   }
 
+  Future<void> _deletePhoto(DestinationPhoto photo) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus Memori?'),
+        content: const Text('Apakah Anda yakin ingin menghapus foto polaroid ini? Kenangan yang terhapus tidak bisa dikembalikan.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && photo.id != null) {
+      await dbHelper.deleteDestinationPhoto(photo.id!);
+      _loadPhotos();
+    }
+  }
+
   void _onDeckEmpty() {
     // Dipanggil saat kartu terakhir dilempar
     ScaffoldMessenger.of(context).showSnackBar(
@@ -218,6 +244,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
             : PolaroidDeckGallery(
                 photos: _photos,
                 onDeckEmpty: _onDeckEmpty,
+                onDeletePhoto: _deletePhoto,
                 decoType: _decoType,
               ),
       ),

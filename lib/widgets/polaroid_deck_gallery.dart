@@ -11,12 +11,14 @@ import 'polaroid_painters.dart';
 class PolaroidDeckGallery extends StatefulWidget {
   final List<DestinationPhoto> photos;
   final VoidCallback onDeckEmpty;
+  final Function(DestinationPhoto)? onDeletePhoto;
   final String decoType;
 
   const PolaroidDeckGallery({
     super.key,
     required this.photos,
     required this.onDeckEmpty,
+    this.onDeletePhoto,
     this.decoType = 'tape',
   });
 
@@ -206,6 +208,19 @@ class _PolaroidDeckGalleryState extends State<PolaroidDeckGallery> with SingleTi
             size: const Size(double.infinity, 40),
           ),
         ),
+        if (isTop && widget.onDeletePhoto != null)
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: Material(
+              color: Colors.transparent,
+              child: IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                tooltip: 'Hapus Memori',
+                onPressed: () => widget.onDeletePhoto!(photo),
+              ),
+            ),
+          ),
       ],
     );
 
