@@ -275,6 +275,7 @@ const Map<String, Map<String, String>> _translations = {
 
   // ── Bottom Navigation ─────────────────────────────────────
   'nav_home': {'ID': 'Beranda', 'EN': 'Home'},
+  'nav_gallery': {'ID': 'Galeri', 'EN': 'Gallery'},
   'nav_stats': {'ID': 'Statistik', 'EN': 'Statistics'},
   'nav_settings': {'ID': 'Pengaturan', 'EN': 'Settings'},
 

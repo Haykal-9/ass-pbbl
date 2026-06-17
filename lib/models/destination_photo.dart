@@ -32,4 +32,20 @@ class DestinationPhoto {
       createdAt: map['created_at'] as String,
     );
   }
+
+  DestinationPhoto copyWith({
+    int? id,
+    int? destinationId,
+    String? photoPath,
+    String? caption,
+    String? createdAt,
+  }) {
+    return DestinationPhoto(
+      id: id ?? this.id,
+      destinationId: destinationId ?? this.destinationId,
+      photoPath: photoPath ?? this.photoPath,
+      caption: caption ?? this.caption,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }

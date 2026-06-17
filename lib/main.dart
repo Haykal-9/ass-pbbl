@@ -21,7 +21,11 @@ final ValueNotifier<String> themeNotifier = ValueNotifier('Canopy');
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (error) {
+    debugPrint('Skipping .env load: $error');
+  }
   final prefs = PreferencesService();
   final temaWarna = await prefs.getTemaWarna();
   final bahasa = await prefs.getBahasa();
