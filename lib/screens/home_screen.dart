@@ -13,6 +13,7 @@ import 'add_edit_screen.dart';
 import 'detail_screen.dart';
 import 'scratch_card_screen.dart';
 import 'settings_screen.dart';
+import 'social_gallery_screen.dart';
 import 'statistics_screen.dart';
 
 bool canScratchDestination(Destination destination) {
@@ -200,7 +201,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           title: Text(
-            tr('stats_title'),
+            tr('nav_gallery'),
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           foregroundColor: Theme.of(context).colorScheme.primary,
@@ -208,6 +209,24 @@ class _HomeScreenState extends State<HomeScreen> {
           scrolledUnderElevation: 0,
         );
       case 2:
+        return AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              setState(() {
+                _currentIndex = 0;
+              });
+            },
+          ),
+          title: Text(
+            tr('stats_title'),
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          foregroundColor: Theme.of(context).colorScheme.primary,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+        );
+      case 3:
         return AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
@@ -274,9 +293,11 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           // Tab 0: Home (destination list)
           _buildHomeBody(),
-          // Tab 1: Statistics
+          // Tab 1: Social Gallery
+          const SocialGalleryScreen(),
+          // Tab 2: Statistics
           const StatisticsScreen(),
-          // Tab 2: Settings
+          // Tab 3: Settings
           SettingsScreen(onPrefsChanged: () => _loadPrefs()),
         ],
       ),
@@ -290,6 +311,11 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.home_outlined),
             selectedIcon: const Icon(Icons.home),
             label: tr('nav_home'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.photo_library_outlined),
+            selectedIcon: const Icon(Icons.photo_library),
+            label: tr('nav_gallery'),
           ),
           NavigationDestination(
             icon: const Icon(Icons.bar_chart_outlined),

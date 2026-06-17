@@ -9,6 +9,7 @@ import '../models/budget_item.dart';
 import '../models/checklist_item.dart';
 import '../models/destination.dart';
 import '../models/destination_photo.dart';
+import '../models/gallery_feed_item.dart';
 import '../models/trip_stop.dart';
 
 final ValueNotifier<int> budgetChangedNotifier = ValueNotifier<int>(0);
@@ -814,6 +815,27 @@ class DatabaseHelper {
     return db.insert('destination_photos', photo.toMap());
   }
 
+  Future<List<GalleryFeedItem>> getGalleryFeedItems() async {
+    final db = await database;
+    final maps = await db.rawQuery('''
+      SELECT
+        p.id AS gallery_photo_id,
+        p.destination_id AS gallery_destination_id,
+        p.photo_path AS gallery_photo_path,
+        p.caption AS gallery_caption,
+        p.created_at AS gallery_created_at,
+        d.*,
+        (SELECT COUNT(*) FROM checklist_items WHERE destination_id = d.id)
+          AS checklist_total,
+        (SELECT IFNULL(SUM(is_done), 0) FROM checklist_items WHERE destination_id = d.id)
+          AS checklist_done
+      FROM destination_photos p
+      INNER JOIN destinations d ON d.id = p.destination_id
+      ORDER BY p.created_at DESC, p.id DESC
+    ''');
+    return maps.map(GalleryFeedItem.fromMap).toList();
+  }
+
   Future<List<DestinationPhoto>> getDestinationPhotos(int destinationId) async {
     final db = await database;
     final maps = await db.query(
@@ -823,6 +845,18 @@ class DatabaseHelper {
       orderBy: 'created_at ASC, id ASC',
     );
     return maps.map(DestinationPhoto.fromMap).toList();
+  }
+
+  Future<int> updateDestinationPhoto(DestinationPhoto photo) async {
+    if (photo.id == null) return 0;
+
+    final db = await database;
+    return db.update(
+      'destination_photos',
+      photo.toMap(),
+      where: 'id = ?',
+      whereArgs: [photo.id],
+    );
   }
 
   Future<void> deleteDestinationPhoto(int id) async {
