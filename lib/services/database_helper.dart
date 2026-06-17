@@ -31,7 +31,7 @@ class DatabaseHelper {
       return databaseFactoryFfiWebNoWebWorker.openDatabase(
         'wanderlist.db',
         options: OpenDatabaseOptions(
-          version: 10,
+          version: 11,
           onCreate: (db, version) async {
             await _onCreate(db, version);
             await _seedV9DummyTripStops(db);
@@ -44,7 +44,7 @@ class DatabaseHelper {
       final path = join(dbPath, 'wanderlist.db');
       return openDatabase(
         path,
-        version: 10,
+        version: 11,
         onCreate: (db, version) async {
           await _onCreate(db, version);
           await _seedV9DummyTripStops(db);
@@ -254,6 +254,19 @@ class DatabaseHelper {
     if (oldVersion < 10) {
       await db.execute('ALTER TABLE trip_stops ADD COLUMN is_basecamp INTEGER DEFAULT 0');
     }
+
+    // ── v11: Update Borobudur Basecamp Address ──
+    if (oldVersion < 11) {
+      await db.update(
+        'trip_stops',
+        {
+          'place_address': 'Jl. Syailendra Raya, Borobudur, Magelang, Jawa Tengah 56553',
+          'opening_hours': 'Check-in: 14:00 - Check-out: 12:00',
+        },
+        where: 'place_name = ?',
+        whereArgs: ['The Omah Borobudur'],
+      );
+    }
   }
 
   Future<void> _seedV9DummyTripStops(Database db) async {
@@ -273,7 +286,7 @@ class DatabaseHelper {
         final isBc = s['bc'] == 1;
         await db.insert('trip_stops', {
           'destination_id': id, 'day_number': 1, 'order_index': isBc ? -1 : i,
-          'place_name': s['n'], 'latitude': s['la'], 'longitude': s['lo'],
+          'place_name': s['n'], 'place_address': s['a'], 'opening_hours': s['oh'], 'latitude': s['la'], 'longitude': s['lo'],
           'visit_time': s['t'], 'transport_mode': s['m'] ?? 'walk',
           'distance_meters': s['d'], 'travel_minutes': s['min'],
           'photo_url': s['p'], 'is_basecamp': isBc ? 1 : 0, 'created_at': now,
@@ -323,7 +336,7 @@ class DatabaseHelper {
 
     // 6. Candi Borobudur (visited)
     await seed('Candi Borobudur', '2025-03-15', '2025-03-18', [
-      {'n': 'The Omah Borobudur', 'la': -7.6085, 'lo': 110.1985, 't': '05:00', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
+      {'n': 'The Omah Borobudur', 'a': 'Jl. Syailendra Raya, Borobudur, Magelang, Jawa Tengah 56553', 'oh': 'Check-in: 14:00 - Check-out: 12:00', 'la': -7.6085, 'lo': 110.1985, 't': '05:00', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
       {'n': 'Candi Borobudur', 'la': -7.6076, 'lo': 110.2058, 't': '05:30', 'm': 'walk', 'd': 600.0, 'min': 8, 'p': 'https://images.unsplash.com/photo-1596402184320-417e7178b2cd?q=80&w=600'},
       {'n': 'Candi Pawon', 'la': -7.6050, 'lo': 110.2120, 't': '09:00', 'm': 'walk', 'd': 1800.0, 'min': 22, 'p': 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?q=80&w=600'},
       {'n': 'Candi Mendut', 'la': -7.6042, 'lo': 110.2275, 't': '11:30', 'm': 'walk', 'd': 2500.0, 'min': 30, 'p': 'https://images.unsplash.com/photo-1565018054866-968e244671af?q=80&w=600'},

@@ -4,7 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class OpenRouteService {
-  static const String _baseUrl = 'https://api.openrouteservice.org/v2/directions/driving-car/geojson';
+  static const String _baseUrl = 'https://api.openrouteservice.org/v2/directions/foot-walking/geojson';
 
   Future<List<LatLng>> getRoute(List<LatLng> waypoints) async {
     if (waypoints.length < 2) return waypoints;

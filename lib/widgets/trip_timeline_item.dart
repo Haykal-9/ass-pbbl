@@ -224,14 +224,33 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
                                       ),
                                       const SizedBox(height: 12),
                                     ],
-                                    if (widget.stop.latitude != null && widget.stop.longitude != null) ...[
+                                    if (widget.stop.placeAddress != null && widget.stop.placeAddress!.isNotEmpty) ...[
                                       Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Icon(Icons.location_on_outlined, size: 14, color: colorScheme.primary),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            '${widget.stop.latitude!.toStringAsFixed(4)}, ${widget.stop.longitude!.toStringAsFixed(4)}',
-                                            style: TextStyle(fontSize: 12, color: colorScheme.primary),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Text(
+                                              widget.stop.placeAddress!,
+                                              style: TextStyle(fontSize: 12, color: colorScheme.primary),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                    ],
+                                    if (widget.stop.openingHours != null && widget.stop.openingHours!.isNotEmpty) ...[
+                                      Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Icon(Icons.access_time, size: 14, color: colorScheme.primary),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Text(
+                                              widget.stop.openingHours!,
+                                              style: TextStyle(fontSize: 12, color: colorScheme.primary),
+                                            ),
                                           ),
                                         ],
                                       ),

@@ -132,8 +132,11 @@ class _AddStopSheetState extends State<AddStopSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -147,15 +150,49 @@ class _AddStopSheetState extends State<AddStopSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  widget.existingStop != null
-                      ? 'Edit ${widget.isBasecamp ? "Basecamp" : "Tempat"}'
-                      : (widget.isBasecamp ? 'Set Accommodation / Basecamp' : tr('trip_new_place')),
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                Expanded(
+                  child: Text(
+                    widget.existingStop != null
+                        ? 'Edit ${widget.isBasecamp ? "Basecamp" : "Tempat"}'
+                        : (widget.isBasecamp ? 'Set Accommodation / Basecamp' : tr('trip_new_place')),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
+                  ),
                 ),
                 if (widget.isBasecamp)
-                  const Icon(Icons.hotel, color: Colors.blue)
+                  Icon(Icons.hotel, color: Theme.of(context).colorScheme.primary)
               ],
+            ),
+            const SizedBox(height: 16),
+            
+            // Photo Picker at the top
+            Text('Foto Tempat (Opsional)', style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: _pickImage,
+              child: Container(
+                height: 150,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.2)),
+                ),
+                child: _photoUrl != null && _photoUrl!.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: _photoUrl!.startsWith('http')
+                            ? Image.network(_photoUrl!, fit: BoxFit.cover)
+                            : Image.file(File(_photoUrl!), fit: BoxFit.cover),
+                      )
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add_a_photo, size: 40, color: Theme.of(context).colorScheme.primary),
+                          const SizedBox(height: 8),
+                          Text('Pilih Foto dari Galeri', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7))),
+                        ],
+                      ),
+              ),
             ),
             const SizedBox(height: 16),
             
@@ -242,36 +279,7 @@ class _AddStopSheetState extends State<AddStopSheet> {
                 _transportChip('public', Icons.directions_bus),
               ],
             ),
-            const SizedBox(height: 16),
-            Text('Foto Tempat (Opsional)', style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: _pickImage,
-              child: Container(
-                height: 150,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.2)),
-                ),
-                child: _photoUrl != null && _photoUrl!.isNotEmpty
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: _photoUrl!.startsWith('http')
-                            ? Image.network(_photoUrl!, fit: BoxFit.cover)
-                            : Image.file(File(_photoUrl!), fit: BoxFit.cover),
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.add_a_photo, size: 40, color: Theme.of(context).colorScheme.primary),
-                          const SizedBox(height: 8),
-                          Text('Pilih Foto dari Galeri', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7))),
-                        ],
-                      ),
-              ),
-            ),
+            // Photo picker moved to top
             const SizedBox(height: 20),
             FilledButton.icon(
               onPressed: () {
