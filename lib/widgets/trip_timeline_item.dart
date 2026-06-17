@@ -31,6 +31,21 @@ class TripTimelineItem extends StatefulWidget {
 class _TripTimelineItemState extends State<TripTimelineItem> {
   bool _isExpanded = false;
 
+  String _getEndTime() {
+    if (widget.stop.visitTime == null || widget.stop.visitTime!.isEmpty) return '';
+    try {
+      final parts = widget.stop.visitTime!.split(':');
+      final startMin = int.parse(parts[0]) * 60 + int.parse(parts[1]);
+      final duration = widget.stop.estimatedDurationMinutes ?? 60;
+      final endMin = startMin + duration;
+      final h = (endMin ~/ 60) % 24;
+      final m = endMin % 60;
+      return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return '';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -84,6 +99,33 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
                 color: colorScheme.onSurface.withValues(alpha: 0.15),
               ),
             ),
+          if (widget.isLast && widget.stop.visitTime != null && widget.stop.visitTime!.isNotEmpty) ...[
+            // The timeline line spanning the card height
+            Positioned(
+              top: 44,
+              bottom: 30, // stops right above the end time text
+              left: 27,
+              width: 1,
+              child: Container(
+                color: colorScheme.onSurface.withValues(alpha: 0.15),
+              ),
+            ),
+            // The end time text at the bottom of the line
+            Positioned(
+              bottom: 8,
+              left: 0,
+              width: 55,
+              child: Text(
+                _getEndTime(),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: colorScheme.primary, // Not faded
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
           // ── Main Content ──
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,19 +219,7 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  if (widget.stop.placeAddress != null && widget.stop.placeAddress!.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 4),
-                                      child: Text(
-                                        widget.stop.placeAddress!,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: colorScheme.onSurface.withValues(alpha: 0.5),
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
+
                                 ],
                               ),
                             ),

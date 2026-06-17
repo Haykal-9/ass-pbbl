@@ -148,18 +148,28 @@ class _AddStopSheetState extends State<AddStopSheet> {
               ),
             ),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: Text(
                     widget.existingStop != null
-                        ? 'Edit ${widget.isBasecamp ? "Basecamp" : "Tempat"}'
-                        : (widget.isBasecamp ? 'Set Accommodation / Basecamp' : tr('trip_new_place')),
+                        ? (widget.isBasecamp ? tr('trip_edit_basecamp') : 'Edit Tempat')
+                        : (widget.isBasecamp ? tr('trip_set_basecamp') : tr('trip_new_place')),
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
                   ),
                 ),
-                if (widget.isBasecamp)
-                  Icon(Icons.hotel, color: Theme.of(context).colorScheme.primary)
+                Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    onPressed: () => Navigator.pop(context),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    tooltip: 'Tutup',
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),

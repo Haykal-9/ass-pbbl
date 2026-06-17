@@ -311,6 +311,14 @@ const Map<String, Map<String, String>> _translations = {
     'ID': 'Tap tombol di bawah untuk menambahkan tempat kunjungan!',
     'EN': 'Tap the button below to add a place to visit!',
   },
+  'trip_set_basecamp': {
+    'ID': 'Tambah Titik Keberangkatan',
+    'EN': 'Add Departure Point',
+  },
+  'trip_edit_basecamp': {
+    'ID': 'Edit Titik Keberangkatan',
+    'EN': 'Edit Departure Point',
+  },
   'trip_added_success': {
     'ID': 'berhasil ditambahkan',
     'EN': 'added successfully',

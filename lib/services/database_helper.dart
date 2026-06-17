@@ -31,7 +31,7 @@ class DatabaseHelper {
       return databaseFactoryFfiWebNoWebWorker.openDatabase(
         'wanderlist.db',
         options: OpenDatabaseOptions(
-          version: 11,
+          version: 13,
           onCreate: (db, version) async {
             await _onCreate(db, version);
             await _seedV9DummyTripStops(db);
@@ -44,7 +44,7 @@ class DatabaseHelper {
       final path = join(dbPath, 'wanderlist.db');
       return openDatabase(
         path,
-        version: 11,
+        version: 13,
         onCreate: (db, version) async {
           await _onCreate(db, version);
           await _seedV9DummyTripStops(db);
@@ -267,6 +267,18 @@ class DatabaseHelper {
         whereArgs: ['The Omah Borobudur'],
       );
     }
+
+    // ── v12: Full re-seed to apply addresses to all 15 destinations ──
+    if (oldVersion < 12) {
+      await db.delete('trip_stops');
+      await _seedV9DummyTripStops(db);
+    }
+
+    // ── v13: Apply manual 'estimated_duration_minutes' from dummy data ──
+    if (oldVersion < 13) {
+      await db.delete('trip_stops');
+      await _seedV9DummyTripStops(db);
+    }
   }
 
   Future<void> _seedV9DummyTripStops(Database db) async {
@@ -289,6 +301,7 @@ class DatabaseHelper {
           'place_name': s['n'], 'place_address': s['a'], 'opening_hours': s['oh'], 'latitude': s['la'], 'longitude': s['lo'],
           'visit_time': s['t'], 'transport_mode': s['m'] ?? 'walk',
           'distance_meters': s['d'], 'travel_minutes': s['min'],
+          'estimated_duration_minutes': s['ed'] ?? 60,
           'photo_url': s['p'], 'is_basecamp': isBc ? 1 : 0, 'created_at': now,
         });
       }
@@ -296,121 +309,121 @@ class DatabaseHelper {
 
     // 1. Raja Ampat (wishlist)
     await seed('Raja Ampat', '2027-08-01', '2027-08-07', [
-      {'n': 'Meridian Adventure Marina', 'la': -0.4287, 'lo': 130.8166, 't': '07:00', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
-      {'n': 'Pianemo Islands', 'la': -0.2553, 'lo': 130.4757, 't': '08:00', 'm': 'transit', 'd': 20000.0, 'min': 30, 'p': 'https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?q=80&w=600'},
-      {'n': 'Wayag Lagoon', 'la': -0.1553, 'lo': 130.0557, 't': '11:00', 'm': 'transit', 'd': 48000.0, 'min': 90, 'p': 'https://images.unsplash.com/photo-1570789210967-2cac24ba7b34?q=80&w=600'},
-      {'n': 'Arborek Village', 'la': -0.4953, 'lo': 130.4057, 't': '16:00', 'm': 'transit', 'd': 30000.0, 'min': 60, 'p': 'https://images.unsplash.com/photo-1573790387438-4da905039392?q=80&w=600'},
+      {'n': 'Meridian Adventure Marina', 'a': 'Waisai, Raja Ampat Regency, West Papua', 'oh': '08:00 - 17:00', 'la': -0.4287, 'lo': 130.8166, 't': '07:00', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
+      {'n': 'Pianemo Islands', 'a': 'Groot Fam, Saukabu, Raja Ampat Regency', 'oh': '08:00 - 18:00', 'la': -0.2553, 'lo': 130.4757, 't': '08:00', 'm': 'transit', 'd': 20000.0, 'min': 30, 'p': 'https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?q=80&w=600'},
+      {'n': 'Wayag Lagoon', 'a': 'Waigeo Barat Kepulauan, Raja Ampat', 'oh': '24 Jam', 'la': -0.1553, 'lo': 130.0557, 't': '11:00', 'm': 'transit', 'd': 48000.0, 'min': 90, 'p': 'https://images.unsplash.com/photo-1570789210967-2cac24ba7b34?q=80&w=600'},
+      {'n': 'Arborek Village', 'a': 'Arborek, Meos Mansar, Raja Ampat', 'oh': '24 Jam', 'la': -0.4953, 'lo': 130.4057, 't': '16:00', 'm': 'transit', 'd': 30000.0, 'min': 60, 'p': 'https://images.unsplash.com/photo-1573790387438-4da905039392?q=80&w=600'},
     ]);
 
     // 2. Taman Nasional Komodo (visited)
     await seed('Taman Nasional Komodo', '2025-05-10', '2025-05-14', [
-      {'n': 'Ayana Komodo Resort', 'la': -8.4900, 'lo': 119.8700, 't': '06:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
-      {'n': 'Pulau Komodo', 'la': -8.5550, 'lo': 119.4447, 't': '07:30', 'm': 'transit', 'd': 50000.0, 'min': 60, 'p': 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?q=80&w=600'},
-      {'n': 'Pink Beach', 'la': -8.5800, 'lo': 119.4900, 't': '11:00', 'm': 'transit', 'd': 8000.0, 'min': 25, 'p': 'https://images.unsplash.com/photo-1577717903315-1691ae25ab3f?q=80&w=600'},
-      {'n': 'Pulau Padar', 'la': -8.6500, 'lo': 119.5700, 't': '14:30', 'm': 'transit', 'd': 15000.0, 'min': 45, 'p': 'https://images.unsplash.com/photo-1571366343168-631c5bcca7a4?q=80&w=600'},
+      {'n': 'Ayana Komodo Resort', 'a': 'Pantai Waecicu, Labuan Bajo, Kabupaten Manggarai Barat', 'oh': 'Check-in: 14:00 - Check-out: 12:00', 'la': -8.4900, 'lo': 119.8700, 't': '06:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
+      {'n': 'Pulau Komodo', 'a': 'Pulau Komodo, Area', 'oh': '08:00 - 17:00', 'la': -8.5550, 'lo': 119.4447, 't': '07:30', 'm': 'transit', 'd': 50000.0, 'min': 60, 'p': 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?q=80&w=600'},
+      {'n': 'Pink Beach', 'a': 'Pulau Komodo, Kabupaten Manggarai Barat', 'oh': '08:00 - 17:00', 'la': -8.5800, 'lo': 119.4900, 't': '11:00', 'm': 'transit', 'd': 8000.0, 'min': 25, 'p': 'https://images.unsplash.com/photo-1577717903315-1691ae25ab3f?q=80&w=600'},
+      {'n': 'Pulau Padar', 'a': 'Taman Nasional Komodo, Kabupaten Manggarai Barat', 'oh': '06:00 - 18:00', 'la': -8.6500, 'lo': 119.5700, 't': '14:30', 'm': 'transit', 'd': 15000.0, 'min': 45, 'p': 'https://images.unsplash.com/photo-1571366343168-631c5bcca7a4?q=80&w=600'},
     ]);
 
     // 3. Gunung Fuji (wishlist)
     await seed('Gunung Fuji', '2027-04-05', '2027-04-12', [
-      {'n': 'Hoshinoya Fuji', 'la': 35.5181, 'lo': 138.7488, 't': '07:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
-      {'n': 'Lake Kawaguchi', 'la': 35.5171, 'lo': 138.7518, 't': '08:00', 'm': 'drive', 'd': 500.0, 'min': 5, 'p': 'https://images.unsplash.com/photo-1578271887552-5ac3a72752bc?q=80&w=600'},
-      {'n': 'Chureito Pagoda', 'la': 35.5015, 'lo': 138.8016, 't': '10:30', 'm': 'drive', 'd': 12000.0, 'min': 30, 'p': 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=600'},
-      {'n': 'Fuji 5th Station', 'la': 35.3956, 'lo': 138.7314, 't': '14:00', 'm': 'drive', 'd': 25000.0, 'min': 60, 'p': 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?q=80&w=600'},
+      {'n': 'Hoshinoya Fuji', 'a': '1408 Oishi, Fujikawaguchiko, Minamitsuru District, Yamanashi', 'oh': '08:00 - 17:00', 'la': 35.5181, 'lo': 138.7488, 't': '07:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
+      {'n': 'Lake Kawaguchi', 'a': 'Fujikawaguchiko, Minamitsuru District, Yamanashi', 'oh': '24 Jam', 'la': 35.5171, 'lo': 138.7518, 't': '08:00', 'm': 'drive', 'd': 500.0, 'min': 5, 'p': 'https://images.unsplash.com/photo-1578271887552-5ac3a72752bc?q=80&w=600'},
+      {'n': 'Chureito Pagoda', 'a': '3353-1 Arakura, Fujiyoshida, Yamanashi', 'oh': '24 Jam', 'la': 35.5015, 'lo': 138.8016, 't': '10:30', 'm': 'drive', 'd': 12000.0, 'min': 30, 'p': 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=600'},
+      {'n': 'Fuji 5th Station', 'a': 'Naruzawa, Minamitsuru District, Yamanashi', 'oh': '09:00 - 17:00', 'la': 35.3956, 'lo': 138.7314, 't': '14:00', 'm': 'drive', 'd': 25000.0, 'min': 60, 'p': 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?q=80&w=600'},
     ]);
 
     // 4. Air Terjun Niagara (wishlist)
     await seed('Air Terjun Niagara', '2027-07-20', '2027-07-24', [
-      {'n': 'Sheraton Fallsview', 'la': 43.0888, 'lo': -79.0722, 't': '08:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
-      {'n': 'Horseshoe Falls', 'la': 43.0799, 'lo': -79.0747, 't': '09:00', 'm': 'walk', 'd': 1500.0, 'min': 20, 'p': 'https://images.unsplash.com/photo-1489447068241-b3490214e879?q=80&w=600'},
-      {'n': 'Maid of the Mist', 'la': 43.0862, 'lo': -79.0677, 't': '11:00', 'm': 'walk', 'd': 1200.0, 'min': 15, 'p': 'https://images.unsplash.com/photo-1533094602577-198d3beefb09?q=80&w=600'},
-      {'n': 'Skylon Tower', 'la': 43.0862, 'lo': -79.0767, 't': '14:00', 'm': 'walk', 'd': 800.0, 'min': 10, 'p': 'https://images.unsplash.com/photo-1503614472-8c93d56e92ce?q=80&w=600'},
+      {'n': 'Sheraton Fallsview', 'a': '5875 Falls Ave, Niagara Falls, ON', 'oh': 'Check-in: 14:00 - Check-out: 12:00', 'la': 43.0888, 'lo': -79.0722, 't': '08:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
+      {'n': 'Horseshoe Falls', 'a': 'Niagara Falls, ON L2G 0L0', 'oh': '24 Jam', 'la': 43.0799, 'lo': -79.0747, 't': '09:00', 'm': 'walk', 'd': 1500.0, 'min': 20, 'p': 'https://images.unsplash.com/photo-1489447068241-b3490214e879?q=80&w=600'},
+      {'n': 'Maid of the Mist', 'a': '1 Prospect St, Niagara Falls, NY', 'oh': '09:00 - 17:00', 'la': 43.0862, 'lo': -79.0677, 't': '11:00', 'm': 'walk', 'd': 1200.0, 'min': 15, 'p': 'https://images.unsplash.com/photo-1533094602577-198d3beefb09?q=80&w=600'},
+      {'n': 'Skylon Tower', 'a': '5200 Robinson St, Niagara Falls, ON', 'oh': '10:00 - 22:00', 'la': 43.0862, 'lo': -79.0767, 't': '14:00', 'm': 'walk', 'd': 800.0, 'min': 10, 'p': 'https://images.unsplash.com/photo-1503614472-8c93d56e92ce?q=80&w=600'},
     ]);
 
     // 5. Taman Nasional Yellowstone (wishlist)
     await seed('Taman Nasional Yellowstone', '2027-09-01', '2027-09-08', [
-      {'n': 'Old Faithful Inn', 'la': 44.4599, 'lo': -110.8286, 't': '08:00', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
-      {'n': 'Old Faithful Geyser', 'la': 44.4605, 'lo': -110.8281, 't': '08:30', 'm': 'walk', 'd': 500.0, 'min': 5, 'p': 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?q=80&w=600'},
-      {'n': 'Grand Prismatic Spring', 'la': 44.5251, 'lo': -110.8382, 't': '11:00', 'm': 'drive', 'd': 10000.0, 'min': 20, 'p': 'https://images.unsplash.com/photo-1607265605788-62cbff45a56b?q=80&w=600'},
-      {'n': 'Yellowstone Lake', 'la': 44.4235, 'lo': -110.3541, 't': '15:00', 'm': 'drive', 'd': 45000.0, 'min': 50, 'p': 'https://images.unsplash.com/photo-1529439322271-42931c09bce1?q=80&w=600'},
+      {'n': 'Old Faithful Inn', 'a': '3200 Old Faithful Inn Rd, Yellowstone National Park, WY', 'oh': 'Check-in: 14:00 - Check-out: 12:00', 'la': 44.4599, 'lo': -110.8286, 't': '08:00', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
+      {'n': 'Old Faithful Geyser', 'a': 'Yellowstone National Park, WY 82190', 'oh': '24 Jam', 'la': 44.4605, 'lo': -110.8281, 't': '08:30', 'm': 'walk', 'd': 500.0, 'min': 5, 'p': 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?q=80&w=600'},
+      {'n': 'Grand Prismatic Spring', 'a': 'Midway Geyser Basin, Yellowstone National Park, WY', 'oh': '06:00 - 18:00', 'la': 44.5251, 'lo': -110.8382, 't': '11:00', 'm': 'drive', 'd': 10000.0, 'min': 20, 'p': 'https://images.unsplash.com/photo-1607265605788-62cbff45a56b?q=80&w=600'},
+      {'n': 'Yellowstone Lake', 'a': 'Yellowstone National Park, WY', 'oh': '24 Jam', 'la': 44.4235, 'lo': -110.3541, 't': '15:00', 'm': 'drive', 'd': 45000.0, 'min': 50, 'p': 'https://images.unsplash.com/photo-1529439322271-42931c09bce1?q=80&w=600'},
     ]);
 
     // 6. Candi Borobudur (visited)
     await seed('Candi Borobudur', '2025-03-15', '2025-03-18', [
       {'n': 'The Omah Borobudur', 'a': 'Jl. Syailendra Raya, Borobudur, Magelang, Jawa Tengah 56553', 'oh': 'Check-in: 14:00 - Check-out: 12:00', 'la': -7.6085, 'lo': 110.1985, 't': '05:00', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
-      {'n': 'Candi Borobudur', 'la': -7.6076, 'lo': 110.2058, 't': '05:30', 'm': 'walk', 'd': 600.0, 'min': 8, 'p': 'https://images.unsplash.com/photo-1596402184320-417e7178b2cd?q=80&w=600'},
-      {'n': 'Candi Pawon', 'la': -7.6050, 'lo': 110.2120, 't': '09:00', 'm': 'walk', 'd': 1800.0, 'min': 22, 'p': 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?q=80&w=600'},
-      {'n': 'Candi Mendut', 'la': -7.6042, 'lo': 110.2275, 't': '11:30', 'm': 'walk', 'd': 2500.0, 'min': 30, 'p': 'https://images.unsplash.com/photo-1565018054866-968e244671af?q=80&w=600'},
+      {'n': 'Candi Borobudur', 'a': 'Jl. Badrawati, Kw. Candi Borobudur, Borobudur, Magelang', 'oh': '06:00 - 17:00', 'la': -7.6076, 'lo': 110.2058, 't': '05:30', 'm': 'walk', 'd': 600.0, 'min': 8, 'ed': 180, 'p': 'https://images.unsplash.com/photo-1596402184320-417e7178b2cd?q=80&w=600'},
+      {'n': 'Candi Pawon', 'a': 'Brojonalan, Dusun 1, Wanurejo, Borobudur, Magelang', 'oh': '08:00 - 16:00', 'la': -7.6050, 'lo': 110.2120, 't': '09:00', 'm': 'walk', 'd': 1800.0, 'min': 22, 'ed': 60, 'p': 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?q=80&w=600'},
+      {'n': 'Candi Mendut', 'a': 'Jl. Mayor Kusen, Sumberrejo, Mendut, Mungkid, Magelang', 'oh': '07:00 - 17:30', 'la': -7.6042, 'lo': 110.2275, 't': '11:30', 'm': 'walk', 'd': 2500.0, 'min': 30, 'ed': 60, 'p': 'https://images.unsplash.com/photo-1565018054866-968e244671af?q=80&w=600'},
     ]);
 
     // 7. Angkor Wat (wishlist)
     await seed('Angkor Wat', '2027-11-10', '2027-11-15', [
-      {'n': 'Raffles Grand Hotel', 'la': 13.3615, 'lo': 103.8596, 't': '04:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
-      {'n': 'Angkor Wat', 'la': 13.4125, 'lo': 103.8670, 't': '05:00', 'm': 'drive', 'd': 6000.0, 'min': 15, 'p': 'https://images.unsplash.com/photo-1600100397608-de38c1e7a76d?q=80&w=600'},
-      {'n': 'Bayon Temple', 'la': 13.4412, 'lo': 103.8590, 't': '09:30', 'm': 'drive', 'd': 3500.0, 'min': 10, 'p': 'https://images.unsplash.com/photo-1569321172437-42c82e4c6d5e?q=80&w=600'},
-      {'n': 'Ta Prohm', 'la': 13.4351, 'lo': 103.8890, 't': '13:00', 'm': 'drive', 'd': 4000.0, 'min': 12, 'p': 'https://images.unsplash.com/photo-1567422145765-0bf6b3aa7e15?q=80&w=600'},
+      {'n': 'Raffles Grand Hotel', 'a': '1 Vithei, Charles De Gaulle, Krong Siem Reap', 'oh': 'Check-in: 14:00 - Check-out: 12:00', 'la': 13.3615, 'lo': 103.8596, 't': '04:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
+      {'n': 'Angkor Wat', 'a': 'Krong Siem Reap, Cambodia', 'oh': '05:00 - 17:30', 'la': 13.4125, 'lo': 103.8670, 't': '05:00', 'm': 'drive', 'd': 6000.0, 'min': 15, 'p': 'https://images.unsplash.com/photo-1600100397608-de38c1e7a76d?q=80&w=600'},
+      {'n': 'Bayon Temple', 'a': 'Angkor Thom, Siem Reap', 'oh': '07:30 - 17:30', 'la': 13.4412, 'lo': 103.8590, 't': '09:30', 'm': 'drive', 'd': 3500.0, 'min': 10, 'p': 'https://images.unsplash.com/photo-1569321172437-42c82e4c6d5e?q=80&w=600'},
+      {'n': 'Ta Prohm', 'a': 'Angkor Archaeological Park, Siem Reap', 'oh': '07:30 - 17:30', 'la': 13.4351, 'lo': 103.8890, 't': '13:00', 'm': 'drive', 'd': 4000.0, 'min': 12, 'p': 'https://images.unsplash.com/photo-1567422145765-0bf6b3aa7e15?q=80&w=600'},
     ]);
 
     // 8. Colosseum (visited)
     await seed('Colosseum', '2025-06-20', '2025-06-25', [
-      {'n': 'Hotel Forum Rome', 'la': 41.8940, 'lo': 12.4870, 't': '08:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
-      {'n': 'Colosseum', 'la': 41.8902, 'lo': 12.4922, 't': '09:00', 'm': 'walk', 'd': 800.0, 'min': 10, 'p': 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=600'},
-      {'n': 'Roman Forum', 'la': 41.8925, 'lo': 12.4853, 't': '11:30', 'm': 'walk', 'd': 700.0, 'min': 10, 'p': 'https://images.unsplash.com/photo-1604580864964-0462f5d5b1a8?q=80&w=600'},
-      {'n': 'Trevi Fountain', 'la': 41.9009, 'lo': 12.4833, 't': '14:30', 'm': 'walk', 'd': 1400.0, 'min': 17, 'p': 'https://images.unsplash.com/photo-1525874684015-58379d421a52?q=80&w=600'},
+      {'n': 'Hotel Forum Rome', 'a': 'Hotel Forum Rome, Area', 'oh': 'Check-in: 14:00 - Check-out: 12:00', 'la': 41.8940, 'lo': 12.4870, 't': '08:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
+      {'n': 'Colosseum', 'a': 'Piazza del Colosseo, 1, 00184 Roma RM, Italy', 'oh': '08:30 - 19:00', 'la': 41.8902, 'lo': 12.4922, 't': '09:00', 'm': 'walk', 'd': 800.0, 'min': 10, 'p': 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=600'},
+      {'n': 'Roman Forum', 'a': 'Via della Salara Vecchia, 5/6, 00186 Roma RM', 'oh': '09:00 - 19:00', 'la': 41.8925, 'lo': 12.4853, 't': '11:30', 'm': 'walk', 'd': 700.0, 'min': 10, 'p': 'https://images.unsplash.com/photo-1604580864964-0462f5d5b1a8?q=80&w=600'},
+      {'n': 'Trevi Fountain', 'a': 'Trevi Fountain, Area', 'oh': '08:00 - 17:00', 'la': 41.9009, 'lo': 12.4833, 't': '14:30', 'm': 'walk', 'd': 1400.0, 'min': 17, 'p': 'https://images.unsplash.com/photo-1525874684015-58379d421a52?q=80&w=600'},
     ]);
 
     // 9. Machu Picchu (wishlist)
     await seed('Machu Picchu', '2027-06-01', '2027-06-06', [
-      {'n': 'Belmond Sanctuary Lodge', 'la': -13.1558, 'lo': -72.5369, 't': '05:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
-      {'n': 'Sun Gate (Intipunku)', 'la': -13.1553, 'lo': -72.5350, 't': '06:00', 'm': 'walk', 'd': 2500.0, 'min': 45, 'p': 'https://images.unsplash.com/photo-1526392060635-9d6019884377?q=80&w=600'},
-      {'n': 'Temple of the Sun', 'la': -13.1636, 'lo': -72.5451, 't': '09:30', 'm': 'walk', 'd': 1200.0, 'min': 20, 'p': 'https://images.unsplash.com/photo-1580619305218-8423a7ef79b4?q=80&w=600'},
-      {'n': 'Huayna Picchu', 'la': -13.1553, 'lo': -72.5480, 't': '13:00', 'm': 'walk', 'd': 1500.0, 'min': 60, 'p': 'https://images.unsplash.com/photo-1587595431973-160d0d94add1?q=80&w=600'},
+      {'n': 'Belmond Sanctuary Lodge', 'a': 'Belmond Sanctuary Lodge, Area', 'oh': 'Check-in: 14:00 - Check-out: 12:00', 'la': -13.1558, 'lo': -72.5369, 't': '05:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
+      {'n': 'Sun Gate (Intipunku)', 'a': 'Sun Gate (Intipunku), Area', 'oh': '08:00 - 17:00', 'la': -13.1553, 'lo': -72.5350, 't': '06:00', 'm': 'walk', 'd': 2500.0, 'min': 45, 'p': 'https://images.unsplash.com/photo-1526392060635-9d6019884377?q=80&w=600'},
+      {'n': 'Temple of the Sun', 'a': 'Temple of the Sun, Area', 'oh': '08:00 - 17:00', 'la': -13.1636, 'lo': -72.5451, 't': '09:30', 'm': 'walk', 'd': 1200.0, 'min': 20, 'p': 'https://images.unsplash.com/photo-1580619305218-8423a7ef79b4?q=80&w=600'},
+      {'n': 'Huayna Picchu', 'a': 'Machu Picchu 08680, Peru', 'oh': '07:00 - 14:00', 'la': -13.1553, 'lo': -72.5480, 't': '13:00', 'm': 'walk', 'd': 1500.0, 'min': 60, 'p': 'https://images.unsplash.com/photo-1587595431973-160d0d94add1?q=80&w=600'},
     ]);
 
     // 10. Tembok Besar China (wishlist)
     await seed('Tembok Besar China', '2027-10-01', '2027-10-06', [
-      {'n': 'Commune by the Great Wall', 'la': 40.3235, 'lo': 116.0270, 't': '07:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
-      {'n': 'Badaling Section', 'la': 40.3539, 'lo': 116.0048, 't': '08:00', 'm': 'drive', 'd': 15000.0, 'min': 30, 'p': 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?q=80&w=600'},
-      {'n': 'Mutianyu Section', 'la': 40.4319, 'lo': 116.5704, 't': '13:00', 'm': 'drive', 'd': 55000.0, 'min': 70, 'p': 'https://images.unsplash.com/photo-1597655601841-214a4cfe8b2c?q=80&w=600'},
+      {'n': 'Commune by the Great Wall', 'a': 'Commune by the Great Wall, Area', 'oh': '08:00 - 17:00', 'la': 40.3235, 'lo': 116.0270, 't': '07:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
+      {'n': 'Badaling Section', 'a': 'Badaling Section, Area', 'oh': '08:00 - 17:00', 'la': 40.3539, 'lo': 116.0048, 't': '08:00', 'm': 'drive', 'd': 15000.0, 'min': 30, 'p': 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?q=80&w=600'},
+      {'n': 'Mutianyu Section', 'a': 'Mutianyu Section, Area', 'oh': '08:00 - 17:00', 'la': 40.4319, 'lo': 116.5704, 't': '13:00', 'm': 'drive', 'd': 55000.0, 'min': 70, 'p': 'https://images.unsplash.com/photo-1597655601841-214a4cfe8b2c?q=80&w=600'},
     ]);
 
     // 11. Burj Khalifa (wishlist)
     await seed('Burj Khalifa', '2027-12-20', '2027-12-25', [
-      {'n': 'Armani Hotel Dubai', 'la': 25.1972, 'lo': 55.2744, 't': '08:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
-      {'n': 'Burj Khalifa Observation', 'la': 25.1972, 'lo': 55.2744, 't': '09:00', 'm': 'walk', 'd': 200.0, 'min': 3, 'p': 'https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?q=80&w=600'},
-      {'n': 'Dubai Fountain', 'la': 25.1952, 'lo': 55.2747, 't': '12:00', 'm': 'walk', 'd': 400.0, 'min': 5, 'p': 'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?q=80&w=600'},
-      {'n': 'Dubai Mall Aquarium', 'la': 25.1976, 'lo': 55.2790, 't': '15:00', 'm': 'walk', 'd': 600.0, 'min': 8, 'p': 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=600'},
+      {'n': 'Armani Hotel Dubai', 'a': 'Burj Khalifa, Downtown Dubai, Dubai', 'oh': 'Check-in: 14:00 - Check-out: 12:00', 'la': 25.1972, 'lo': 55.2744, 't': '08:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
+      {'n': 'Burj Khalifa Observation', 'a': 'Burj Khalifa Observation, Area', 'oh': '08:00 - 17:00', 'la': 25.1972, 'lo': 55.2744, 't': '09:00', 'm': 'walk', 'd': 200.0, 'min': 3, 'p': 'https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?q=80&w=600'},
+      {'n': 'Dubai Fountain', 'a': 'Sheikh Mohammed bin Rashid Blvd, Downtown Dubai', 'oh': '18:00 - 23:00', 'la': 25.1952, 'lo': 55.2747, 't': '12:00', 'm': 'walk', 'd': 400.0, 'min': 5, 'p': 'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?q=80&w=600'},
+      {'n': 'Dubai Mall Aquarium', 'a': 'Dubai Mall Aquarium, Area', 'oh': '08:00 - 17:00', 'la': 25.1976, 'lo': 55.2790, 't': '15:00', 'm': 'walk', 'd': 600.0, 'min': 8, 'p': 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=600'},
     ]);
 
     // 12. Menara Eiffel (visited)
     await seed('Menara Eiffel', '2025-10-10', '2025-10-15', [
-      {'n': 'Pullman Paris Tour Eiffel', 'la': 48.8550, 'lo': 2.2930, 't': '08:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
-      {'n': 'Louvre Museum', 'la': 48.8606, 'lo': 2.3376, 't': '09:00', 'm': 'walk', 'd': 1200.0, 'min': 15, 'p': 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=600'},
-      {'n': 'Menara Eiffel', 'la': 48.8584, 'lo': 2.2945, 't': '12:30', 'm': 'transit', 'd': 3500.0, 'min': 25, 'p': 'https://images.unsplash.com/photo-1543349689-9a4d426bee8e?q=80&w=600'},
-      {'n': 'Arc de Triomphe', 'la': 48.8738, 'lo': 2.2950, 't': '16:00', 'm': 'walk', 'd': 2000.0, 'min': 25, 'p': 'https://images.unsplash.com/photo-1509439581779-6298f75bf6e5?q=80&w=600'},
+      {'n': 'Pullman Paris Tour Eiffel', 'a': '18 Avenue De Suffren, 75015 Paris', 'oh': '08:00 - 17:00', 'la': 48.8550, 'lo': 2.2930, 't': '08:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
+      {'n': 'Louvre Museum', 'a': 'Rue de Rivoli, 75001 Paris, France', 'oh': '09:00 - 18:00', 'la': 48.8606, 'lo': 2.3376, 't': '09:00', 'm': 'walk', 'd': 1200.0, 'min': 15, 'p': 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=600'},
+      {'n': 'Menara Eiffel', 'a': 'Menara Eiffel, Area', 'oh': '08:00 - 17:00', 'la': 48.8584, 'lo': 2.2945, 't': '12:30', 'm': 'transit', 'd': 3500.0, 'min': 25, 'p': 'https://images.unsplash.com/photo-1543349689-9a4d426bee8e?q=80&w=600'},
+      {'n': 'Arc de Triomphe', 'a': 'Arc de Triomphe, Area', 'oh': '08:00 - 17:00', 'la': 48.8738, 'lo': 2.2950, 't': '16:00', 'm': 'walk', 'd': 2000.0, 'min': 25, 'p': 'https://images.unsplash.com/photo-1509439581779-6298f75bf6e5?q=80&w=600'},
     ]);
 
     // 13. Shibuya Crossing (visited)
     await seed('Shibuya Crossing', '2025-11-05', '2025-11-10', [
-      {'n': 'Shibuya Excel Hotel Tokyu', 'la': 35.6580, 'lo': 139.6990, 't': '09:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
-      {'n': 'Shibuya Crossing', 'la': 35.6580, 'lo': 139.7016, 't': '10:00', 'm': 'walk', 'd': 200.0, 'min': 3, 'p': 'https://images.unsplash.com/photo-1542051841857-5f90071e7989?q=80&w=600'},
-      {'n': 'Meiji Shrine', 'la': 35.6764, 'lo': 139.6993, 't': '13:00', 'm': 'walk', 'd': 2000.0, 'min': 25, 'p': 'https://images.unsplash.com/photo-1583766395091-2eb9994ed094?q=80&w=600'},
-      {'n': 'Sensoji Temple', 'la': 35.7148, 'lo': 139.7967, 't': '16:00', 'm': 'transit', 'd': 12000.0, 'min': 30, 'p': 'https://images.unsplash.com/photo-1570521462033-3015e76e7432?q=80&w=600'},
+      {'n': 'Shibuya Excel Hotel Tokyu', 'a': '1-12-2 Dogenzaka, Shibuya City, Tokyo', 'oh': 'Check-in: 14:00 - Check-out: 12:00', 'la': 35.6580, 'lo': 139.6990, 't': '09:30', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
+      {'n': 'Shibuya Crossing', 'a': 'Dogenzaka, Shibuya City, Tokyo 150-0043', 'oh': '24 Jam', 'la': 35.6580, 'lo': 139.7016, 't': '10:00', 'm': 'walk', 'd': 200.0, 'min': 3, 'p': 'https://images.unsplash.com/photo-1542051841857-5f90071e7989?q=80&w=600'},
+      {'n': 'Meiji Shrine', 'a': 'Meiji Shrine, Area', 'oh': '08:00 - 17:00', 'la': 35.6764, 'lo': 139.6993, 't': '13:00', 'm': 'walk', 'd': 2000.0, 'min': 25, 'p': 'https://images.unsplash.com/photo-1583766395091-2eb9994ed094?q=80&w=600'},
+      {'n': 'Sensoji Temple', 'a': 'Sensoji Temple, Area', 'oh': '08:00 - 17:00', 'la': 35.7148, 'lo': 139.7967, 't': '16:00', 'm': 'transit', 'd': 12000.0, 'min': 30, 'p': 'https://images.unsplash.com/photo-1570521462033-3015e76e7432?q=80&w=600'},
     ]);
 
     // 14. Marina Bay Sands (in_trip)
     await seed('Marina Bay Sands', '2026-06-15', '2026-06-20', [
-      {'n': 'Marina Bay Sands Hotel', 'la': 1.2838, 'lo': 103.8590, 't': '09:00', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
-      {'n': 'Marina Bay Sands', 'la': 1.2838, 'lo': 103.8607, 't': '09:30', 'm': 'walk', 'd': 800.0, 'min': 10, 'p': 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?q=80&w=600'},
-      {'n': 'Gardens by the Bay', 'la': 1.2816, 'lo': 103.8636, 't': '12:00', 'm': 'walk', 'd': 1500.0, 'min': 20, 'p': 'https://images.unsplash.com/photo-1506161488156-f947bc6309bb?q=80&w=600'},
-      {'n': 'Merlion Park', 'la': 1.2868, 'lo': 103.8545, 't': '15:00', 'm': 'walk', 'd': 1200.0, 'min': 15, 'p': 'https://images.unsplash.com/photo-1565967511849-76a60a516170?q=80&w=600'},
+      {'n': 'Marina Bay Sands Hotel', 'a': '10 Bayfront Ave, Singapore 018956', 'oh': 'Check-in: 14:00 - Check-out: 12:00', 'la': 1.2838, 'lo': 103.8590, 't': '09:00', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
+      {'n': 'Marina Bay Sands', 'a': 'Marina Bay Sands, Area', 'oh': 'Check-in: 14:00 - Check-out: 12:00', 'la': 1.2838, 'lo': 103.8607, 't': '09:30', 'm': 'walk', 'd': 800.0, 'min': 10, 'p': 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?q=80&w=600'},
+      {'n': 'Gardens by the Bay', 'a': '18 Marina Gardens Dr, Singapore 018953', 'oh': '05:00 - 02:00', 'la': 1.2816, 'lo': 103.8636, 't': '12:00', 'm': 'walk', 'd': 1500.0, 'min': 20, 'p': 'https://images.unsplash.com/photo-1506161488156-f947bc6309bb?q=80&w=600'},
+      {'n': 'Merlion Park', 'a': '1 Fullerton Rd, Singapore 049213', 'oh': '24 Jam', 'la': 1.2868, 'lo': 103.8545, 't': '15:00', 'm': 'walk', 'd': 1200.0, 'min': 15, 'p': 'https://images.unsplash.com/photo-1565967511849-76a60a516170?q=80&w=600'},
     ]);
 
     // 15. Times Square (visited)
     await seed('Times Square', '2025-12-28', '2026-01-02', [
-      {'n': 'New York Marriott Marquis', 'la': 40.7586, 'lo': -73.9861, 't': '09:00', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
-      {'n': 'Times Square', 'la': 40.7580, 'lo': -73.9855, 't': '10:00', 'm': 'walk', 'd': 300.0, 'min': 5, 'p': 'https://images.unsplash.com/photo-1534430480872-3498386e7856?q=80&w=600'},
-      {'n': 'Central Park', 'la': 40.7829, 'lo': -73.9654, 't': '13:00', 'm': 'walk', 'd': 3000.0, 'min': 35, 'p': 'https://images.unsplash.com/photo-1534251369789-5067c8971c89?q=80&w=600'},
-      {'n': 'Statue of Liberty', 'la': 40.6892, 'lo': -74.0445, 't': '16:30', 'm': 'transit', 'd': 12000.0, 'min': 40, 'p': 'https://images.unsplash.com/photo-1492666673288-3c4b4f1a8b23?q=80&w=600'},
+      {'n': 'New York Marriott Marquis', 'a': '1535 Broadway, New York, NY 10036', 'oh': 'Check-in: 14:00 - Check-out: 12:00', 'la': 40.7586, 'lo': -73.9861, 't': '09:00', 'bc': 1, 'p': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'},
+      {'n': 'Times Square', 'a': 'Manhattan, NY 10036', 'oh': '24 Jam', 'la': 40.7580, 'lo': -73.9855, 't': '10:00', 'm': 'walk', 'd': 300.0, 'min': 5, 'p': 'https://images.unsplash.com/photo-1534430480872-3498386e7856?q=80&w=600'},
+      {'n': 'Central Park', 'a': 'New York, NY', 'oh': '06:00 - 01:00', 'la': 40.7829, 'lo': -73.9654, 't': '13:00', 'm': 'walk', 'd': 3000.0, 'min': 35, 'p': 'https://images.unsplash.com/photo-1534251369789-5067c8971c89?q=80&w=600'},
+      {'n': 'Statue of Liberty', 'a': 'Statue of Liberty, Area', 'oh': '08:00 - 17:00', 'la': 40.6892, 'lo': -74.0445, 't': '16:30', 'm': 'transit', 'd': 12000.0, 'min': 40, 'p': 'https://images.unsplash.com/photo-1492666673288-3c4b4f1a8b23?q=80&w=600'},
     ]);
   }
 

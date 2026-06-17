@@ -165,9 +165,19 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
         final startMin = int.parse(firstParts[0]) * 60 + int.parse(firstParts[1]);
         // Add 60 mins as default duration for the last stop
         final endMin = int.parse(lastParts[0]) * 60 + int.parse(lastParts[1]) + (lastStop.estimatedDurationMinutes ?? 60);
-        
+        // Calculate daily travel minutes
+        int dailyTravelMinutes = 0;
+        for (final s in stops) {
+          dailyTravelMinutes += (s.travelMinutes ?? 0);
+        }
+
         if (endMin > startMin) {
-          totalMinutes += (endMin - startMin);
+          int dailySpan = endMin - startMin;
+          // Subtract travel time to get pure effective time spent AT destinations
+          int dailyStay = dailySpan - dailyTravelMinutes;
+          if (dailyStay > 0) {
+            totalMinutes += dailyStay;
+          }
         }
       } catch (_) {}
     }
@@ -843,10 +853,10 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.hotel, color: colorScheme.primary.withValues(alpha: 0.8)),
+            Icon(Icons.add_location_alt, color: colorScheme.primary.withValues(alpha: 0.8)),
             const SizedBox(width: 12),
             Text(
-              '+ Tambah Titik Keberangkatan / Hotel',
+              '+ ${tr('trip_set_basecamp')}',
               style: TextStyle(
                 color: colorScheme.primary,
                 fontWeight: FontWeight.w600,
