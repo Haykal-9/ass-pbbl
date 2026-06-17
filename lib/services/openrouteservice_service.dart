@@ -48,4 +48,51 @@ class OpenRouteService {
       return waypoints; // Fallback
     }
   }
+
+  Future<Map<String, dynamic>?> getDistanceAndDuration(LatLng start, LatLng end, String transportMode) async {
+    final apiKey = dotenv.env['ORS_API_KEY'];
+    if (apiKey == null || apiKey.isEmpty) return null;
+
+    String profile = 'driving-car';
+    if (transportMode == 'bike') profile = 'cycling-regular';
+    if (transportMode == 'walk') profile = 'foot-walking';
+
+    final url = 'https://api.openrouteservice.org/v2/directions/$profile/geojson';
+    final coordinates = [
+      [start.longitude, start.latitude],
+      [end.longitude, end.latitude]
+    ];
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Authorization': apiKey,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8',
+        },
+        body: jsonEncode({
+          'coordinates': coordinates,
+          'instructions': false,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['features'] != null && data['features'].isNotEmpty) {
+          final properties = data['features'][0]['properties'];
+          if (properties != null && properties['segments'] != null && properties['segments'].isNotEmpty) {
+            final segment = properties['segments'][0];
+            return {
+              'distance': (segment['distance'] as num).toDouble(), // in meters
+              'duration': (segment['duration'] as num).toDouble(), // in seconds
+            };
+          }
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
 }

@@ -12,6 +12,7 @@ class AddStopSheet extends StatefulWidget {
   final bool isBasecamp;
   final TripStop? existingStop;
   final String? minStartTime;
+  final String? maxEndTime;
 
   const AddStopSheet({
     super.key, 
@@ -19,6 +20,7 @@ class AddStopSheet extends StatefulWidget {
     this.isBasecamp = false,
     this.existingStop,
     this.minStartTime,
+    this.maxEndTime,
   });
 
   @override
@@ -58,9 +60,19 @@ class _AddStopSheetState extends State<AddStopSheet> {
         }
       }
       
+      if (widget.maxEndTime != null && widget.maxEndTime!.isNotEmpty) {
+        if (_toMins(_timeCtrl.text) > _toMins(widget.maxEndTime!)) {
+          _startTimeError = 'Tidak boleh melewati jadwal berikutnya (${widget.maxEndTime})';
+        }
+      }
+      
       if (_endTimeCtrl.text.isNotEmpty) {
         if (_toMins(_endTimeCtrl.text) < _toMins(_timeCtrl.text)) {
           _endTimeError = 'Harus setelah jam kunjungan';
+        } else if (widget.maxEndTime != null && widget.maxEndTime!.isNotEmpty) {
+          if (_toMins(_endTimeCtrl.text) > _toMins(widget.maxEndTime!)) {
+            _endTimeError = 'Batas maksimal: ${widget.maxEndTime}';
+          }
         }
       }
     });
@@ -400,8 +412,8 @@ class _AddStopSheetState extends State<AddStopSheet> {
                   'xid': xid,
                 });
               },
-              icon: const Icon(Icons.add_location_alt),
-              label: Text(tr('trip_add_stop')),
+              icon: Icon(widget.isBasecamp ? Icons.home : Icons.add_location_alt),
+              label: Text(widget.isBasecamp ? tr('trip_set_basecamp') : tr('trip_add_stop')),
               style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
             ),
           ],

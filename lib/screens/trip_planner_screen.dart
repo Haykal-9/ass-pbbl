@@ -15,6 +15,7 @@ import '../widgets/trip_timeline_item.dart';
 import '../widgets/add_stop_sheet.dart';
 import '../widgets/trip_map_widget.dart';
 import '../services/weather_service.dart';
+import '../services/openrouteservice_service.dart';
 import 'package:intl/intl.dart';
 
 class TripPlannerScreen extends StatefulWidget {
@@ -264,20 +265,9 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
       final lng = result['lng'] as double?;
       final transportMode = result['transport'] as String;
 
-      if (lat != null && lng != null && _currentDayStops.isNotEmpty) {
-        final lastStop = _currentDayStops.last;
-        if (lastStop.latitude != null && lastStop.longitude != null) {
-          distanceMeters = _haversineDistance(
-              lastStop.latitude!, lastStop.longitude!, lat, lng);
-          
-          double speedKmh = 5.0; // default walk
-          if (transportMode == 'car') speedKmh = 40.0;
-          if (transportMode == 'bike') speedKmh = 15.0;
-          if (transportMode == 'public') speedKmh = 30.0;
-          
-          travelMinutes = ((distanceMeters / 1000) / speedKmh * 60).round();
-        }
-      }
+      // Distance and time will be calculated via API below
+      distanceMeters = null;
+      travelMinutes = null;
 
       final stop = TripStop(
         destinationId: _destination.id!,
@@ -298,7 +288,15 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
         createdAt: DateTime.now().toIso8601String(),
       );
       await _db.insertTripStop(stop);
+      
+      // Recalculate all distances for the day with the new stop using real routing API
       await _loadStops();
+      if (_currentDayStops.isNotEmpty) {
+        await _recalculateDistancesAsync(_currentDayStops);
+        await _db.updateTripStopOrder(_currentDayStops);
+        await _loadStops();
+      }
+
       if (mounted) {
         showSuccessSnackbar(
           context,
@@ -309,13 +307,15 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
     }
   }
 
-  void _recalculateDistances(List<TripStop> dayStops) {
+  Future<void> _recalculateDistancesAsync(List<TripStop> dayStops) async {
     // Sort dayStops explicitly: basecamp first, then by old orderIndex
     dayStops.sort((a, b) {
       if (a.isBasecamp && !b.isBasecamp) return -1;
       if (!a.isBasecamp && b.isBasecamp) return 1;
       return a.orderIndex.compareTo(b.orderIndex);
     });
+
+    final ors = OpenRouteService();
 
     for (int i = 0; i < dayStops.length; i++) {
       double? dist;
@@ -324,12 +324,32 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
         final prev = dayStops[i - 1];
         final curr = dayStops[i];
         if (prev.latitude != null && prev.longitude != null && curr.latitude != null && curr.longitude != null) {
-          dist = _haversineDistance(prev.latitude!, prev.longitude!, curr.latitude!, curr.longitude!);
-          double speedKmh = 5.0;
-          if (curr.transportMode == 'car') speedKmh = 40.0;
-          if (curr.transportMode == 'bike') speedKmh = 15.0;
-          if (curr.transportMode == 'public') speedKmh = 30.0;
-          mins = ((dist / 1000) / speedKmh * 60).round();
+          
+          // Try fetching real-world data from ORS API
+          try {
+            final data = await ors.getDistanceAndDuration(
+              LatLng(prev.latitude!, prev.longitude!),
+              LatLng(curr.latitude!, curr.longitude!),
+              curr.transportMode,
+            );
+            if (data != null) {
+              dist = data['distance'];
+              // ORS duration is in seconds, convert to minutes
+              mins = ((data['duration'] as double) / 60.0).round();
+            }
+          } catch (_) {
+            // Ignore API error and fallback to haversine below
+          }
+
+          // Fallback to Haversine if API failed
+          if (dist == null || mins == null) {
+            dist = _haversineDistance(prev.latitude!, prev.longitude!, curr.latitude!, curr.longitude!);
+            double speedKmh = 5.0;
+            if (curr.transportMode == 'car') speedKmh = 40.0;
+            if (curr.transportMode == 'bike') speedKmh = 15.0;
+            if (curr.transportMode == 'public') speedKmh = 30.0;
+            mins = ((dist / 1000) / speedKmh * 60).round();
+          }
         }
       }
       dayStops[i] = dayStops[i].copyWith(
@@ -362,7 +382,7 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
     if (confirmed == true && mounted) {
       await _db.deleteTripStop(stop.id!);
       final updatedStops = _currentDayStops.where((s) => s.id != stop.id).toList();
-      _recalculateDistances(updatedStops);
+      await _recalculateDistancesAsync(updatedStops);
       await _db.updateTripStopOrder(updatedStops);
       await _loadStops();
     }
@@ -378,6 +398,12 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
           : prevStop.visitTime;
     }
 
+    String? nextTime;
+    if (index != -1 && index < _currentDayStops.length - 1) {
+      final nextStop = _currentDayStops[index + 1];
+      nextTime = nextStop.visitTime;
+    }
+
     final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
@@ -390,6 +416,7 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
         isBasecamp: stop.isBasecamp,
         existingStop: stop,
         minStartTime: previousTime,
+        maxEndTime: nextTime,
       ),
     );
 
@@ -413,7 +440,7 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
       final index = currentStops.indexWhere((s) => s.id == stop.id);
       if (index != -1) {
         currentStops[index] = updatedStop;
-        _recalculateDistances(currentStops);
+        await _recalculateDistancesAsync(currentStops);
         await _db.updateTripStopOrder(currentStops);
       }
 
@@ -461,13 +488,15 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
     currentDayStops.insert(newIndex, stop);
     
     // Update orderIndex and distances
-    _recalculateDistances(currentDayStops);
+    await _recalculateDistancesAsync(currentDayStops);
 
-    setState(() {
-      // replace in all stops
-      _allStops.removeWhere((s) => s.dayNumber == _selectedDay);
-      _allStops.addAll(currentDayStops);
-    });
+    if (mounted) {
+      setState(() {
+        // replace in all stops
+        _allStops.removeWhere((s) => s.dayNumber == _selectedDay);
+        _allStops.addAll(currentDayStops);
+      });
+    }
 
     await _db.updateTripStopOrder(currentDayStops);
   }
@@ -931,10 +960,10 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add_location_alt, color: colorScheme.primary.withValues(alpha: 0.8)),
+            Icon(Icons.home, color: colorScheme.primary.withValues(alpha: 0.8)),
             const SizedBox(width: 12),
             Text(
-              '+ ${tr('trip_set_basecamp')}',
+              tr('trip_set_basecamp'),
               style: TextStyle(
                 color: colorScheme.primary,
                 fontWeight: FontWeight.w500,

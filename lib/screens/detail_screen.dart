@@ -210,8 +210,8 @@ class _DetailScreenState extends State<DetailScreen> {
 
                         // Action Cards (Trip Planner, Galeri, Budget, Checklist)
                         _tripPlannerCard(),
-                        const SizedBox(height: 12),
-                        _galleryCard(),
+                        // const SizedBox(height: 12),
+                        // _galleryCard(), // Polaroid gallery temporarily hidden
                         const SizedBox(height: 12),
                         _budgetCard(),
                         const SizedBox(height: 12),
