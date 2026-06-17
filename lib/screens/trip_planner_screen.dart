@@ -183,11 +183,24 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
   // ── Date helpers ──
 
   String _dayDate(int dayNumber) {
-    if (_destination.startDate == null) return '';
+    if (_destination.startDate == null) return 'Day $dayNumber';
     try {
       final start = DateTime.parse(_destination.startDate!);
       final date = start.add(Duration(days: dayNumber - 1));
-      return '${date.day}/${date.month}';
+      return DateFormat('d MMM').format(date);
+    } catch (_) {
+      return 'Day $dayNumber';
+    }
+  }
+
+  String _weatherText(int dayNumber) {
+    final w = _weatherForecast[dayNumber];
+    if (w == null) return '';
+    try {
+      final condition = w['weather'][0]['main'] as String;
+      final temp = (w['main']['temp'] as num).round();
+      final icon = WeatherService.weatherIconPath(condition);
+      return '$icon $temp°C';
     } catch (_) {
       return '';
     }
@@ -576,24 +589,25 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
                                     dividerColor: Colors.transparent,
                                     tabs: List.generate(_maxDay, (i) {
                                       final dayNum = i + 1;
-                                      final date = _dayDate(dayNum);
+                                      final dateStr = _dayDate(dayNum);
+                                      final weatherStr = _weatherText(dayNum);
                                       return Tab(
                                         height: 60,
                                         child: Column(
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
                                             Text(
-                                              'Day $dayNum',
+                                              dateStr,
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 16,
                                               ),
                                             ),
-                                            if (date.isNotEmpty)
+                                            if (weatherStr.isNotEmpty)
                                               Padding(
                                                 padding: const EdgeInsets.only(top: 4),
                                                 child: Text(
-                                                  date,
+                                                  weatherStr,
                                                   style: TextStyle(
                                                     fontSize: 12,
                                                     color: colorScheme.onSurface.withValues(alpha: 0.6),

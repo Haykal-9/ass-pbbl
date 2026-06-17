@@ -35,7 +35,7 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final hasTransitInfo = widget.stop.distanceMeters != null || widget.stop.travelMinutes != null;
-    final showTransit = widget.stop.isBasecamp ? false : (hasTransitInfo); // Basecamp has no transit strip above it
+    final showTransit = hasTransitInfo || widget.stop.isBasecamp;
 
     return Dismissible(
       key: ValueKey('trip_stop_${widget.stop.id}'),
@@ -295,20 +295,18 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
                             _transitChip(
                               context,
                               _transportIcon(widget.stop.transportMode),
-                              widget.stop.transportMode,
+                              widget.stop.isBasecamp ? '-' : widget.stop.transportMode,
                             ),
-                            if (widget.stop.distanceMeters != null)
-                              _transitChip(
-                                context,
-                                Icons.straighten,
-                                _formatDistance(widget.stop.distanceMeters!),
-                              ),
-                            if (widget.stop.travelMinutes != null)
-                              _transitChip(
-                                context,
-                                Icons.schedule,
-                                _formatMinutes(widget.stop.travelMinutes!),
-                              ),
+                            _transitChip(
+                              context,
+                              Icons.straighten,
+                              widget.stop.distanceMeters != null ? _formatDistance(widget.stop.distanceMeters!) : '-',
+                            ),
+                            _transitChip(
+                              context,
+                              Icons.schedule,
+                              widget.stop.travelMinutes != null ? _formatMinutes(widget.stop.travelMinutes!) : '-',
+                            ),
                           ],
                         ),
                       ),
