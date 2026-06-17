@@ -207,12 +207,7 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
   String _weatherText(int dayNumber) {
     final w = _weatherForecast[dayNumber];
     if (w == null) {
-      // Fallback dummy weather for dates outside the 5-day forecast limit
-      final mockTemps = [28, 29, 31, 26, 27];
-      final mockIcons = ['☀️', '⛅', '☀️', '🌧️', '⛅'];
-      final t = mockTemps[dayNumber % mockTemps.length];
-      final i = mockIcons[dayNumber % mockIcons.length];
-      return '$i $t°C';
+      return ''; // No longer showing fake mock weather
     }
     try {
       final condition = w['weather'][0]['main'] as String;
@@ -220,7 +215,7 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
       final icon = WeatherService.weatherIconPath(condition);
       return '$icon $temp°C';
     } catch (_) {
-      return '⛅ 28°C'; // Fallback
+      return ''; 
     }
   }
 

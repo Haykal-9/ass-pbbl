@@ -32,7 +32,19 @@ class WeatherService {
           }
         }
         
-        return bestMatch; // Can be null if date is outside 5-day forecast
+        if (bestMatch != null) {
+          return bestMatch;
+        }
+
+        // Fallback to Current Weather API if the date is outside the 5-day forecast window
+        final currentUrl = Uri.parse('https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lng&appid=${ApiConstants.openWeatherMapKey}&units=metric&lang=id');
+        final currentResponse = await http.get(currentUrl).timeout(const Duration(seconds: 10));
+        
+        if (currentResponse.statusCode == 200) {
+          return jsonDecode(currentResponse.body); // Root object has 'main' and 'weather' fields perfectly matching the forecast item
+        } else {
+          return null; // Let the UI handle the completely missing data
+        }
       } else {
         throw Exception('API Error: ${response.statusCode}');
       }
