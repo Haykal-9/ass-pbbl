@@ -235,6 +235,14 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
   // ── CRUD Actions ──
 
   Future<void> _addStop({bool isBasecamp = false}) async {
+    String? previousTime;
+    if (_currentDayStops.isNotEmpty) {
+      final lastStop = _currentDayStops.last;
+      previousTime = (lastStop.endTime != null && lastStop.endTime!.isNotEmpty) 
+          ? lastStop.endTime 
+          : lastStop.visitTime;
+    }
+
     final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
@@ -242,7 +250,11 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => AddStopSheet(dayNumber: _selectedDay, isBasecamp: isBasecamp),
+      builder: (ctx) => AddStopSheet(
+        dayNumber: _selectedDay, 
+        isBasecamp: isBasecamp,
+        minStartTime: previousTime,
+      ),
     );
 
     if (result != null && mounted) {
@@ -274,6 +286,7 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
         placeName: result['name'] as String,
         placeAddress: (result['address'] as String?)?.isEmpty ?? true ? null : result['address'],
         visitTime: result['time'] as String,
+        endTime: result['endTime'] as String?,
         transportMode: transportMode,
         photoUrl: result['photoUrl'] as String?,
         latitude: lat,
@@ -375,6 +388,7 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
         placeName: result['name'] as String,
         placeAddress: (result['address'] as String?)?.isEmpty ?? true ? null : result['address'],
         visitTime: result['time'] as String,
+        endTime: result['endTime'] as String?,
         transportMode: result['transport'] as String,
         photoUrl: result['photoUrl'] as String?,
         latitude: result['lat'] as double?,
@@ -557,23 +571,19 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
                   // ── Statistics Strip ──
                   SliverToBoxAdapter(
                     child: Container(
-                      margin: const EdgeInsets.only(top: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withValues(alpha: 0.06),
-                        border: Border(
-                          bottom: BorderSide(
-                            color: colorScheme.primary.withValues(alpha: 0.1),
-                          ),
-                        ),
-                      ),
-                      child: Wrap(
-                        alignment: WrapAlignment.spaceAround,
-                        runSpacing: 12,
+                      margin: const EdgeInsets.only(top: 8, bottom: 8),
+                      height: 80,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        physics: const BouncingScrollPhysics(),
                         children: [
                           _statItem(Icons.place, '$_totalStops', tr('trip_stat_places')),
+                          const SizedBox(width: 12),
                           _statItem(Icons.straighten, '${_totalDistanceKm.toStringAsFixed(1)} km', tr('trip_stat_distance')),
+                          const SizedBox(width: 12),
                           _statItem(Icons.schedule, _formatMinutes(_totalTravelMinutes), tr('trip_stat_travel_time')),
+                          const SizedBox(width: 12),
                           _statItem(Icons.timer, _effectiveTime, 'Waktu Efektif'),
                         ],
                       ),
@@ -589,58 +599,83 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TabBar(
-                                    controller: _tabController,
-                                    isScrollable: true,
-                                    tabAlignment: TabAlignment.start,
-                                    labelColor: colorScheme.onSurface,
-                                    unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.5),
-                                    indicatorColor: colorScheme.primary,
-                                    indicatorWeight: 3,
-                                    dividerColor: Colors.transparent,
-                                    tabs: List.generate(_maxDay, (i) {
-                                      final dayNum = i + 1;
-                                      final dateStr = _dayDate(dayNum);
-                                      final weatherStr = _weatherText(dayNum);
-                                      return Tab(
-                                        height: 60,
-                                        child: Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              dateStr,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
-                                              ),
-                                            ),
-                                            if (weatherStr.isNotEmpty)
-                                              Padding(
-                                                padding: const EdgeInsets.only(top: 4),
-                                                child: Text(
-                                                  weatherStr,
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: colorScheme.onSurface.withValues(alpha: 0.6),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: TabBar(
+                                      controller: _tabController,
+                                      isScrollable: true,
+                                      tabAlignment: TabAlignment.start,
+                                      dividerColor: Colors.transparent,
+                                      indicator: BoxDecoration(
+                                        color: colorScheme.primary,
+                                        borderRadius: BorderRadius.circular(16),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: colorScheme.primary.withValues(alpha: 0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      labelColor: colorScheme.onPrimary,
+                                      unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.6),
+                                      indicatorPadding: EdgeInsets.zero,
+                                      labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                                      physics: const BouncingScrollPhysics(),
+                                      tabs: List.generate(_maxDay, (i) {
+                                        final dayNum = i + 1;
+                                        final dateStr = _dayDate(dayNum);
+                                        final weatherStr = _weatherText(dayNum);
+                                        return Tab(
+                                          height: 56,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                                            child: Column(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  dateStr,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 15,
                                                   ),
                                                 ),
-                                              ),
-                                          ],
-                                        ),
-                                      );
-                                    }),
+                                                if (weatherStr.isNotEmpty)
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(top: 2),
+                                                    child: Text(
+                                                      weatherStr,
+                                                      style: const TextStyle(
+                                                        fontSize: 11,
+                                                        fontWeight: FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      }),
+                                    ),
                                   ),
-                                ),
-                                if (_destination.tripDays == 0 || _maxDay < _destination.tripDays)
-                                  IconButton(
-                                    icon: Icon(Icons.add_circle_outline, color: colorScheme.primary),
-                                    tooltip: tr('trip_add_day'),
-                                    onPressed: _addDay,
-                                  ),
-                              ],
+                                  if (_destination.tripDays == 0 || _maxDay < _destination.tripDays)
+                                    Container(
+                                      margin: const EdgeInsets.only(left: 8),
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.primaryContainer.withValues(alpha: 0.5),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: IconButton(
+                                        icon: Icon(Icons.add, color: colorScheme.onPrimaryContainer),
+                                        tooltip: tr('trip_add_day'),
+                                        onPressed: _addDay,
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
                             Container(
                               height: 1,
@@ -769,27 +804,58 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
 
   Widget _statItem(IconData icon, String value, String label) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 20, color: colorScheme.primary),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-            color: colorScheme.onSurface,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.05)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 20, color: colorScheme.primary),
           ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: colorScheme.onSurface.withValues(alpha: 0.5),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.onSurface.withValues(alpha: 0.5),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

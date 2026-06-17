@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '../models/trip_stop.dart';
 import '../services/app_locale.dart';
@@ -32,18 +33,7 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
   bool _isExpanded = false;
 
   String _getEndTime() {
-    if (widget.stop.visitTime == null || widget.stop.visitTime!.isEmpty) return '';
-    try {
-      final parts = widget.stop.visitTime!.split(':');
-      final startMin = int.parse(parts[0]) * 60 + int.parse(parts[1]);
-      final duration = widget.stop.estimatedDurationMinutes ?? 60;
-      final endMin = startMin + duration;
-      final h = (endMin ~/ 60) % 24;
-      final m = endMin % 60;
-      return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
-    } catch (_) {
-      return '';
-    }
+    return widget.stop.endTime ?? '';
   }
 
   @override
@@ -184,7 +174,7 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
                               bottomLeft: Radius.circular(showTransit && !_isExpanded ? 0 : 12),
                             ),
                             child: widget.stop.photoUrl != null && widget.stop.photoUrl!.isNotEmpty
-                                ? (widget.stop.photoUrl!.startsWith('http')
+                                ? (widget.stop.photoUrl!.startsWith('http') || widget.stop.photoUrl!.startsWith('blob:') || kIsWeb
                                     ? Image.network(
                                         widget.stop.photoUrl!,
                                         width: 76,

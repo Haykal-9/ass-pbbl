@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:async';
 import 'package:image_picker/image_picker.dart';
 import '../services/app_locale.dart';
@@ -10,12 +11,14 @@ class AddStopSheet extends StatefulWidget {
   final int dayNumber;
   final bool isBasecamp;
   final TripStop? existingStop;
+  final String? minStartTime;
 
   const AddStopSheet({
     super.key, 
     required this.dayNumber,
     this.isBasecamp = false,
     this.existingStop,
+    this.minStartTime,
   });
 
   @override
@@ -28,6 +31,7 @@ class _AddStopSheetState extends State<AddStopSheet> {
   final _nameCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
   final _timeCtrl = TextEditingController(text: '09:00');
+  final _endTimeCtrl = TextEditingController();
   
   String _transport = 'walk';
   bool _isSearching = false;
@@ -39,11 +43,13 @@ class _AddStopSheetState extends State<AddStopSheet> {
   @override
   void initState() {
     super.initState();
+    _timeCtrl.text = widget.minStartTime ?? '09:00';
     if (widget.existingStop != null) {
       final stop = widget.existingStop!;
       _nameCtrl.text = stop.placeName;
       _addressCtrl.text = stop.placeAddress ?? '';
       _timeCtrl.text = stop.visitTime ?? '09:00';
+      _endTimeCtrl.text = stop.endTime ?? '';
       _transport = stop.transportMode;
       _photoUrl = stop.photoUrl;
       if (stop.latitude != null && stop.longitude != null) {
@@ -63,6 +69,7 @@ class _AddStopSheetState extends State<AddStopSheet> {
     _nameCtrl.dispose();
     _addressCtrl.dispose();
     _timeCtrl.dispose();
+    _endTimeCtrl.dispose();
     _debounce?.cancel();
     super.dispose();
   }
@@ -190,7 +197,7 @@ class _AddStopSheetState extends State<AddStopSheet> {
                 child: _photoUrl != null && _photoUrl!.isNotEmpty
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: _photoUrl!.startsWith('http')
+                        child: _photoUrl!.startsWith('http') || _photoUrl!.startsWith('blob:') || kIsWeb
                             ? Image.network(_photoUrl!, fit: BoxFit.cover)
                             : Image.file(File(_photoUrl!), fit: BoxFit.cover),
                       )
@@ -211,7 +218,7 @@ class _AddStopSheetState extends State<AddStopSheet> {
               controller: _searchCtrl,
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
-                labelText: 'Cari tempat (OpenStreetMap)',
+                labelText: 'Cari tempat',
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _isSearching ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))) : null,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -262,20 +269,45 @@ class _AddStopSheetState extends State<AddStopSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: _timeCtrl,
-              readOnly: true,
-              decoration: InputDecoration(
-                labelText: tr('trip_visit_time'),
-                prefixIcon: const Icon(Icons.access_time),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onTap: () async {
-                final picked = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 9, minute: 0));
-                if (picked != null) {
-                  _timeCtrl.text = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
-                }
-              },
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _timeCtrl,
+                    readOnly: true,
+                    decoration: InputDecoration(
+                      labelText: tr('trip_visit_time'),
+                      prefixIcon: const Icon(Icons.access_time),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onTap: () async {
+                      final picked = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 9, minute: 0));
+                      if (picked != null) {
+                        _timeCtrl.text = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: _endTimeCtrl,
+                    readOnly: true,
+                    decoration: InputDecoration(
+                      labelText: 'Jam Berakhir',
+                      prefixIcon: const Icon(Icons.av_timer),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      hintText: 'Opsional',
+                    ),
+                    onTap: () async {
+                      final picked = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 10, minute: 0));
+                      if (picked != null) {
+                        _endTimeCtrl.text = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+                      }
+                    },
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             Text(tr('trip_transport_mode'), style: Theme.of(context).textTheme.labelLarge),
@@ -295,6 +327,19 @@ class _AddStopSheetState extends State<AddStopSheet> {
               onPressed: () {
                 if (_nameCtrl.text.trim().isEmpty) return;
                 
+                if (widget.minStartTime != null && widget.minStartTime!.isNotEmpty && widget.existingStop == null) {
+                  int toMins(String t) {
+                    final p = t.split(':');
+                    return p.length == 2 ? int.parse(p[0]) * 60 + int.parse(p[1]) : 0;
+                  }
+                  if (toMins(_timeCtrl.text) < toMins(widget.minStartTime!)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Jam mulai tidak boleh lebih awal dari waktu berakhir tempat sebelumnya (${widget.minStartTime})')),
+                    );
+                    return;
+                  }
+                }
+                
                 String? photoUrl;
                 double? lat, lng;
                 String? xid;
@@ -307,8 +352,9 @@ class _AddStopSheetState extends State<AddStopSheet> {
 
                 Navigator.pop(context, {
                   'name': _nameCtrl.text.trim(),
-                  'address': _addressCtrl.text.trim(),
-                  'time': _timeCtrl.text.trim(),
+                  'address': _addressCtrl.text,
+                  'time': _timeCtrl.text,
+                  'endTime': _endTimeCtrl.text.trim().isEmpty ? '' : _endTimeCtrl.text,
                   'transport': _transport,
                   'photoUrl': _photoUrl,
                   'lat': lat,

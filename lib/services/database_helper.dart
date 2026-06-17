@@ -31,7 +31,7 @@ class DatabaseHelper {
       return databaseFactoryFfiWebNoWebWorker.openDatabase(
         'wanderlist.db',
         options: OpenDatabaseOptions(
-          version: 13,
+          version: 14,
           onCreate: (db, version) async {
             await _onCreate(db, version);
             await _seedV9DummyTripStops(db);
@@ -44,10 +44,10 @@ class DatabaseHelper {
       final path = join(dbPath, 'wanderlist.db');
       return openDatabase(
         path,
-        version: 13,
+        version: 14,
         onCreate: (db, version) async {
-          await _onCreate(db, version);
-          await _seedV9DummyTripStops(db);
+            await _onCreate(db, version);
+            await _seedV9DummyTripStops(db);
         },
         onUpgrade: _onUpgrade,
       );
@@ -92,6 +92,7 @@ class DatabaseHelper {
       description                TEXT,
       otm_xid                    TEXT,
       visit_time                 TEXT,
+      end_time                   TEXT,
       estimated_duration_minutes INTEGER DEFAULT 60,
       transport_mode             TEXT    DEFAULT 'walk',
       distance_meters            REAL,
@@ -279,6 +280,11 @@ class DatabaseHelper {
       await db.delete('trip_stops');
       await _seedV9DummyTripStops(db);
     }
+
+    // ── v14: Add end_time explicit column ──
+    if (oldVersion < 14) {
+      await db.execute('ALTER TABLE trip_stops ADD COLUMN end_time TEXT');
+    }
   }
 
   Future<void> _seedV9DummyTripStops(Database db) async {
@@ -299,7 +305,7 @@ class DatabaseHelper {
         await db.insert('trip_stops', {
           'destination_id': id, 'day_number': 1, 'order_index': isBc ? -1 : i,
           'place_name': s['n'], 'place_address': s['a'], 'opening_hours': s['oh'], 'latitude': s['la'], 'longitude': s['lo'],
-          'visit_time': s['t'], 'transport_mode': s['m'] ?? 'walk',
+          'visit_time': s['t'], 'end_time': s['et'], 'transport_mode': s['m'] ?? 'walk',
           'distance_meters': s['d'], 'travel_minutes': s['min'],
           'estimated_duration_minutes': s['ed'] ?? 60,
           'photo_url': s['p'], 'is_basecamp': isBc ? 1 : 0, 'created_at': now,

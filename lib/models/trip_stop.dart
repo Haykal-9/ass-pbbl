@@ -12,6 +12,7 @@ class TripStop {
   final String? description;
   final String? otmXid;
   final String? visitTime;
+  final String? endTime;
   final int estimatedDurationMinutes;
   final String transportMode;
   final double? distanceMeters;
@@ -33,6 +34,7 @@ class TripStop {
     this.description,
     this.otmXid,
     this.visitTime,
+    this.endTime,
     this.estimatedDurationMinutes = 60,
     this.transportMode = 'walk',
     this.distanceMeters,
@@ -55,6 +57,7 @@ class TripStop {
         description: map['description'] as String?,
         otmXid: map['otm_xid'] as String?,
         visitTime: map['visit_time'] as String?,
+        endTime: map['end_time'] as String?,
         estimatedDurationMinutes:
             map['estimated_duration_minutes'] as int? ?? 60,
         transportMode: map['transport_mode'] as String? ?? 'walk',
@@ -78,6 +81,7 @@ class TripStop {
         'description': description,
         'otm_xid': otmXid,
         'visit_time': visitTime,
+        'end_time': endTime,
         'estimated_duration_minutes': estimatedDurationMinutes,
         'transport_mode': transportMode,
         'distance_meters': distanceMeters,
@@ -100,6 +104,7 @@ class TripStop {
     String? description,
     String? otmXid,
     String? visitTime,
+    String? endTime,
     int? estimatedDurationMinutes,
     String? transportMode,
     double? distanceMeters,
@@ -121,6 +126,7 @@ class TripStop {
         description: description ?? this.description,
         otmXid: otmXid ?? this.otmXid,
         visitTime: visitTime ?? this.visitTime,
+        endTime: endTime ?? this.endTime,
         estimatedDurationMinutes:
             estimatedDurationMinutes ?? this.estimatedDurationMinutes,
         transportMode: transportMode ?? this.transportMode,
