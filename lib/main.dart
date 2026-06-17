@@ -43,60 +43,60 @@ class WanderListApp extends StatelessWidget {
     switch (temaWarna) {
       case 'Ancient Earth':
         final colorScheme = ColorScheme.fromSeed(
-          seedColor: const Color(0xFF8B5E3C),
+          seedColor: const Color(0xFFB07D62), // Terracotta clay
           brightness: Brightness.light,
         ).copyWith(
           onPrimary: Colors.white,
         );
         return ThemeData(
           colorScheme: colorScheme,
-          scaffoldBackgroundColor: const Color(0xFFFDF5E6),
-          cardColor: const Color(0xFFFFFBF0),
+          scaffoldBackgroundColor: const Color(0xFFFCF8F2), // Warm sand
+          cardColor: Colors.white,
           useMaterial3: true,
           appBarTheme: const AppBarTheme(
-            backgroundColor: Color(0xFFFDF5E6),
-            foregroundColor: Color(0xFF3E2723),
+            backgroundColor: Color(0xFFFCF8F2),
+            foregroundColor: Color(0xFF4A3B32),
           ),
           bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-            backgroundColor: Color(0xFFFFFBF0),
+            backgroundColor: Colors.white,
           ),
         );
       case 'Urban Slate':
         final colorScheme = ColorScheme.fromSeed(
-          seedColor: const Color(0xFF607D8B),
+          seedColor: const Color(0xFF7CA1C0), // Calm dusty blue
           brightness: Brightness.dark,
         ).copyWith(
-          onPrimary: const Color(0xFF0B192C), // Navy/Dark color for better contrast
+          onPrimary: const Color(0xFF15191E), 
         );
         return ThemeData(
           colorScheme: colorScheme,
-          scaffoldBackgroundColor: const Color(0xFF1E2329),
-          cardColor: const Color(0xFF282C34),
+          scaffoldBackgroundColor: const Color(0xFF15191E), // Deep slate navy
+          cardColor: const Color(0xFF222831), // Soft dark greyish blue
           useMaterial3: true,
           appBarTheme: const AppBarTheme(
-            backgroundColor: Color(0xFF1E2329),
+            backgroundColor: Color(0xFF15191E),
             foregroundColor: Colors.white,
           ),
           bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-            backgroundColor: Color(0xFF282C34),
+            backgroundColor: Color(0xFF222831),
           ),
         );
       case 'Canopy':
       default:
         final colorScheme = ColorScheme.fromSeed(
-          seedColor: const Color(0xFF3A6B4A),
+          seedColor: const Color(0xFF2E8B57), // Sea green
           brightness: Brightness.light,
         ).copyWith(
           onPrimary: Colors.white,
         );
         return ThemeData(
           colorScheme: colorScheme,
-          scaffoldBackgroundColor: const Color(0xFFF1F8F4),
-          cardColor: Colors.white,
+          scaffoldBackgroundColor: const Color(0xFFF4F9F6), // Very soft mint
+          cardColor: Colors.white, 
           useMaterial3: true,
           appBarTheme: const AppBarTheme(
-            backgroundColor: Color(0xFFF1F8F4),
-            foregroundColor: Color(0xFF1B3D26),
+            backgroundColor: Color(0xFFF4F9F6),
+            foregroundColor: Color(0xFF1E3A2B),
           ),
           bottomNavigationBarTheme: const BottomNavigationBarThemeData(
             backgroundColor: Colors.white,

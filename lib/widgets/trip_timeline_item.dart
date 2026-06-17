@@ -203,7 +203,7 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
                                     widget.stop.placeName,
                                     style: TextStyle(
                                       fontSize: 15,
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w500,
                                       color: colorScheme.onSurface,
                                     ),
                                     maxLines: 2,
@@ -221,7 +221,7 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
                               turns: _isExpanded ? 0.5 : 0,
                               duration: const Duration(milliseconds: 200),
                               child: Icon(Icons.expand_more,
-                                  color: colorScheme.onSurface.withValues(alpha: 0.3), size: 20),
+                                  color: colorScheme.onSurface.withValues(alpha: 0.5), size: 20),
                             ),
                           ),
                         ],
@@ -260,21 +260,7 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
                                       ),
                                       const SizedBox(height: 8),
                                     ],
-                                    if (widget.stop.openingHours != null && widget.stop.openingHours!.isNotEmpty) ...[
-                                      Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Icon(Icons.access_time, size: 14, color: colorScheme.primary),
-                                          const SizedBox(width: 6),
-                                          Expanded(
-                                            child: Text(
-                                              widget.stop.openingHours!,
-                                              style: TextStyle(fontSize: 12, color: colorScheme.primary),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+
                                     const SizedBox(height: 16),
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.end,
@@ -338,7 +324,7 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
                             ),
                             _transitChip(
                               context,
-                              Icons.straighten,
+                              Icons.swap_vert,
                               widget.stop.distanceMeters != null ? _formatDistance(widget.stop.distanceMeters!) : '-',
                             ),
                             _transitChip(
@@ -363,7 +349,7 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
   }
 
   Widget _transitChip(BuildContext context, IconData icon, String label) {
-    final color = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
+    final color = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

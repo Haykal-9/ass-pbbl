@@ -39,6 +39,32 @@ class _AddStopSheetState extends State<AddStopSheet> {
   Timer? _debounce;
   Map<String, dynamic>? _selectedPlaceDetails;
   String? _photoUrl;
+  String? _startTimeError;
+  String? _endTimeError;
+
+  int _toMins(String t) {
+    final p = t.split(':');
+    return p.length == 2 ? int.parse(p[0]) * 60 + int.parse(p[1]) : 0;
+  }
+
+  void _validateTimes() {
+    setState(() {
+      _startTimeError = null;
+      _endTimeError = null;
+      
+      if (widget.minStartTime != null && widget.minStartTime!.isNotEmpty) {
+        if (_toMins(_timeCtrl.text) < _toMins(widget.minStartTime!)) {
+          _startTimeError = 'Pilih waktu setelah ${widget.minStartTime}';
+        }
+      }
+      
+      if (_endTimeCtrl.text.isNotEmpty) {
+        if (_toMins(_endTimeCtrl.text) < _toMins(_timeCtrl.text)) {
+          _endTimeError = 'Harus setelah jam kunjungan';
+        }
+      }
+    });
+  }
 
   @override
   void initState() {
@@ -61,6 +87,7 @@ class _AddStopSheetState extends State<AddStopSheet> {
         };
       }
     }
+    _validateTimes();
   }
 
   @override
@@ -270,6 +297,7 @@ class _AddStopSheetState extends State<AddStopSheet> {
             ),
             const SizedBox(height: 12),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: TextField(
@@ -279,11 +307,20 @@ class _AddStopSheetState extends State<AddStopSheet> {
                       labelText: tr('trip_visit_time'),
                       prefixIcon: const Icon(Icons.access_time),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      errorText: _startTimeError,
                     ),
                     onTap: () async {
-                      final picked = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 9, minute: 0));
+                      final initialTimeStr = _timeCtrl.text.split(':');
+                      final initialH = int.tryParse(initialTimeStr[0]) ?? 9;
+                      final initialM = initialTimeStr.length > 1 ? (int.tryParse(initialTimeStr[1]) ?? 0) : 0;
+                      
+                      final picked = await showTimePicker(
+                        context: context, 
+                        initialTime: TimeOfDay(hour: initialH, minute: initialM),
+                      );
                       if (picked != null) {
                         _timeCtrl.text = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+                        _validateTimes();
                       }
                     },
                   ),
@@ -298,11 +335,20 @@ class _AddStopSheetState extends State<AddStopSheet> {
                       prefixIcon: const Icon(Icons.av_timer),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       hintText: 'Opsional',
+                      errorText: _endTimeError,
                     ),
                     onTap: () async {
-                      final picked = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 10, minute: 0));
+                      final initialTimeStr = _endTimeCtrl.text.isNotEmpty ? _endTimeCtrl.text.split(':') : _timeCtrl.text.split(':');
+                      final initialH = int.tryParse(initialTimeStr[0]) ?? 9;
+                      final initialM = initialTimeStr.length > 1 ? (int.tryParse(initialTimeStr[1]) ?? 0) : 0;
+
+                      final picked = await showTimePicker(
+                        context: context, 
+                        initialTime: TimeOfDay(hour: initialH, minute: initialM),
+                      );
                       if (picked != null) {
                         _endTimeCtrl.text = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+                        _validateTimes();
                       }
                     },
                   ),
@@ -327,17 +373,9 @@ class _AddStopSheetState extends State<AddStopSheet> {
               onPressed: () {
                 if (_nameCtrl.text.trim().isEmpty) return;
                 
-                if (widget.minStartTime != null && widget.minStartTime!.isNotEmpty && widget.existingStop == null) {
-                  int toMins(String t) {
-                    final p = t.split(':');
-                    return p.length == 2 ? int.parse(p[0]) * 60 + int.parse(p[1]) : 0;
-                  }
-                  if (toMins(_timeCtrl.text) < toMins(widget.minStartTime!)) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Jam mulai tidak boleh lebih awal dari waktu berakhir tempat sebelumnya (${widget.minStartTime})')),
-                    );
-                    return;
-                  }
+                _validateTimes();
+                if (_startTimeError != null || _endTimeError != null) {
+                  return; // Stop submission if there are visual errors
                 }
                 
                 String? photoUrl;

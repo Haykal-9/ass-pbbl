@@ -369,6 +369,15 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
   }
 
   Future<void> _editStop(TripStop stop) async {
+    String? previousTime;
+    final index = _currentDayStops.indexWhere((s) => s.id == stop.id);
+    if (index > 0) {
+      final prevStop = _currentDayStops[index - 1];
+      previousTime = (prevStop.endTime != null && prevStop.endTime!.isNotEmpty) 
+          ? prevStop.endTime 
+          : prevStop.visitTime;
+    }
+
     final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
@@ -380,6 +389,7 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
         dayNumber: _selectedDay,
         isBasecamp: stop.isBasecamp,
         existingStop: stop,
+        minStartTime: previousTime,
       ),
     );
 
@@ -580,7 +590,7 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
                         children: [
                           _statItem(Icons.place, '$_totalStops', tr('trip_stat_places')),
                           const SizedBox(width: 12),
-                          _statItem(Icons.straighten, '${_totalDistanceKm.toStringAsFixed(1)} km', tr('trip_stat_distance')),
+                          _statItem(Icons.swap_vert, '${_totalDistanceKm.toStringAsFixed(1)} km', tr('trip_stat_distance')),
                           const SizedBox(width: 12),
                           _statItem(Icons.schedule, _formatMinutes(_totalTravelMinutes), tr('trip_stat_travel_time')),
                           const SizedBox(width: 12),
@@ -621,7 +631,7 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
                                         ],
                                       ),
                                       labelColor: colorScheme.onPrimary,
-                                      unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.6),
+                                      unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.5),
                                       indicatorPadding: EdgeInsets.zero,
                                       labelPadding: const EdgeInsets.symmetric(horizontal: 8),
                                       physics: const BouncingScrollPhysics(),
@@ -731,9 +741,16 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _addStop,
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
+        onPressed: basecampStop == null 
+            ? () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Harap set Titik Keberangkatan terlebih dahulu untuk hari ini')),
+                );
+              }
+            : _addStop,
+        backgroundColor: basecampStop == null ? colorScheme.surfaceContainerHighest : colorScheme.primary,
+        foregroundColor: basecampStop == null ? colorScheme.onSurfaceVariant : colorScheme.onPrimary,
+        elevation: basecampStop == null ? 0 : 4,
         icon: const Icon(Icons.add_location_alt),
         label: Text(tr('trip_add_stop')),
       ),
@@ -869,13 +886,13 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
           children: [
             Icon(Icons.map_outlined,
                 size: 64,
-                color: colorScheme.onSurface.withValues(alpha: 0.2)),
+                color: colorScheme.onSurface.withValues(alpha: 0.5)),
             const SizedBox(height: 16),
             Text(
               tr('trip_empty'),
               style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
                 color: colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
@@ -885,7 +902,7 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,
-                color: colorScheme.onSurface.withValues(alpha: 0.4),
+                color: colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
           ],
@@ -920,7 +937,7 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
               '+ ${tr('trip_set_basecamp')}',
               style: TextStyle(
                 color: colorScheme.primary,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
                 fontSize: 14,
               ),
             ),
