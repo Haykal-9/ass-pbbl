@@ -323,6 +323,10 @@ const Map<String, Map<String, String>> _translations = {
     'ID': 'berhasil ditambahkan',
     'EN': 'added successfully',
   },
+  'trip_deleted_success': {
+    'ID': 'berhasil dihapus',
+    'EN': 'deleted successfully',
+  },
   'trip_delete_confirm': {
     'ID': 'Hapus tempat',
     'EN': 'Delete stop',

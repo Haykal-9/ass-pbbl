@@ -75,7 +75,7 @@ class OpenRouteService {
           'coordinates': coordinates,
           'instructions': false,
         }),
-      );
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

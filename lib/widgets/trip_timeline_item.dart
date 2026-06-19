@@ -36,11 +36,32 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
     return widget.stop.endTime ?? '';
   }
 
+  Future<bool?> _confirmDelete() async {
+    final colorScheme = Theme.of(context).colorScheme;
+    return await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tr('confirm_delete')),
+        content: Text('${tr('trip_delete_confirm')} "${widget.stop.placeName}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(tr('cancel')),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: colorScheme.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(tr('delete')),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final hasTransitInfo = widget.stop.distanceMeters != null || widget.stop.travelMinutes != null;
-    final showTransit = hasTransitInfo || widget.stop.isBasecamp;
+    final showTransit = true; // Always show transit strip for transport mode visibility
 
     return Dismissible(
       key: ValueKey('trip_stop_${widget.stop.id}'),
@@ -56,24 +77,7 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
         child: Icon(Icons.delete, color: colorScheme.onError),
       ),
       confirmDismiss: (_) async {
-        return await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: Text(tr('confirm_delete')),
-            content: Text('${tr('trip_delete_confirm')} "${widget.stop.placeName}"?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: Text(tr('cancel')),
-              ),
-              FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: colorScheme.error),
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(tr('delete')),
-              ),
-            ],
-          ),
-        );
+        return await _confirmDelete();
       },
       onDismissed: (_) => widget.onDelete(),
       child: Stack(
@@ -278,7 +282,12 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
                                         ),
                                         const SizedBox(width: 12),
                                         OutlinedButton.icon(
-                                          onPressed: widget.onDelete,
+                                          onPressed: () async {
+                                            final confirm = await _confirmDelete();
+                                            if (confirm == true) {
+                                              widget.onDelete();
+                                            }
+                                          },
                                           icon: Icon(Icons.delete_outline, size: 14, color: colorScheme.error),
                                           label: Text('Hapus', style: TextStyle(color: colorScheme.error, fontSize: 12)),
                                           style: OutlinedButton.styleFrom(
@@ -317,21 +326,29 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
                           runSpacing: 4,
                           crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
-                            _transitChip(
-                              context,
-                              _transportIcon(widget.stop.transportMode),
-                              widget.stop.isBasecamp ? '-' : widget.stop.transportMode,
-                            ),
-                            _transitChip(
-                              context,
-                              Icons.swap_vert,
-                              widget.stop.distanceMeters != null ? _formatDistance(widget.stop.distanceMeters!) : '-',
-                            ),
-                            _transitChip(
-                              context,
-                              Icons.schedule,
-                              widget.stop.travelMinutes != null ? _formatMinutes(widget.stop.travelMinutes!) : '-',
-                            ),
+                            if (widget.stop.isBasecamp)
+                              _transitChip(
+                                context,
+                                Icons.home,
+                                'Titik Keberangkatan',
+                              )
+                            else ...[
+                              _transitChip(
+                                context,
+                                _transportIcon(widget.stop.transportMode),
+                                widget.stop.transportMode,
+                              ),
+                              _transitChip(
+                                context,
+                                Icons.swap_vert,
+                                widget.stop.distanceMeters != null ? _formatDistance(widget.stop.distanceMeters!) : '-',
+                              ),
+                              _transitChip(
+                                context,
+                                Icons.schedule,
+                                widget.stop.travelMinutes != null ? _formatMinutes(widget.stop.travelMinutes!) : '-',
+                              ),
+                            ],
                           ],
                         ),
                       ),

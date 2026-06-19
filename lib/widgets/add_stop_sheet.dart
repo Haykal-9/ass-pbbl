@@ -93,7 +93,7 @@ class _AddStopSheetState extends State<AddStopSheet> {
       if (stop.latitude != null && stop.longitude != null) {
         _selectedPlaceDetails = {
           'lat': stop.latitude,
-          'lon': stop.longitude,
+          'lng': stop.longitude,
           'xid': stop.otmXid,
           'photoUrl': stop.photoUrl,
         };
@@ -388,6 +388,18 @@ class _AddStopSheetState extends State<AddStopSheet> {
                 _validateTimes();
                 if (_startTimeError != null || _endTimeError != null) {
                   return; // Stop submission if there are visual errors
+                }
+                
+                // Best Practice: Prevent saving without map coordinates to avoid breaking route calculations
+                if (_selectedPlaceDetails == null || _selectedPlaceDetails!['lat'] == null || _selectedPlaceDetails!['lng'] == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Harap cari dan pilih lokasi dari daftar Peta agar rute jarak dapat dikalkulasi!'),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                  return;
                 }
                 
                 String? photoUrl;

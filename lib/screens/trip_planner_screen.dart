@@ -162,10 +162,16 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
       
       try {
         final firstParts = firstStop.visitTime!.split(':');
-        final lastParts = lastStop.visitTime!.split(':');
         final startMin = int.parse(firstParts[0]) * 60 + int.parse(firstParts[1]);
-        // Add 60 mins as default duration for the last stop
-        final endMin = int.parse(lastParts[0]) * 60 + int.parse(lastParts[1]) + (lastStop.estimatedDurationMinutes ?? 60);
+        
+        int endMin = 0;
+        if (lastStop.endTime != null && lastStop.endTime!.isNotEmpty) {
+          final lastEndParts = lastStop.endTime!.split(':');
+          endMin = int.parse(lastEndParts[0]) * 60 + int.parse(lastEndParts[1]);
+        } else {
+          final lastParts = lastStop.visitTime!.split(':');
+          endMin = int.parse(lastParts[0]) * 60 + int.parse(lastParts[1]) + 60;
+        }
         // Calculate daily travel minutes
         int dailyTravelMinutes = 0;
         for (final s in stops) {
@@ -287,9 +293,10 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
       
       // Recalculate all distances for the day with the new stop using real routing API
       await _loadStops();
-      if (_currentDayStops.isNotEmpty) {
-        await _recalculateDistancesAsync(_currentDayStops);
-        await _db.updateTripStopOrder(_currentDayStops);
+      final stopsToRecalculate = _currentDayStops; // capture once — getter returns a NEW list each call
+      if (stopsToRecalculate.isNotEmpty) {
+        await _recalculateDistancesAsync(stopsToRecalculate);
+        await _db.updateTripStopOrder(stopsToRecalculate); // same list, now with distances filled in
         await _loadStops();
       }
 
@@ -312,12 +319,29 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
     });
 
     final ors = OpenRouteService();
+    
+    // Temukan basecamp dari hari sebelumnya jika hari ini tidak ada basecamp
+    TripStop? effectiveBasecamp;
+    if (dayStops.isNotEmpty && !dayStops.first.isBasecamp) {
+      final allBasecamps = _allStops.where((s) => s.isBasecamp && s.dayNumber <= dayStops.first.dayNumber).toList();
+      if (allBasecamps.isNotEmpty) {
+        allBasecamps.sort((a, b) => b.dayNumber.compareTo(a.dayNumber));
+        effectiveBasecamp = allBasecamps.first;
+      }
+    }
 
     for (int i = 0; i < dayStops.length; i++) {
       double? dist;
       int? mins;
+      
+      TripStop? prev;
       if (i > 0) {
-        final prev = dayStops[i - 1];
+        prev = dayStops[i - 1];
+      } else if (i == 0 && effectiveBasecamp != null) {
+        prev = effectiveBasecamp;
+      }
+
+      if (prev != null) {
         final curr = dayStops[i];
         if (prev.latitude != null && prev.longitude != null && curr.latitude != null && curr.longitude != null) {
           
@@ -348,39 +372,61 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
           }
         }
       }
-      dayStops[i] = dayStops[i].copyWith(
+      // explicit handling without relying on copyWith null coalescing to clear old distances
+      double? finalDist;
+      int? finalMins;
+      
+      // Basecamp hari tersebut tidak boleh memiliki jarak dari dirinya sendiri
+      if (i == 0 && effectiveBasecamp == null) {
+        finalDist = null;
+        finalMins = null;
+      } else {
+        finalDist = dist;
+        finalMins = mins;
+      }
+
+      dayStops[i] = TripStop(
+        id: dayStops[i].id,
+        destinationId: dayStops[i].destinationId,
+        dayNumber: dayStops[i].dayNumber,
         orderIndex: dayStops[i].isBasecamp ? -1 : (dayStops.first.isBasecamp ? i - 1 : i),
-        distanceMeters: i == 0 ? null : dist,
-        travelMinutes: i == 0 ? null : mins,
+        placeName: dayStops[i].placeName,
+        placeAddress: dayStops[i].placeAddress,
+        latitude: dayStops[i].latitude,
+        longitude: dayStops[i].longitude,
+        photoUrl: dayStops[i].photoUrl,
+        openingHours: dayStops[i].openingHours,
+        description: dayStops[i].description,
+        otmXid: dayStops[i].otmXid,
+        visitTime: dayStops[i].visitTime,
+        endTime: dayStops[i].endTime,
+        estimatedDurationMinutes: dayStops[i].estimatedDurationMinutes,
+        transportMode: dayStops[i].transportMode,
+        distanceMeters: finalDist,
+        travelMinutes: finalMins,
+        isBasecamp: dayStops[i].isBasecamp,
+        createdAt: dayStops[i].createdAt,
       );
     }
   }
 
   Future<void> _deleteStop(TripStop stop) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(tr('confirm_delete')),
-        content: Text('${tr('trip_delete_confirm')} "${stop.placeName}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(tr('cancel')),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(tr('delete')),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true && mounted) {
+    // Dialog konfirmasi sudah ditangani oleh Dismissible di TripTimelineItem
+    // Jadi di sini langsung eksekusi penghapusan
+    if (mounted) {
       await _db.deleteTripStop(stop.id!);
       final updatedStops = _currentDayStops.where((s) => s.id != stop.id).toList();
       await _recalculateDistancesAsync(updatedStops);
       await _db.updateTripStopOrder(updatedStops);
       await _loadStops();
+      
+      if (mounted) {
+        showSuccessSnackbar(
+          context,
+          '"${stop.placeName}" ${tr('trip_deleted_success')}',
+          icon: Icons.delete_outline,
+        );
+      }
     }
   }
 
