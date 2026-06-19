@@ -185,11 +185,7 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
     
     if (totalMinutes == 0) return '-';
     
-    final h = totalMinutes ~/ 60;
-    final m = totalMinutes % 60;
-    if (h == 0) return '${m}m';
-    if (m == 0) return '${h}j';
-    return '${h}j ${m}m';
+    return _formatMinutes(totalMinutes);
   }
 
   // ── Date helpers ──
@@ -623,7 +619,7 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
                           const SizedBox(width: 12),
                           _statItem(Icons.schedule, _formatMinutes(_totalTravelMinutes), tr('trip_stat_travel_time')),
                           const SizedBox(width: 12),
-                          _statItem(Icons.timer, _effectiveTime, 'Waktu Efektif'),
+                          _statItem(Icons.timer, _effectiveTime, tr('trip_stat_effective_time')),
                         ],
                       ),
                     ),
@@ -1023,12 +1019,14 @@ class _TripPlannerScreenState extends State<TripPlannerScreen>
   }
 
   String _formatMinutes(int minutes) {
+    final hStr = tr('time_hour');
+    final mStr = tr('time_minute');
     if (minutes >= 60) {
       final h = minutes ~/ 60;
       final m = minutes % 60;
-      return m > 0 ? '${h}h ${m}m' : '${h}h';
+      return m > 0 ? '$h$hStr $m$mStr' : '$h$hStr';
     }
-    return '${minutes}m';
+    return '$minutes$mStr';
   }
 }
 

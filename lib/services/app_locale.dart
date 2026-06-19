@@ -345,4 +345,9 @@ const Map<String, Map<String, String>> _translations = {
     'ID': 'Galeri Polaroid',
     'EN': 'Polaroid Gallery',
   },
+  
+  // ── Time ─────────────────────────────────────────────
+  'time_hour': {'ID': 'j', 'EN': 'h'},
+  'time_minute': {'ID': 'm', 'EN': 'm'},
+  'trip_stat_effective_time': {'ID': 'Waktu Efektif', 'EN': 'Effective Time'},
 };
