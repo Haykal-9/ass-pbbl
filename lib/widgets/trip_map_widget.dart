@@ -158,7 +158,9 @@ class _TripMapWidgetState extends State<TripMapWidget> {
                   Polyline(
                     points: _routePoints,
                     strokeWidth: 4.0,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: Theme.of(context).brightness == Brightness.dark 
+                        ? const Color(0xFF2C3E50) // Navy-grey blend
+                        : Theme.of(context).colorScheme.primary,
                   ),
                 ],
               ),
@@ -177,7 +179,9 @@ class _TripMapWidgetState extends State<TripMapWidget> {
                     child: CustomPaint(
                       painter: NumberedMarkerPainter(
                         number: stop.isBasecamp ? 0 : idx + (validStops.isNotEmpty && validStops.first.isBasecamp ? 0 : 1),
-                        color: stop.isBasecamp ? Colors.blueGrey.shade800 : Theme.of(context).colorScheme.primary,
+                        color: stop.isBasecamp 
+                            ? (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF34495E) : Colors.blueGrey.shade800)
+                            : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF2C3E50) : Theme.of(context).colorScheme.primary),
                         isHighlighted: isHighlighted,
                         isBasecamp: stop.isBasecamp,
                       ),
