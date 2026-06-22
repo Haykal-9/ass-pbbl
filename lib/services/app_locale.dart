@@ -343,6 +343,12 @@ const Map<String, Map<String, String>> _translations = {
     'ID': 'Tanggal Selesai',
     'EN': 'End Date',
   },
+  
+  // ── Transport Modes ─────────────────────────────────────
+  'transport_walk': {'ID': 'Jalan', 'EN': 'Walk'},
+  'transport_car': {'ID': 'Mobil', 'EN': 'Car'},
+  'transport_bike': {'ID': 'Motor', 'EN': 'Bike'},
+  'transport_public': {'ID': 'Umum', 'EN': 'Public'},
 
   // ── Gallery ──────────────────────────────────────────
   'gallery_title': {

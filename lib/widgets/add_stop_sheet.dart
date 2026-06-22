@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:async';
 import 'package:image_picker/image_picker.dart';
@@ -160,7 +161,7 @@ class _AddStopSheetState extends State<AddStopSheet> {
     final isActive = _transport == mode;
     return ChoiceChip(
       avatar: Icon(icon, size: 18, color: isActive ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurface),
-      label: Text(mode, style: TextStyle(color: isActive ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurface)),
+      label: Text(tr('transport_$mode'), style: TextStyle(color: isActive ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurface)),
       selected: isActive,
       selectedColor: Theme.of(context).colorScheme.primary,
       onSelected: (_) => setState(() => _transport = mode),
@@ -173,6 +174,51 @@ class _AddStopSheetState extends State<AddStopSheet> {
     if (pickedFile != null) {
       setState(() => _photoUrl = pickedFile.path);
     }
+  }
+
+  Future<TimeOfDay?> _showScrollableTimePicker(TimeOfDay initialTime) async {
+    TimeOfDay? pickedTime;
+    final now = DateTime.now();
+    DateTime initialDateTime = DateTime(now.year, now.month, now.day, initialTime.hour, initialTime.minute);
+
+    await showCupertinoModalPopup(
+      context: context,
+      builder: (context) => Container(
+        height: 280,
+        color: Theme.of(context).cardColor,
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                CupertinoButton(
+                  child: Text(tr('cancel'), style: TextStyle(color: Theme.of(context).colorScheme.primary)),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                CupertinoButton(
+                  child: Text('OK', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+                  onPressed: () {
+                    pickedTime = TimeOfDay(hour: initialDateTime.hour, minute: initialDateTime.minute);
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+            Expanded(
+              child: CupertinoDatePicker(
+                mode: CupertinoDatePickerMode.time,
+                use24hFormat: true,
+                initialDateTime: initialDateTime,
+                onDateTimeChanged: (DateTime newDateTime) {
+                  initialDateTime = newDateTime;
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    return pickedTime;
   }
 
   @override
@@ -326,9 +372,8 @@ class _AddStopSheetState extends State<AddStopSheet> {
                       final initialH = int.tryParse(initialTimeStr[0]) ?? 9;
                       final initialM = initialTimeStr.length > 1 ? (int.tryParse(initialTimeStr[1]) ?? 0) : 0;
                       
-                      final picked = await showTimePicker(
-                        context: context, 
-                        initialTime: TimeOfDay(hour: initialH, minute: initialM),
+                      final picked = await _showScrollableTimePicker(
+                        TimeOfDay(hour: initialH, minute: initialM),
                       );
                       if (picked != null) {
                         _timeCtrl.text = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
@@ -354,9 +399,8 @@ class _AddStopSheetState extends State<AddStopSheet> {
                       final initialH = int.tryParse(initialTimeStr[0]) ?? 9;
                       final initialM = initialTimeStr.length > 1 ? (int.tryParse(initialTimeStr[1]) ?? 0) : 0;
 
-                      final picked = await showTimePicker(
-                        context: context, 
-                        initialTime: TimeOfDay(hour: initialH, minute: initialM),
+                      final picked = await _showScrollableTimePicker(
+                        TimeOfDay(hour: initialH, minute: initialM),
                       );
                       if (picked != null) {
                         _endTimeCtrl.text = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';

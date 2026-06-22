@@ -336,7 +336,7 @@ class _TripTimelineItemState extends State<TripTimelineItem> {
                               _transitChip(
                                 context,
                                 _transportIcon(widget.stop.transportMode),
-                                widget.stop.transportMode,
+                                tr('transport_${widget.stop.transportMode}'),
                               ),
                               _transitChip(
                                 context,
