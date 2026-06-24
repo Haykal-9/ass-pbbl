@@ -7,6 +7,7 @@ import '../models/destination.dart';
 import '../models/destination_photo.dart';
 import '../services/app_locale.dart';
 import 'category_chip.dart';
+import 'polaroid_painters.dart'; // Impor custom painter
 
 class SocialGalleryPostCard extends StatelessWidget {
   final Destination destination;
@@ -63,6 +64,20 @@ class SocialGalleryPostCard extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 _photoImage(context),
+                // Custom Drawing: Washi Tape di atas gambar
+                Positioned(
+                  top: -10,
+                  left: 0,
+                  right: 0,
+                  child: IgnorePointer(
+                    child: SizedBox(
+                      height: 40,
+                      child: CustomPaint(
+                        painter: WashiTapePainter(),
+                      ),
+                    ),
+                  ),
+                ),
                 Positioned(
                   left: 12,
                   right: 12,
@@ -102,8 +117,8 @@ class SocialGalleryPostCard extends StatelessWidget {
               runSpacing: 8,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                _iconAction(
-                  icon: isLiked ? Icons.favorite : Icons.favorite_border,
+                _customLikeAction(
+                  isLiked: isLiked,
                   label: '$likeCount',
                   color: isLiked ? Colors.red : colorScheme.onSurface,
                   onPressed: onLike,
@@ -289,6 +304,35 @@ class SocialGalleryPostCard extends StatelessWidget {
         Icons.image_not_supported_outlined,
         color: colorScheme.onSurface.withValues(alpha: 0.35),
         size: 52,
+      ),
+    );
+  }
+
+  Widget _customLikeAction({
+    required bool isLiked,
+    required String label,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onPressed,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: CustomPaint(
+                painter: HeartPainter(isFilled: isLiked, color: color),
+              ),
+            ),
+            const SizedBox(width: 5),
+            Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
+          ],
+        ),
       ),
     );
   }

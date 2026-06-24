@@ -107,3 +107,50 @@ class PushPinPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+/// Menggambar Ikon Hati secara custom menggunakan Bezier Paths
+class HeartPainter extends CustomPainter {
+  final bool isFilled;
+  final Color color;
+
+  HeartPainter({required this.isFilled, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = isFilled ? PaintingStyle.fill : PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round;
+
+    final double width = size.width;
+    final double height = size.height;
+
+    // Menggambar hati menggunakan path (kubik bezier)
+    final path = Path();
+    path.moveTo(width / 2, height / 5);
+    
+    // Kurva kiri atas
+    path.cubicTo(
+      width * 1 / 8, 0, 
+      0, height * 2 / 5, 
+      width / 2, height * 9 / 10
+    );
+    
+    // Kurva kanan atas
+    path.moveTo(width / 2, height / 5);
+    path.cubicTo(
+      width * 7 / 8, 0, 
+      width, height * 2 / 5, 
+      width / 2, height * 9 / 10
+    );
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant HeartPainter oldDelegate) {
+    return oldDelegate.isFilled != isFilled || oldDelegate.color != color;
+  }
+}
