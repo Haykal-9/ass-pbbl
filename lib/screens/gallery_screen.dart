@@ -6,6 +6,7 @@ import '../models/destination.dart';
 import '../models/destination_photo.dart';
 import '../services/app_locale.dart';
 import '../services/database_helper.dart';
+import '../services/session_service.dart';
 import '../widgets/polaroid_deck_gallery.dart';
 
 class GalleryScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class GalleryScreen extends StatefulWidget {
 
 class _GalleryScreenState extends State<GalleryScreen> {
   final dbHelper = DatabaseHelper();
+  final SessionService _session = SessionService();
   List<DestinationPhoto> _photos = [];
   bool _isLoading = true;
   String _bgType = 'wood';
@@ -95,9 +97,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
       );
 
       if (result != null) {
+        final currentUserId = await _session.getCurrentUserId() ?? 1;
         final newPhoto = DestinationPhoto(
           destinationId: widget.destination.id!,
           photoPath: pickedFile.path,
+          authorUserId: currentUserId,
           caption: result.isEmpty ? 'Memori Indah' : result,
           createdAt: DateTime.now().toIso8601String(),
         );

@@ -5,6 +5,7 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
+import '../models/app_user.dart';
 import '../models/budget_item.dart';
 import '../models/checklist_item.dart';
 import '../models/destination.dart';
@@ -31,7 +32,7 @@ class DatabaseHelper {
       return databaseFactoryFfiWebNoWebWorker.openDatabase(
         'wanderlist.db',
         options: OpenDatabaseOptions(
-          version: 17,
+          version: 18,
           onCreate: (db, version) async {
             await _onCreate(db, version);
             await _seedV9DummyTripStops(db);
@@ -44,7 +45,7 @@ class DatabaseHelper {
       final path = join(dbPath, 'wanderlist.db');
       return openDatabase(
         path,
-        version: 17,
+        version: 18,
         onCreate: (db, version) async {
             await _onCreate(db, version);
             await _seedV9DummyTripStops(db);
@@ -66,13 +67,27 @@ class DatabaseHelper {
     )
   ''';
 
+  static const String _createAppUsersTable = '''
+    CREATE TABLE IF NOT EXISTS app_users (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      display_name  TEXT    NOT NULL,
+      username      TEXT    NOT NULL UNIQUE,
+      password      TEXT    NOT NULL,
+      avatar_path   TEXT,
+      bio           TEXT    NOT NULL DEFAULT '',
+      created_at    TEXT    NOT NULL
+    )
+  ''';
+
   static const String _createDestinationPhotosTable = '''
     CREATE TABLE destination_photos (
       id             INTEGER PRIMARY KEY AUTOINCREMENT,
       destination_id INTEGER NOT NULL,
       photo_path     TEXT    NOT NULL,
+      author_user_id INTEGER NOT NULL DEFAULT 1,
       caption        TEXT,
       created_at     TEXT    NOT NULL,
+      FOREIGN KEY(author_user_id) REFERENCES app_users(id),
       FOREIGN KEY(destination_id) REFERENCES destinations(id) ON DELETE CASCADE
     )
   ''';
@@ -176,11 +191,20 @@ class DatabaseHelper {
         );
       }
 
+      await db.execute(_createAppUsersTable);
+      final existingUsers = await db.query('app_users', limit: 1);
+      if (existingUsers.isEmpty) {
+        final now = DateTime.now().toIso8601String();
+        await _seedDefaultUsers(db, now);
+      }
+
+      final now = DateTime.now().toIso8601String();
+      await _seedBudgetItems(db, now);
+
       // 2. Create destination_photos table and migrate
       await db.execute(_createDestinationPhotosTable);
       
       final destinations = await db.query('destinations');
-      final now = DateTime.now().toIso8601String();
       for (final dest in destinations) {
         final destId = dest['id'] as int;
         final photoPath = dest['photo_path'] as String?;
@@ -188,6 +212,7 @@ class DatabaseHelper {
           await db.insert('destination_photos', {
             'destination_id': destId,
             'photo_path': photoPath,
+            'author_user_id': 1,
             'caption': 'Foto Utama',
             'created_at': now,
           });
@@ -198,12 +223,14 @@ class DatabaseHelper {
       await db.insert('destination_photos', {
         'destination_id': 1,
         'photo_path': 'https://images.unsplash.com/photo-1544550581-5f7ceaf7f992?q=80&w=600',
+        'author_user_id': 1,
         'caption': 'Spot Diving Pertama',
         'created_at': now,
       });
       await db.insert('destination_photos', {
         'destination_id': 1,
         'photo_path': 'https://images.unsplash.com/photo-1552554030-ad3b1e39a3f2?q=80&w=600',
+        'author_user_id': 2,
         'caption': 'Sunset di Resort',
         'created_at': now,
       });
@@ -254,6 +281,21 @@ class DatabaseHelper {
     // ── v10: Add is_basecamp column to trip_stops ──
     if (oldVersion < 10) {
       await db.execute('ALTER TABLE trip_stops ADD COLUMN is_basecamp INTEGER DEFAULT 0');
+    }
+
+    if (oldVersion < 18) {
+      await db.execute(_createAppUsersTable);
+      try {
+        await db.execute('ALTER TABLE destination_photos ADD COLUMN author_user_id INTEGER NOT NULL DEFAULT 1');
+      } catch (_) {
+        // Older installs may already have the column from a partial upgrade.
+      }
+
+      final users = await db.query('app_users', limit: 1);
+      if (users.isEmpty) {
+        final now = DateTime.now().toIso8601String();
+        await _seedDefaultUsers(db, now);
+      }
     }
 
     // ── v11: Update Borobudur Basecamp Address ──
@@ -481,11 +523,14 @@ class DatabaseHelper {
       )
     ''');
 
+    final now = DateTime.now().toIso8601String();
+
     await db.execute(_createBudgetTable);
+    await db.execute(_createAppUsersTable);
     await db.execute(_createDestinationPhotosTable);
     await db.execute(_createTripStopsTable);
 
-    final now = DateTime.now().toIso8601String();
+    await _seedDefaultUsers(db, now);
     final seeds = [
       "('Raja Ampat', 'Sorong, Indonesia', 'Wisata Alam', 'wishlist', 'Ingin merasakan keajaiban berenang langsung bersama pari manta di alam yang belum tersentuh.', 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Raja_Ampat%2C_West_Papua%2C_Indonesia.jpg/960px-Raja_Ampat%2C_West_Papua%2C_Indonesia.jpg', -0.2353, 130.5257, '$now')",
       "('Taman Nasional Komodo', 'Labuan Bajo, Indonesia', 'Wisata Alam', 'visited', 'Perjalanan ini membuatku takjub bisa melihat langsung naga purba di habitat aslinya yang menakjubkan.', 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?q=80&w=600', -8.5500, 119.4800, '$now')",
@@ -551,29 +596,106 @@ class DatabaseHelper {
 
     // Insert photo seeds
     final photoSeeds = [
-      "1, 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Raja_Ampat%2C_West_Papua%2C_Indonesia.jpg/960px-Raja_Ampat%2C_West_Papua%2C_Indonesia.jpg', 'Foto Utama'",
-      "1, 'https://images.unsplash.com/photo-1544550581-5f7ceaf7f992?q=80&w=600', 'Spot Diving Pertama'",
-      "1, 'https://images.unsplash.com/photo-1552554030-ad3b1e39a3f2?q=80&w=600', 'Sunset di Resort'",
-      "2, 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?q=80&w=600', 'Foto Utama'",
-      "3, 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?q=80&w=600', 'Foto Utama'",
-      "4, 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/3Falls_Niagara.jpg/960px-3Falls_Niagara.jpg', 'Foto Utama'",
-      "5, 'https://upload.wikimedia.org/wikipedia/commons/7/73/Grand_Canyon_of_yellowstone.jpg', 'Foto Utama'",
-      "6, 'https://images.unsplash.com/photo-1596402184320-417e7178b2cd?q=80&w=600', 'Foto Utama'",
-      "7, 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Buddhist_monks_in_front_of_the_Angkor_Wat.jpg/960px-Buddhist_monks_in_front_of_the_Angkor_Wat.jpg', 'Foto Utama'",
-      "8, 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=600', 'Foto Utama'",
-      "9, 'https://images.unsplash.com/photo-1526392060635-9d6019884377?q=80&w=600', 'Foto Utama'",
-      "10, 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?q=80&w=600', 'Foto Utama'",
-      "11, 'https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?q=80&w=600', 'Foto Utama'",
-      "12, 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/960px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg', 'Foto Utama'",
-      "13, 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Shibuya_skyline_from_Tokyu_Plaza_in_Omotesando%2C_Harajuku%2C_Tokyo%2C_2024_May.jpg/960px-Shibuya_skyline_from_Tokyu_Plaza_in_Omotesando%2C_Harajuku%2C_Tokyo%2C_2024_May.jpg', 'Foto Utama'",
-      "14, 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?q=80&w=600', 'Foto Utama'",
-      "15, 'https://images.unsplash.com/photo-1534430480872-3498386e7856?q=80&w=600', 'Foto Utama'"
+      {'destination_id': 1, 'author_user_id': 1, 'photo_path': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Raja_Ampat%2C_West_Papua%2C_Indonesia.jpg/960px-Raja_Ampat%2C_West_Papua%2C_Indonesia.jpg', 'caption': 'Foto Utama'},
+      {'destination_id': 1, 'author_user_id': 2, 'photo_path': 'https://images.unsplash.com/photo-1544550581-5f7ceaf7f992?q=80&w=600', 'caption': 'Spot Diving Pertama'},
+      {'destination_id': 1, 'author_user_id': 3, 'photo_path': 'https://images.unsplash.com/photo-1552554030-ad3b1e39a3f2?q=80&w=600', 'caption': 'Sunset di Resort'},
+      {'destination_id': 2, 'author_user_id': 1, 'photo_path': 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?q=80&w=600', 'caption': 'Foto Utama'},
+      {'destination_id': 3, 'author_user_id': 2, 'photo_path': 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?q=80&w=600', 'caption': 'Foto Utama'},
+      {'destination_id': 4, 'author_user_id': 3, 'photo_path': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/3Falls_Niagara.jpg/960px-3Falls_Niagara.jpg', 'caption': 'Foto Utama'},
+      {'destination_id': 5, 'author_user_id': 1, 'photo_path': 'https://upload.wikimedia.org/wikipedia/commons/7/73/Grand_Canyon_of_yellowstone.jpg', 'caption': 'Foto Utama'},
+      {'destination_id': 6, 'author_user_id': 2, 'photo_path': 'https://images.unsplash.com/photo-1596402184320-417e7178b2cd?q=80&w=600', 'caption': 'Foto Utama'},
+      {'destination_id': 7, 'author_user_id': 3, 'photo_path': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Buddhist_monks_in_front_of_the_Angkor_Wat.jpg/960px-Buddhist_monks_in_front_of_the_Angkor_Wat.jpg', 'caption': 'Foto Utama'},
+      {'destination_id': 8, 'author_user_id': 1, 'photo_path': 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=600', 'caption': 'Foto Utama'},
+      {'destination_id': 9, 'author_user_id': 2, 'photo_path': 'https://images.unsplash.com/photo-1526392060635-9d6019884377?q=80&w=600', 'caption': 'Foto Utama'},
+      {'destination_id': 10, 'author_user_id': 3, 'photo_path': 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?q=80&w=600', 'caption': 'Foto Utama'},
+      {'destination_id': 11, 'author_user_id': 1, 'photo_path': 'https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?q=80&w=600', 'caption': 'Foto Utama'},
+      {'destination_id': 12, 'author_user_id': 2, 'photo_path': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/960px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg', 'caption': 'Foto Utama'},
+      {'destination_id': 13, 'author_user_id': 3, 'photo_path': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Shibuya_skyline_from_Tokyu_Plaza_in_Omotesando%2C_Harajuku%2C_Tokyo%2C_2024_May.jpg/960px-Shibuya_skyline_from_Tokyu_Plaza_in_Omotesando%2C_Harajuku%2C_Tokyo%2C_2024_May.jpg', 'caption': 'Foto Utama'},
+      {'destination_id': 14, 'author_user_id': 1, 'photo_path': 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?q=80&w=600', 'caption': 'Foto Utama'},
+      {'destination_id': 15, 'author_user_id': 2, 'photo_path': 'https://images.unsplash.com/photo-1534430480872-3498386e7856?q=80&w=600', 'caption': 'Foto Utama'}
     ];
-    for (var val in photoSeeds) {
+    for (final seed in photoSeeds) {
       await db.execute('''
-        INSERT INTO destination_photos (destination_id, photo_path, caption, created_at)
-        VALUES ($val, '$now')
+        INSERT INTO destination_photos (destination_id, photo_path, author_user_id, caption, created_at)
+        VALUES (${seed['destination_id']}, '${seed['photo_path']}', ${seed['author_user_id']}, '${seed['caption']}', '$now')
       ''');
+    }
+
+    await _seedBudgetItems(db, now);
+  }
+
+  Future<void> _seedDefaultUsers(Database db, String now) async {
+    final seedUsers = [
+      const AppUser(
+        displayName: 'Wander Admin',
+        username: 'wander_admin',
+        password: 'wander123',
+        bio: 'Curating memories from every destination.',
+        createdAt: '',
+      ),
+      const AppUser(
+        displayName: 'Travel Maya',
+        username: 'travel_maya',
+        password: 'maya123',
+        bio: 'Posting travel stories and photo dumps.',
+        createdAt: '',
+      ),
+      const AppUser(
+        displayName: 'Nomad Rio',
+        username: 'nomad_rio',
+        password: 'rio123',
+        bio: 'Collecting sunsets, one city at a time.',
+        createdAt: '',
+      ),
+    ];
+
+    for (final user in seedUsers) {
+      await db.insert('app_users', {
+        'display_name': user.displayName,
+        'username': user.username,
+        'password': user.password,
+        'avatar_path': user.avatarPath,
+        'bio': user.bio,
+        'created_at': now,
+      });
+    }
+  }
+
+  Future<void> _seedBudgetItems(Database db, String now) async {
+    final existingCount = Sqflite.firstIntValue(
+          await db.rawQuery('SELECT COUNT(*) FROM budget_items'),
+        ) ??
+        0;
+    if (existingCount > 0) return;
+
+    final budgetSeeds = [
+      {'destination_id': 1, 'label': 'Paket diving dan snorkeling', 'category': 'aktivitas', 'amount': 3500000.0},
+      {'destination_id': 1, 'label': 'Penginapan resort 2 malam', 'category': 'akomodasi', 'amount': 4200000.0},
+      {'destination_id': 2, 'label': 'Tiket kapal dan tour komodo', 'category': 'aktivitas', 'amount': 2800000.0},
+      {'destination_id': 2, 'label': 'Penginapan Labuan Bajo', 'category': 'akomodasi', 'amount': 2300000.0},
+      {'destination_id': 3, 'label': 'Transport lokal ke area Fuji', 'category': 'transport', 'amount': 1800000.0},
+      {'destination_id': 4, 'label': 'Boat tour air terjun', 'category': 'aktivitas', 'amount': 2600000.0},
+      {'destination_id': 5, 'label': 'Tiket masuk taman nasional', 'category': 'aktivitas', 'amount': 2100000.0},
+      {'destination_id': 6, 'label': 'Akses stupa utama', 'category': 'aktivitas', 'amount': 950000.0},
+      {'destination_id': 7, 'label': 'Tiket masuk Angkor Wat', 'category': 'aktivitas', 'amount': 1200000.0},
+      {'destination_id': 8, 'label': 'Transport dan tur Roma', 'category': 'transport', 'amount': 3000000.0},
+      {'destination_id': 9, 'label': 'Trekking dan guide lokal', 'category': 'aktivitas', 'amount': 3900000.0},
+      {'destination_id': 10, 'label': 'Tur tembok besar', 'category': 'aktivitas', 'amount': 2400000.0},
+      {'destination_id': 11, 'label': 'Tiket observatory deck', 'category': 'aktivitas', 'amount': 2700000.0},
+      {'destination_id': 12, 'label': 'Akomodasi dekat Eiffel', 'category': 'akomodasi', 'amount': 4800000.0},
+      {'destination_id': 13, 'label': 'Transport MRT dan belanja', 'category': 'transport', 'amount': 1500000.0},
+      {'destination_id': 14, 'label': 'Hotel Marina Bay 2 malam', 'category': 'akomodasi', 'amount': 5200000.0},
+      {'destination_id': 15, 'label': 'Tiket Broadway show', 'category': 'aktivitas', 'amount': 3100000.0},
+    ];
+
+    for (final seed in budgetSeeds) {
+      await db.insert('budget_items', {
+        'destination_id': seed['destination_id'],
+        'label': seed['label'],
+        'category': seed['category'],
+        'amount': seed['amount'],
+        'created_at': now,
+      });
     }
   }
 
@@ -588,6 +710,47 @@ class DatabaseHelper {
       destination.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // APP USERS — auth + profile
+  // ─────────────────────────────────────────────────────────────────
+
+  Future<int> insertAppUser(AppUser user) async {
+    final db = await database;
+    return db.insert('app_users', user.toMap());
+  }
+
+  Future<AppUser?> getAppUserById(int id) async {
+    final db = await database;
+    final maps = await db.query('app_users', where: 'id = ?', whereArgs: [id], limit: 1);
+    if (maps.isEmpty) return null;
+    return AppUser.fromMap(maps.first);
+  }
+
+  Future<AppUser?> getAppUserByUsername(String username) async {
+    final db = await database;
+    final maps = await db.query('app_users', where: 'username = ?', whereArgs: [username], limit: 1);
+    if (maps.isEmpty) return null;
+    return AppUser.fromMap(maps.first);
+  }
+
+  Future<AppUser?> getAppUserByCredentials(String username, String password) async {
+    final db = await database;
+    final maps = await db.query(
+      'app_users',
+      where: 'username = ? AND password = ?',
+      whereArgs: [username, password],
+      limit: 1,
+    );
+    if (maps.isEmpty) return null;
+    return AppUser.fromMap(maps.first);
+  }
+
+  Future<int> updateAppUser(AppUser user) async {
+    if (user.id == null) return 0;
+    final db = await database;
+    return db.update('app_users', user.toMap(), where: 'id = ?', whereArgs: [user.id]);
   }
 
   /// filter: 'all' | 'wishlist' | 'visited'
@@ -872,8 +1035,13 @@ class DatabaseHelper {
         p.id AS gallery_photo_id,
         p.destination_id AS gallery_destination_id,
         p.photo_path AS gallery_photo_path,
+        p.author_user_id AS gallery_author_user_id,
         p.caption AS gallery_caption,
         p.created_at AS gallery_created_at,
+        u.id AS gallery_author_id,
+        u.display_name AS gallery_author_display_name,
+        u.username AS gallery_author_username,
+        u.avatar_path AS gallery_author_avatar_path,
         d.*,
         (SELECT COUNT(*) FROM checklist_items WHERE destination_id = d.id)
           AS checklist_total,
@@ -881,6 +1049,7 @@ class DatabaseHelper {
           AS checklist_done
       FROM destination_photos p
       INNER JOIN destinations d ON d.id = p.destination_id
+      LEFT JOIN app_users u ON u.id = p.author_user_id
       ORDER BY p.created_at DESC, p.id DESC
     ''');
     return maps.map(GalleryFeedItem.fromMap).toList();

@@ -2,6 +2,7 @@ class DestinationPhoto {
   final int? id;
   final int destinationId;
   final String photoPath;
+  final int? authorUserId;
   final String? caption;
   final String createdAt;
 
@@ -9,6 +10,7 @@ class DestinationPhoto {
     this.id,
     required this.destinationId,
     required this.photoPath,
+    this.authorUserId,
     this.caption,
     required this.createdAt,
   });
@@ -18,6 +20,7 @@ class DestinationPhoto {
       if (id != null) 'id': id,
       'destination_id': destinationId,
       'photo_path': photoPath,
+      'author_user_id': authorUserId,
       'caption': caption,
       'created_at': createdAt,
     };
@@ -28,6 +31,7 @@ class DestinationPhoto {
       id: map['id'] as int?,
       destinationId: map['destination_id'] as int,
       photoPath: map['photo_path'] as String,
+      authorUserId: map['author_user_id'] as int?,
       caption: map['caption'] as String?,
       createdAt: map['created_at'] as String,
     );
@@ -37,6 +41,7 @@ class DestinationPhoto {
     int? id,
     int? destinationId,
     String? photoPath,
+    int? authorUserId,
     String? caption,
     String? createdAt,
   }) {
@@ -44,6 +49,7 @@ class DestinationPhoto {
       id: id ?? this.id,
       destinationId: destinationId ?? this.destinationId,
       photoPath: photoPath ?? this.photoPath,
+      authorUserId: authorUserId ?? this.authorUserId,
       caption: caption ?? this.caption,
       createdAt: createdAt ?? this.createdAt,
     );

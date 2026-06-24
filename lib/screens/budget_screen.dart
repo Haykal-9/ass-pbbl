@@ -145,7 +145,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                               icon: kBudgetCategories[_items[index].category] ?? Icons.category,
                               categoryLabel: budgetCategoryLabel(_items[index].category),
                               onTap: () => _openEditor(existing: _items[index]),
-                              confirmDismiss: () => _confirmDeleteItem(_items[index]),
+                              confirmDismiss: (_) => _confirmDeleteItem(_items[index]),
                               onDelete: () => _deleteItem(_items[index].id!),
                             ),
                       ),

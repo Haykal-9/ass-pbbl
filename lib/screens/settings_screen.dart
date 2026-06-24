@@ -7,8 +7,10 @@ import '../services/preferences_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   final VoidCallback? onPrefsChanged;
+  final bool shrinkWrap;
+  final ScrollPhysics? physics;
 
-  const SettingsScreen({super.key, this.onPrefsChanged});
+  const SettingsScreen({super.key, this.onPrefsChanged, this.shrinkWrap = false, this.physics});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -71,6 +73,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
 
     return ListView(
+      shrinkWrap: widget.shrinkWrap,
+      physics: widget.physics,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       children: [
         _sectionHeader(tr('settings_display')),

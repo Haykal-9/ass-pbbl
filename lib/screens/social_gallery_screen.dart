@@ -13,6 +13,7 @@ import '../models/destination_photo.dart';
 import '../models/gallery_feed_item.dart';
 import '../services/app_locale.dart';
 import '../services/database_helper.dart';
+import '../services/session_service.dart';
 import '../widgets/custom_snackbar.dart';
 import '../widgets/social_gallery_post_card.dart';
 import 'detail_screen.dart';
@@ -27,6 +28,7 @@ class SocialGalleryScreen extends StatefulWidget {
 class _SocialGalleryScreenState extends State<SocialGalleryScreen> {
   final DatabaseHelper _db = DatabaseHelper();
   final ImagePicker _picker = ImagePicker();
+  final SessionService _session = SessionService();
 
   List<GalleryFeedItem> _items = [];
   List<Destination> _destinations = [];
@@ -129,7 +131,7 @@ class _SocialGalleryScreenState extends State<SocialGalleryScreen> {
                 maxLines: 3,
                 maxLength: 120,
                 decoration: const InputDecoration(
-                  labelText: 'Komentar dummy',
+                  labelText: 'Komentar',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -357,11 +359,13 @@ class _SocialGalleryScreenState extends State<SocialGalleryScreen> {
     );
 
     if (result == null || result.destination.id == null) return;
+    final currentUserId = await _session.getCurrentUserId() ?? 1;
 
     await _db.insertDestinationPhoto(
       DestinationPhoto(
         destinationId: result.destination.id!,
         photoPath: result.photoPath,
+        authorUserId: currentUserId,
         caption: result.caption.isEmpty ? 'Memori perjalanan' : result.caption,
         createdAt: DateTime.now().toIso8601String(),
       ),
@@ -406,9 +410,13 @@ class _SocialGalleryScreenState extends State<SocialGalleryScreen> {
         return SocialGalleryPostCard(
           destination: item.destination,
           photo: item.photo,
+          authorDisplayName: item.authorDisplayName,
+          authorUsername: item.authorUsername,
+          authorAvatarPath: item.authorAvatarPath,
           isLiked: _likedPhotoIds.contains(id),
           likeCount: _likeCounts[id] ?? _defaultLikeCount(id),
           comments: _comments[id] ?? _defaultComments(item),
+          locationLabel: trCountry(item.destination.country),
           onLike: () => _toggleLike(item),
           onComment: () => _addComment(item),
           onShare: () => _sharePost(item),

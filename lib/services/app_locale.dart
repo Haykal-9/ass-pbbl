@@ -277,7 +277,10 @@ const Map<String, Map<String, String>> _translations = {
   'nav_home': {'ID': 'Beranda', 'EN': 'Home'},
   'nav_gallery': {'ID': 'Galeri', 'EN': 'Gallery'},
   'nav_stats': {'ID': 'Statistik', 'EN': 'Statistics'},
-  'nav_settings': {'ID': 'Pengaturan', 'EN': 'Settings'},
+  'nav_profile': {'ID': 'Profile', 'EN': 'Profile'},
+
+  // ── Profile screen ──────────────────────────────────────
+  'profile_title': {'ID': 'Profile', 'EN': 'Profile'},
 
   // ── Trip Planner ──────────────────────────────────────────
   'trip_planner_title': {

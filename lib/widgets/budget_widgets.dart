@@ -81,7 +81,7 @@ class BudgetItemCard extends StatelessWidget {
   final IconData icon;
   final String categoryLabel;
   final VoidCallback onTap;
-  final Future<bool?> Function()? confirmDismiss;
+  final Future<bool?> Function(DismissDirection)? confirmDismiss;
   final VoidCallback onDelete;
 
   const BudgetItemCard({

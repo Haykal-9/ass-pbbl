@@ -12,7 +12,7 @@ import '../widgets/destination_card.dart';
 import 'add_edit_screen.dart';
 import 'detail_screen.dart';
 import 'scratch_card_screen.dart';
-import 'settings_screen.dart';
+import 'profile_screen.dart';
 import 'social_gallery_screen.dart';
 import 'statistics_screen.dart';
 
@@ -237,7 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           title: Text(
-            tr('settings_title'),
+            tr('profile_title'),
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           foregroundColor: Theme.of(context).colorScheme.primary,
@@ -298,7 +298,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Tab 2: Statistics
           const StatisticsScreen(),
           // Tab 3: Settings
-          SettingsScreen(onPrefsChanged: () => _loadPrefs()),
+          ProfileScreen(onPrefsChanged: () => _loadPrefs()),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -323,9 +323,9 @@ class _HomeScreenState extends State<HomeScreen> {
             label: tr('nav_stats'),
           ),
           NavigationDestination(
-            icon: const Icon(Icons.settings_outlined),
-            selectedIcon: const Icon(Icons.settings),
-            label: tr('nav_settings'),
+            icon: const Icon(Icons.person_outline),
+            selectedIcon: const Icon(Icons.person),
+            label: tr('nav_profile'),
           ),
         ],
       ),

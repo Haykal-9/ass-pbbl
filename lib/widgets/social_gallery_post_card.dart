@@ -11,6 +11,10 @@ import 'category_chip.dart';
 class SocialGalleryPostCard extends StatelessWidget {
   final Destination destination;
   final DestinationPhoto photo;
+  final String authorDisplayName;
+  final String authorUsername;
+  final String? authorAvatarPath;
+  final String locationLabel;
   final bool isLiked;
   final int likeCount;
   final List<String> comments;
@@ -25,6 +29,10 @@ class SocialGalleryPostCard extends StatelessWidget {
     super.key,
     required this.destination,
     required this.photo,
+    required this.authorDisplayName,
+    required this.authorUsername,
+    required this.authorAvatarPath,
+    required this.locationLabel,
     required this.isLiked,
     required this.likeCount,
     required this.comments,
@@ -47,63 +55,90 @@ class SocialGalleryPostCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ListTile(
-            contentPadding: const EdgeInsets.fromLTRB(14, 8, 8, 6),
-            leading: CircleAvatar(
-              backgroundColor: colorScheme.primary.withValues(alpha: 0.12),
-              child: Icon(Icons.place, color: colorScheme.primary),
-            ),
-            title: Text(
-              trName(destination.name),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-            subtitle: Text(
-              trCountry(destination.country),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            trailing: PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'detail') onOpenDetail();
-                if (value == 'edit') onEditCaption();
-                if (value == 'delete') onDelete();
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'detail',
-                  child: ListTile(
-                    dense: true,
-                    leading: Icon(Icons.open_in_new),
-                    title: Text('Buka Detail'),
+          AspectRatio(
+            aspectRatio: 1,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                _photoImage(context),
+                Positioned(
+                  left: 12,
+                  right: 12,
+                  top: 12,
+                  child: _authorOverlay(context),
+                ),
+                Positioned(
+                  right: 10,
+                  top: 10,
+                  child: PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'detail') onOpenDetail();
+                      if (value == 'edit') onEditCaption();
+                      if (value == 'delete') onDelete();
+                    },
+                    color: Theme.of(context).colorScheme.surface,
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'detail',
+                        child: ListTile(
+                          dense: true,
+                          leading: Icon(Icons.open_in_new),
+                          title: Text('Buka Detail'),
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: ListTile(
+                          dense: true,
+                          leading: Icon(Icons.edit),
+                          title: Text('Edit Caption'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: ListTile(
+                          dense: true,
+                          leading: Icon(Icons.delete_outline, color: colorScheme.error),
+                          title: Text(
+                            'Hapus Foto',
+                            style: TextStyle(color: colorScheme.error),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const PopupMenuItem(
-                  value: 'edit',
-                  child: ListTile(
-                    dense: true,
-                    leading: Icon(Icons.edit),
-                    title: Text('Edit Caption'),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'delete',
-                  child: ListTile(
-                    dense: true,
-                    leading: Icon(Icons.delete_outline, color: colorScheme.error),
-                    title: Text(
-                      'Hapus Foto',
-                      style: TextStyle(color: colorScheme.error),
+                Positioned(
+                  left: 12,
+                  right: 12,
+                  bottom: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.32),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.place, color: Colors.white.withValues(alpha: 0.95), size: 18),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            locationLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ],
             ),
-          ),
-          AspectRatio(
-            aspectRatio: 1,
-            child: _photoImage(context),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
@@ -206,6 +241,59 @@ class SocialGalleryPostCard extends StatelessWidget {
     }
 
     return _imagePlaceholder(context);
+  }
+
+  Widget _authorOverlay(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final avatarPath = authorAvatarPath;
+    final hasAvatar = avatarPath != null && avatarPath.isNotEmpty && !kIsWeb && File(avatarPath).existsSync();
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.34),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: colorScheme.primary.withValues(alpha: 0.18),
+            backgroundImage: hasAvatar ? FileImage(File(avatarPath!)) : null,
+            child: hasAvatar
+                ? null
+                : Text(
+                    authorDisplayName.isNotEmpty ? authorDisplayName[0].toUpperCase() : 'W',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  authorDisplayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  '@$authorUsername',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.84),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _imagePlaceholder(BuildContext context) {

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'screens/home_screen.dart';
+import 'screens/auth_gate.dart';
 import 'services/app_locale.dart';
 import 'services/currency_service.dart';
 import 'services/preferences_service.dart';
@@ -121,7 +121,7 @@ class WanderListApp extends StatelessWidget {
                   debugShowCheckedModeBanner: false,
                   theme: _buildTheme(temaWarna),
                   scrollBehavior: AppScrollBehavior(),
-                  home: const HomeScreen(),
+                  home: const AuthGate(),
                 );
               },
             );
