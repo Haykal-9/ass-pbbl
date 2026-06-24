@@ -7,10 +7,10 @@ import '../services/preferences_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   final VoidCallback? onPrefsChanged;
-  final bool shrinkWrap;
-  final ScrollPhysics? physics;
+  /// Optional widget rendered as the last item in the settings list (e.g. logout button).
+  final Widget? footer;
 
-  const SettingsScreen({super.key, this.onPrefsChanged, this.shrinkWrap = false, this.physics});
+  const SettingsScreen({super.key, this.onPrefsChanged, this.footer});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -73,8 +73,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
 
     return ListView(
-      shrinkWrap: widget.shrinkWrap,
-      physics: widget.physics,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       children: [
         _sectionHeader(tr('settings_display')),
@@ -212,6 +210,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ]),
         const SizedBox(height: 32),
+        if (widget.footer != null) widget.footer!,
+        if (widget.footer != null) const SizedBox(height: 8),
       ],
     );
   }
