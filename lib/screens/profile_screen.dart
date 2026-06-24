@@ -297,56 +297,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final colorScheme = Theme.of(context).colorScheme;
 
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: _profileCard(),
-          ),
-          const SizedBox(height: 12),
-          SettingsScreen(
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: _profileCard(),
+        ),
+        const SizedBox(height: 12),
+        Expanded(
+          child: SettingsScreen(
             onPrefsChanged: widget.onPrefsChanged,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-          ),
-          // Tombol logout di paling bawah halaman (scrollable)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: SafeArea(
+            footer: SafeArea(
               top: false,
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton.tonal(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: colorScheme.errorContainer,
-                    foregroundColor: colorScheme.onErrorContainer,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  onPressed: _confirmLogout,
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.logout_rounded, size: 20),
-                      SizedBox(width: 8),
-                      Text(
-                        'Keluar dari Akun',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.tonal(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: colorScheme.errorContainer,
+                      foregroundColor: colorScheme.onErrorContainer,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                    ],
+                    ),
+                    onPressed: _confirmLogout,
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.logout_rounded, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Keluar dari Akun',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
