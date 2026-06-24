@@ -223,30 +223,15 @@ class SocialGalleryPostCard extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  authorDisplayName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-                Text(
-                  authorUsername, // tanpa @
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: colorScheme.onSurface.withValues(alpha: 0.55),
-                    fontSize: 12,
-                  ),
-                ),
-              ],
+            child: Text(
+              authorUsername,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: colorScheme.onSurface,
+              ),
             ),
           ),
           // Popup menu pindah ke author row
