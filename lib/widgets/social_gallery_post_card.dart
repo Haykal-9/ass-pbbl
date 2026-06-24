@@ -63,7 +63,11 @@ class SocialGalleryPostCard extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                _photoImage(context),
+                _DoubleTapLikeOverlay(
+                  isLiked: isLiked,
+                  onLike: onLike,
+                  child: _photoImage(context),
+                ),
                 // Custom Drawing: Washi Tape di atas gambar
                 Positioned(
                   top: -10,
@@ -205,6 +209,7 @@ class SocialGalleryPostCard extends StatelessWidget {
         return Image.file(
           file,
           fit: BoxFit.cover,
+          cacheWidth: 800, // Mengatasi lag dengan me-resize decoding gambar besar
           errorBuilder: (_, __, ___) => _imagePlaceholder(context),
         );
       }
@@ -225,7 +230,7 @@ class SocialGalleryPostCard extends StatelessWidget {
           CircleAvatar(
             radius: 18,
             backgroundColor: colorScheme.primary.withValues(alpha: 0.15),
-            backgroundImage: hasAvatar ? FileImage(File(avatarPath!)) : null,
+            backgroundImage: hasAvatar ? ResizeImage(FileImage(File(avatarPath!)), width: 100) : null,
             child: hasAvatar
                 ? null
                 : Text(
@@ -356,6 +361,113 @@ class SocialGalleryPostCard extends StatelessWidget {
             Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _DoubleTapLikeOverlay extends StatefulWidget {
+  final Widget child;
+  final bool isLiked;
+  final VoidCallback onLike;
+
+  const _DoubleTapLikeOverlay({
+    required this.child,
+    required this.isLiked,
+    required this.onLike,
+  });
+
+  @override
+  State<_DoubleTapLikeOverlay> createState() => _DoubleTapLikeOverlayState();
+}
+
+class _DoubleTapLikeOverlayState extends State<_DoubleTapLikeOverlay>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _opacityAnimation;
+  bool _showHeart = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+
+    // Animasi goyang / membesar lalu mengecil sedikit (Bouncy)
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.2).chain(CurveTween(curve: Curves.elasticOut)), weight: 60),
+      TweenSequenceItem(tween: Tween(begin: 1.2, end: 1.0).chain(CurveTween(curve: Curves.easeInOut)), weight: 20),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.0), weight: 20), // Tahan sebentar
+    ]).animate(_controller);
+
+    // Animasi muncul lalu memudar
+    _opacityAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: Curves.easeIn)), weight: 10),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.0), weight: 60), // Tahan opasitas penuh
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0).chain(CurveTween(curve: Curves.easeOut)), weight: 30),
+    ]).animate(_controller);
+
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        setState(() => _showHeart = false);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleDoubleTap() {
+    // Jalankan callback like kalau belum dilike
+    if (!widget.isLiked) {
+      widget.onLike();
+    }
+    
+    // Tampilkan animasi goyang hati (kalau di-spam akan restart animasinya)
+    setState(() {
+      _showHeart = true;
+    });
+    _controller.forward(from: 0.0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onDoubleTap: _handleDoubleTap,
+      child: Stack(
+        fit: StackFit.expand,
+        alignment: Alignment.center,
+        children: [
+          widget.child,
+          if (_showHeart)
+            Center(
+              child: AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  return Opacity(
+                    opacity: _opacityAnimation.value,
+                    child: Transform.scale(
+                      scale: _scaleAnimation.value,
+                      child: child,
+                    ),
+                  );
+                },
+                child: SizedBox(
+                  width: 120,
+                  height: 120,
+                  child: CustomPaint(
+                    painter: HeartPainter(isFilled: true, color: Colors.white.withValues(alpha: 0.85)),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

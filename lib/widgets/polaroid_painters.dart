@@ -127,23 +127,35 @@ class HeartPainter extends CustomPainter {
     final double width = size.width;
     final double height = size.height;
 
-    // Menggambar hati menggunakan path (kubik bezier)
+    // Menggambar hati yang lebih proporsional
     final path = Path();
-    path.moveTo(width / 2, height / 5);
     
-    // Kurva kiri atas
+    // Mulai dari lekukan tengah atas
+    path.moveTo(width * 0.5, height * 0.25);
+
+    // Setengah kiri
     path.cubicTo(
-      width * 1 / 8, 0, 
-      0, height * 2 / 5, 
-      width / 2, height * 9 / 10
+      width * 0.5, height * 0.05,
+      0, height * 0.05,
+      0, height * 0.4,
     );
-    
-    // Kurva kanan atas
-    path.moveTo(width / 2, height / 5);
     path.cubicTo(
-      width * 7 / 8, 0, 
-      width, height * 2 / 5, 
-      width / 2, height * 9 / 10
+      0, height * 0.65,
+      width * 0.25, height * 0.8,
+      width * 0.5, height * 0.95,
+    );
+
+    // Setengah kanan
+    path.moveTo(width * 0.5, height * 0.25);
+    path.cubicTo(
+      width * 0.5, height * 0.05,
+      width, height * 0.05,
+      width, height * 0.4,
+    );
+    path.cubicTo(
+      width, height * 0.65,
+      width * 0.75, height * 0.8,
+      width * 0.5, height * 0.95,
     );
 
     canvas.drawPath(path, paint);
