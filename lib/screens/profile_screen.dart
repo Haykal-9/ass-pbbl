@@ -97,43 +97,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final usernameCtrl = TextEditingController(text: _user!.username);
     final bioCtrl = TextEditingController(text: _user!.bio);
     String? avatarPath = _user!.avatarPath;
-    bool saving = false;
 
-    Future<void> saveSheet(StateSetter setSheetState) async {
-      if (!(formKey.currentState?.validate() ?? false)) return;
-
-      final displayName = nameCtrl.text.trim();
-      final username = usernameCtrl.text.trim().toLowerCase();
-      final bio = bioCtrl.text.trim();
-
-      setSheetState(() => saving = true);
-
-      final existing = await _db.getAppUserByUsername(username);
-      if (!mounted) return;
-      if (existing != null && existing.id != _user!.id) {
-        setSheetState(() => saving = false);
-        showErrorSnackbar(context, 'Username sudah dipakai');
-        return;
-      }
-
-      final updatedUser = _user!.copyWith(
-        displayName: displayName,
-        username: username,
-        bio: bio,
-        avatarPath: avatarPath,
-      );
-
-      await _db.updateAppUser(updatedUser);
-      if (!mounted) return;
-
-      setState(() {
-        _user = updatedUser;
-      });
-
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      showSuccessSnackbar(context, 'Profil berhasil diperbarui');
-    }
+    // Store the result here; applied to state AFTER sheet fully closes.
+    AppUser? updatedUser;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -141,11 +107,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
       useSafeArea: true,
       showDragHandle: true,
       builder: (sheetContext) {
-        final colorScheme = Theme.of(sheetContext).colorScheme;
+        bool saving = false;
         return StatefulBuilder(
-          builder: (context, setSheetState) {
-            final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+          builder: (ctx, setSheetState) {
+            final colorScheme = Theme.of(ctx).colorScheme;
+            final bottomInset = MediaQuery.of(ctx).viewInsets.bottom;
             final hasAvatar = avatarPath != null && avatarPath!.isNotEmpty && !kIsWeb && File(avatarPath!).existsSync();
+
+            Future<void> save() async {
+              if (!(formKey.currentState?.validate() ?? false)) return;
+
+              final displayName = nameCtrl.text.trim();
+              final username = usernameCtrl.text.trim().toLowerCase();
+              final bio = bioCtrl.text.trim();
+
+              setSheetState(() => saving = true);
+
+              final existing = await _db.getAppUserByUsername(username);
+              if (!mounted) return;
+              if (existing != null && existing.id != _user!.id) {
+                setSheetState(() => saving = false);
+                if (mounted) showErrorSnackbar(context, 'Username sudah dipakai');
+                return;
+              }
+
+              updatedUser = _user!.copyWith(
+                displayName: displayName,
+                username: username,
+                bio: bio,
+                avatarPath: avatarPath,
+              );
+
+              await _db.updateAppUser(updatedUser!);
+
+              // Close the sheet using its own navigator — avoids outer-context
+              // setState race that causes _dependents.isEmpty assertion.
+              if (mounted) Navigator.of(sheetContext).pop();
+            }
 
             return Padding(
               padding: EdgeInsets.fromLTRB(20, 8, 20, 20 + bottomInset),
@@ -159,7 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Text(
                         'Ubah Profil',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                        style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 16),
                       Center(
@@ -181,7 +179,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 tooltip: 'Ubah foto profil',
                                 onPressed: () async {
                                   final pickedPath = await _pickAvatarImage();
-                                  if (pickedPath == null || !mounted) return;
+                                  if (pickedPath == null) return;
                                   setSheetState(() {
                                     avatarPath = pickedPath;
                                   });
@@ -225,7 +223,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 20),
                       FilledButton.icon(
-                        onPressed: saving ? null : () => saveSheet(setSheetState),
+                        onPressed: saving ? null : save,
                         icon: saving
                             ? const SizedBox(
                                 width: 18,
@@ -237,7 +235,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 8),
                       TextButton(
-                        onPressed: saving ? null : () => Navigator.of(context).pop(),
+                        onPressed: saving ? null : () => Navigator.of(sheetContext).pop(),
                         child: const Text('Batal'),
                       ),
                     ],
@@ -250,10 +248,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
       },
     );
 
+    // Dispose controllers now — sheet is fully closed, no more rebuilds.
     nameCtrl.dispose();
     usernameCtrl.dispose();
     bioCtrl.dispose();
+
+    // Apply state update AFTER sheet is fully gone — no InheritedWidget conflicts.
+    if (updatedUser != null && mounted) {
+      setState(() => _user = updatedUser);
+      showSuccessSnackbar(context, 'Profil berhasil diperbarui');
+    }
   }
+
 
   Future<void> _confirmLogout() async {
     final colorScheme = Theme.of(context).colorScheme;
@@ -295,8 +301,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Column(
       children: [
         Padding(
@@ -307,40 +311,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Expanded(
           child: SettingsScreen(
             onPrefsChanged: widget.onPrefsChanged,
-            footer: SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.tonal(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: colorScheme.errorContainer,
-                      foregroundColor: colorScheme.onErrorContainer,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    onPressed: _confirmLogout,
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.logout_rounded, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          'Keluar dari Akun',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            onLogout: _confirmLogout,
           ),
         ),
       ],

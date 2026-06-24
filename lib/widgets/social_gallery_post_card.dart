@@ -55,59 +55,14 @@ class SocialGalleryPostCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Author row — DI ATAS foto, bukan overlay
+          _buildAuthorRow(context),
           AspectRatio(
             aspectRatio: 1,
             child: Stack(
               fit: StackFit.expand,
               children: [
                 _photoImage(context),
-                Positioned(
-                  left: 12,
-                  right: 12,
-                  top: 12,
-                  child: _authorOverlay(context),
-                ),
-                Positioned(
-                  right: 10,
-                  top: 10,
-                  child: PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'detail') onOpenDetail();
-                      if (value == 'edit') onEditCaption();
-                      if (value == 'delete') onDelete();
-                    },
-                    color: Theme.of(context).colorScheme.surface,
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'detail',
-                        child: ListTile(
-                          dense: true,
-                          leading: Icon(Icons.open_in_new),
-                          title: Text('Buka Detail'),
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: ListTile(
-                          dense: true,
-                          leading: Icon(Icons.edit),
-                          title: Text('Edit Caption'),
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: ListTile(
-                          dense: true,
-                          leading: Icon(Icons.delete_outline, color: colorScheme.error),
-                          title: Text(
-                            'Hapus Foto',
-                            style: TextStyle(color: colorScheme.error),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
                 Positioned(
                   left: 12,
                   right: 12,
@@ -243,28 +198,27 @@ class SocialGalleryPostCard extends StatelessWidget {
     return _imagePlaceholder(context);
   }
 
-  Widget _authorOverlay(BuildContext context) {
+  Widget _buildAuthorRow(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final avatarPath = authorAvatarPath;
     final hasAvatar = avatarPath != null && avatarPath.isNotEmpty && !kIsWeb && File(avatarPath).existsSync();
 
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(18),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 12, 4, 10),
       child: Row(
         children: [
           CircleAvatar(
-            radius: 16,
-            backgroundColor: colorScheme.primary.withValues(alpha: 0.18),
+            radius: 18,
+            backgroundColor: colorScheme.primary.withValues(alpha: 0.15),
             backgroundImage: hasAvatar ? FileImage(File(avatarPath!)) : null,
             child: hasAvatar
                 ? null
                 : Text(
                     authorDisplayName.isNotEmpty ? authorDisplayName[0].toUpperCase() : 'W',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
           ),
           const SizedBox(width: 10),
@@ -277,19 +231,65 @@ class SocialGalleryPostCard extends StatelessWidget {
                   authorDisplayName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
                 Text(
-                  '@$authorUsername',
+                  authorUsername, // tanpa @
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.84),
+                    color: colorScheme.onSurface.withValues(alpha: 0.55),
                     fontSize: 12,
                   ),
                 ),
               ],
             ),
+          ),
+          // Popup menu pindah ke author row
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'detail') onOpenDetail();
+              if (value == 'edit') onEditCaption();
+              if (value == 'delete') onDelete();
+            },
+            icon: Icon(
+              Icons.more_vert,
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+            color: Theme.of(context).colorScheme.surface,
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'detail',
+                child: ListTile(
+                  dense: true,
+                  leading: Icon(Icons.open_in_new),
+                  title: Text('Buka Detail'),
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'edit',
+                child: ListTile(
+                  dense: true,
+                  leading: Icon(Icons.edit),
+                  title: Text('Edit Caption'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: ListTile(
+                  dense: true,
+                  leading: Icon(Icons.delete_outline, color: colorScheme.error),
+                  title: Text(
+                    'Hapus Foto',
+                    style: TextStyle(color: colorScheme.error),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -7,10 +7,11 @@ import '../services/preferences_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   final VoidCallback? onPrefsChanged;
-  /// Optional widget rendered as the last item in the settings list (e.g. logout button).
-  final Widget? footer;
+  /// Optional logout callback. When provided, a logout button is rendered
+  /// at the bottom of the settings list using this screen's own build context.
+  final VoidCallback? onLogout;
 
-  const SettingsScreen({super.key, this.onPrefsChanged, this.footer});
+  const SettingsScreen({super.key, this.onPrefsChanged, this.onLogout});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -210,9 +211,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ]),
         const SizedBox(height: 32),
-        if (widget.footer != null) widget.footer!,
-        if (widget.footer != null) const SizedBox(height: 8),
+        if (widget.onLogout != null) _buildLogoutButton(),
+        if (widget.onLogout != null) const SizedBox(height: 16),
       ],
+    );
+  }
+
+  Widget _buildLogoutButton() {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+      child: SizedBox(
+        width: double.infinity,
+        child: FilledButton.tonal(
+          style: FilledButton.styleFrom(
+            backgroundColor: colorScheme.errorContainer,
+            foregroundColor: colorScheme.onErrorContainer,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          onPressed: widget.onLogout,
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.logout_rounded, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Keluar dari Akun',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
