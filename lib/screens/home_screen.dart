@@ -1,6 +1,7 @@
 // PERSON A — CREATE + READ (home screen & daftar destinasi)
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../models/destination.dart';
@@ -194,17 +195,36 @@ class _HomeScreenState extends State<HomeScreen> {
         return AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              setState(() {
-                _currentIndex = 0;
-              });
-            },
+            onPressed: () => setState(() => _currentIndex = 0),
           ),
-          title: Text(
-            tr('nav_gallery'),
-            style: const TextStyle(fontWeight: FontWeight.bold),
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: 36,
+                child: SvgPicture.asset(
+                  'wanderlist-logo-horizontal-transparent.svg',
+                  fit: BoxFit.contain,
+                  colorFilter: ColorFilter.mode(
+                    Theme.of(context).colorScheme.primary,
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                tr('nav_gallery'),
+                style: GoogleFonts.dancingScript(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 22,
+                  color: Theme.of(context).colorScheme.primary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
           ),
           foregroundColor: Theme.of(context).colorScheme.primary,
+          centerTitle: true,
           elevation: 0,
           scrolledUnderElevation: 0,
         );
