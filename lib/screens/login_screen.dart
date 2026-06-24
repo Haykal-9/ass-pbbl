@@ -25,6 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _bioCtrl = TextEditingController();
   bool _isLogin = true;
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -143,8 +144,20 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _passwordCtrl,
-                            obscureText: true,
-                            decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder()),
+                            obscureText: _obscurePassword,
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              border: const OutlineInputBorder(),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
+                                ),
+                                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                tooltip: _obscurePassword ? 'Tampilkan password' : 'Sembunyikan password',
+                              ),
+                            ),
                             validator: (v) => (v == null || v.trim().length < 4) ? 'Password minimal 4 karakter' : null,
                           ),
                           if (!_isLogin) ...[
