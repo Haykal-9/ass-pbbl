@@ -401,11 +401,9 @@ class _SocialGalleryScreenState extends State<SocialGalleryScreen> {
   Widget _feedList() {
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: 96),
-      itemCount: _items.length + 1,
+      itemCount: _items.length,
       itemBuilder: (context, index) {
-        if (index == 0) return _header();
-
-        final item = _items[index - 1];
+        final item = _items[index];
         final id = item.photo.id ?? -1;
         return SocialGalleryPostCard(
           destination: item.destination,
@@ -428,28 +426,6 @@ class _SocialGalleryScreenState extends State<SocialGalleryScreen> {
     );
   }
 
-  Widget _header() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              'Memori dari semua destinasi',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-          ),
-          TextButton.icon(
-            onPressed: _loadGallery,
-            icon: const Icon(Icons.refresh, size: 18),
-            label: const Text('Refresh'),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _emptyState() {
     return ListView(
