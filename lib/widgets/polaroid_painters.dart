@@ -107,3 +107,62 @@ class PushPinPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+/// Menggambar Ikon Hati secara custom menggunakan Bezier Paths
+class HeartPainter extends CustomPainter {
+  final bool isFilled;
+  final Color color;
+
+  HeartPainter({required this.isFilled, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = isFilled ? PaintingStyle.fill : PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round;
+
+    final double width = size.width;
+    final double height = size.height;
+
+    // Menggambar hati yang lebih proporsional
+    final path = Path();
+    
+    // Mulai dari lekukan tengah atas
+    path.moveTo(width * 0.5, height * 0.25);
+
+    // Setengah kiri
+    path.cubicTo(
+      width * 0.5, height * 0.05,
+      0, height * 0.05,
+      0, height * 0.4,
+    );
+    path.cubicTo(
+      0, height * 0.65,
+      width * 0.25, height * 0.8,
+      width * 0.5, height * 0.95,
+    );
+
+    // Setengah kanan
+    path.moveTo(width * 0.5, height * 0.25);
+    path.cubicTo(
+      width * 0.5, height * 0.05,
+      width, height * 0.05,
+      width, height * 0.4,
+    );
+    path.cubicTo(
+      width, height * 0.65,
+      width * 0.75, height * 0.8,
+      width * 0.5, height * 0.95,
+    );
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant HeartPainter oldDelegate) {
+    return oldDelegate.isFilled != isFilled || oldDelegate.color != color;
+  }
+}
