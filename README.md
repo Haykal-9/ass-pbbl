@@ -63,11 +63,21 @@ WanderList is a full-featured Flutter application designed to solve the chaos of
    flutter run
    ```
 
-## 📸 Screenshots
+## 🎥 Live Demo & 📸 Screenshots
 
-*(Replace with actual demo GIFs/Videos for better portfolio showcase)*
+### Live Demo
 <p align="center">
-  <img src="flutter_01.png" alt="App Screenshot" width="250">
+  <img src="docs/live_demo.gif" alt="WanderList Live Demo" width="250">
+</p>
+
+### App Screenshots
+<p align="center">
+  <img src="docs/home.png" alt="Home Screen" width="250">&nbsp;&nbsp;
+  <img src="docs/social.png" alt="Social Gallery" width="250">
+</p>
+<p align="center">
+  <img src="docs/detail.png" alt="Detail Screen" width="250">&nbsp;&nbsp;
+  <img src="docs/setting.png" alt="Settings Screen" width="250">
 </p>
 
 ## 📂 Project Structure
