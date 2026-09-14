@@ -59,11 +59,12 @@ Asesmen 3 berfokus pada pengalaman pengguna tingkat lanjut melalui pembangunan a
 *   **Layanan API Eksternal**: OpenStreetMap (peta/basemap), Nominatim (pencarian alamat/geocoding), OpenRouteService (penggambaran garis rute navigasi), OpenWeatherMap (informasi cuaca dinamis di Trip Planner).
 
 ### 5. Library Tambahan yang Digunakan beserta Alasan
-*   **`flutter_map`**: Dipilih karena merupakan pustaka *open-source* serbaguna yang kuat untuk me-render *tile* OpenStreetMap tanpa perlu integrasi SDK tertutup atau API *billing* berbayar seperti Google Maps.
-*   **`latlong2`**: Dipilih untuk mempermudah sistem dalam memanipulasi titik koordinat dan menghitung jarak aktual antar lokasi perjalanan menggunakan formula haversine di dalam peta.
-*   **`http`**: Dipilih untuk mengelola pemanggilan *request* asinkronus ke REST API eksternal (cuaca, alamat, dan rute) secara langsung, ringan, dan andal.
-*   **`flutter_dotenv`**: Dipilih untuk menyembunyikan dan mengamankan kunci API (seperti API Key OpenRouteService & OpenWeatherMap) dari publik, memastikan keamanan repositori (*best practice*).
-*   **`intl`**: Dipilih agar tanggal dan waktu dalam rencana perjalanan dapat diformat secara cerdas dan beradaptasi secara dinamis sesuai dengan lokalisasi aplikasi.
+*   **`flutter_map`**: Dipilih karena merupakan pustaka *open-source* serbaguna yang kuat untuk me-render *tile* OpenStreetMap tanpa batasan *billing* berbayar seperti Google Maps, ideal untuk memvisualisasikan rute *Polyline*.
+*   **`latlong2`**: Digunakan bersamaan dengan `flutter_map` untuk merepresentasikan sistem koordinat bumi (Latitude & Longitude) ke dalam peta secara presisi.
+*   **`http`**: Memegang peranan krusial sebagai jembatan jaringan (Network Bridge) untuk pemanggilan *request* REST API eksternal secara asinkron (Async), termasuk OpenStreetMap (peta dasar), Nominatim (*geocoding* pencarian alamat), OpenWeatherMap (prediksi cuaca dinamis), serta OpenRouteService (pengambilan *array* koordinat rute, estimasi jarak jalan raya nyata, dan ETA/waktu tempuh).
+*   **`flutter_dotenv`**: Dipilih sebagai standar keamanan (*best practice*) untuk menyembunyikan kredensial sensitif seperti *API Key* layanan eksternal agar tidak terekspos secara publik di repositori *source code*.
+*   **`intl`**: Digunakan untuk memformat dan memanipulasi *string* tanggal, hari, serta zonasi waktu secara terstruktur agar mudah dibaca oleh sistem (komputasi rentang hari) maupun oleh manusia di UI.
+*   **`image_picker`**: Diintegrasikan secara khusus pada form penambahan destinasi (`AddStopSheet`) untuk membuka akses galeri/kamera perangkat, memungkinkan *user* untuk melampirkan foto personal (kustom) pada setiap lokasi yang dikunjungi.
 
 ### 6. Hierarki File Terkait (Knowledge Base Alur Kerja)
 Untuk membangun keseluruhan arsitektur Rencana Perjalanan secara komprehensif, implementasi harus melewati rantai file berikut secara berurutan:
@@ -99,3 +100,10 @@ Berikut adalah daftar skenario pengujian komprehensif yang dirancang khusus untu
 #### C. Pengujian Integrasi API (Network & Third-Party)
 - [ ] **Uji Geocoding Nominatim (Dinamis):** Memasukkan kata kunci seperti "Gedung Sate" di form pencarian harus dapat ditarik (*fetch*) ke internet dan dikembalikan sebagai string alamat lengkap serta pasangan koordinat *Latitude/Longitude* secara presisi.
 - [ ] **Uji Routing OpenRouteService (Dinamis):** Aplikasi harus sukses mengirim dua buah koordinat berdekatan ke API ORS, menerima respons array *GeoJSON*, lalu memplotnya menjadi satu garis rute (*Polyline*) tak terputus (*seamless*) pada `FlutterMap`.
+
+perhitungan waktu: 
+day 1: waktu tempuh = 1 jam
+       Waktu efektif = 9 jam
+day 2: Waktu tempuh = 42 menit (total tempuh 1 j 42m ✅)
+       Waktu efektif = pukul 9 sampai 5.30 sore (8j 30m - 42m = 7j 48m)
+total day 1 & 2 = 9j + 7j 48m = 16j 48m
